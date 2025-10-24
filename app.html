@@ -692,6 +692,7 @@
             min-width: 60px;
             text-align: center;
         }
+
     </style>
 </head>
 <body>
@@ -699,6 +700,7 @@
         <div class="sidebar-header">
             <a href="index.html" style="color: #666666; text-decoration: none; font-size: 0.9rem; margin-bottom: 10px; display: block; position: relative; z-index: 10;">&larr; Back to Home</a>
             <div class="sidebar-title">Between Verses</div>
+            <div class="sidebar-subtitle" id="versionIndicator">Original</div>
         </div>
 
         <div class="sidebar-content">
@@ -736,6 +738,24 @@
                 </div>
             </div>
 
+            <div class="control-section" id="performanceSection">
+                <div class="section-title">Performance</div>
+                <div class="debug-info">
+                    <div class="debug-item">
+                        <span class="debug-label">FPS:</span>
+                        <span class="debug-value" id="perfFPS">0</span>
+                    </div>
+                    <div class="debug-item">
+                        <span class="debug-label">Quality:</span>
+                        <span class="debug-value" id="perfQuality">high</span>
+                    </div>
+                    <div class="debug-item">
+                        <span class="debug-label">Render:</span>
+                        <span class="debug-value" id="perfRender">0ms</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="control-section">
                 <div class="section-title">Display</div>
                 <div class="control-group">
@@ -757,9 +777,8 @@
                 <canvas id="outputCanvas"></canvas>
                 <canvas id="overlayCanvas"></canvas>
                 <div id="pixiContainer"></div>
-            </div>
 
-            <!-- Status removed for cleaner interface -->
+            </div>
 
         </div>
     </div>
@@ -815,7 +834,97 @@
     <script src="layers/PixiSpriteLayer.js"></script>
     <script src="layers/LayerManager.js"></script>
 
+    <!-- Optimization Modules -->
+    <script src="modules/PoseDetector.js"></script>
+    <script src="modules/TextureManager.js"></script>
+    <script src="modules/RenderOptimizer.js"></script>
+    <script src="modules/AppOptimized.js"></script>
+
     <!-- Main Application -->
     <script src="app.js"></script>
+
+    <script>
+        // Debug: Check if optimization modules loaded
+        console.log('=== MODULE LOADING DEBUG ===');
+        console.log('PoseDetector available:', typeof PoseDetector);
+        console.log('TextureManager available:', typeof TextureManager);
+        console.log('RenderOptimizer available:', typeof RenderOptimizer);
+        console.log('ExperienceAppOptimized available:', typeof ExperienceAppOptimized);
+        console.log('==========================');
+
+        // Use legacy (original) version by default, with option for optimized
+        const urlParams = new URLSearchParams(window.location.search);
+        const useOptimized = urlParams.get('optimized') === 'true';
+
+        console.log('URL params:', urlParams.toString());
+        console.log('useOptimized:', useOptimized);
+
+        if (useOptimized) {
+            console.log('🚀 Using optimized application version');
+
+            // Wait for DOM to be ready before accessing elements
+            document.addEventListener('DOMContentLoaded', () => {
+                // Update version indicator
+                const versionIndicator = document.getElementById('versionIndicator');
+                if (versionIndicator) {
+                    versionIndicator.textContent = 'Optimized ⚡';
+                    versionIndicator.style.color = '#28a745';
+                }
+
+                // Show performance section for optimized version
+                const perfSection = document.getElementById('performanceSection');
+                if (perfSection) {
+                    perfSection.style.display = 'block';
+                }
+
+                // Prevent default app from loading
+                if (window.experienceApp) {
+                    window.experienceApp.stop && window.experienceApp.stop();
+                }
+                // Load optimized version
+                try {
+                    console.log('Creating ExperienceAppOptimized...');
+                    window.experienceApp = new ExperienceAppOptimized();
+                    console.log('✓ ExperienceAppOptimized created successfully');
+                } catch (error) {
+                    console.error('❌ Failed to create ExperienceAppOptimized:', error);
+                    console.log('Falling back to legacy app...');
+                    window.experienceApp = new ExperienceApp();
+                }
+
+                // Update performance metrics every second
+                setInterval(() => {
+                    if (window.experienceApp && window.experienceApp.optimizer) {
+                        const report = window.experienceApp.optimizer.getPerformanceReport();
+
+                        // Update sidebar metrics
+                        const fpsEl = document.getElementById('perfFPS');
+                        const qualityEl = document.getElementById('perfQuality');
+                        const renderEl = document.getElementById('perfRender');
+
+                        if (fpsEl) fpsEl.textContent = report.fps;
+                        if (qualityEl) qualityEl.textContent = report.quality;
+                        if (renderEl) renderEl.textContent = report.metrics.renderTime;
+                    }
+                }, 1000);
+            });
+        } else {
+            console.log('Using original application version (default)');
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Update version indicator for original
+                const versionIndicator = document.getElementById('versionIndicator');
+                if (versionIndicator) {
+                    versionIndicator.textContent = 'Original';
+                    versionIndicator.style.color = '#007bff';
+                }
+
+                // Hide performance section for original version
+                const perfSection = document.getElementById('performanceSection');
+                if (perfSection) perfSection.style.display = 'none';
+            });
+        }
+
+    </script>
 </body>
 </html>

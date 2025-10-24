@@ -14,7 +14,7 @@
         "nature": {
           "variants": [
             {
-              "image": "iguazu.png",
+              "image": "mountain.png",
               "position": "bottom_third",
               "opacity": 1.0,
               "blendMode": "normal"
@@ -49,7 +49,7 @@
         "nature": {
           "variants": [
             {
-              "image": "aletsch.png",
+              "image": "mountain.png",
               "position": "bottom_third",
               "opacity": 1.0,
               "blendMode": "normal"
@@ -84,7 +84,7 @@
         "nature": {
           "variants": [
             {
-              "image": "aletsch.png",
+              "image": "mountain.png",
               "position": "bottom_third",
               "opacity": 1.0,
               "blendMode": "normal"
@@ -105,6 +105,219 @@
         }
       }
     },
+    "star": {
+      "name": "Star",
+      "description": "Arms and legs spread wide like a star",
+      "detection": {
+        "armsRaised": true,
+        "armsSpread": true,
+        "legsSpread": true,
+        "armsStraight": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["prime.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/water-lily.png",
+            "animationType": "floating",
+            "spawnRate": 6,
+            "maxParticles": 35,
+            "region": "full_screen",
+            "speedMin": 3,
+            "speedMax": 10,
+            "lifetimeMin": 5.0,
+            "lifetimeMax": 8.0
+          }
+        }
+      }
+    },
+    "arms_out": {
+      "name": "Arms Out",
+      "description": "T-pose with arms extended horizontally",
+      "detection": {
+        "armsHorizontal": true,
+        "armsStraight": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["cristoredentor.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/water-lily.png",
+            "animationType": "floating",
+            "spawnRate": 3,
+            "maxParticles": 20,
+            "region": "bottom_third",
+            "speedMin": 1,
+            "speedMax": 6,
+            "lifetimeMin": 8.0,
+            "lifetimeMax": 12.0
+          }
+        }
+      }
+    },
+    "zigzag": {
+      "name": "Zigzag",
+      "description": "One arm up diagonally",
+      "detection": {
+        "oneArmRaised": true,
+        "asymmetric": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["prime.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/arara.png",
+            "animationType": "flying",
+            "spawnRate": 2,
+            "maxParticles": 12,
+            "region": "full_screen",
+            "speedMin": 12,
+            "speedMax": 20,
+            "lifetimeMin": 8.0,
+            "lifetimeMax": 14.0
+          }
+        }
+      }
+    },
+    "side_arms": {
+      "name": "Side Arms",
+      "description": "Arms extended horizontally to sides",
+      "detection": {
+        "armsLevel": true,
+        "armsStraight": true,
+        "armsToSides": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["cristoredentor.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/water-lily.png",
+            "animationType": "floating",
+            "spawnRate": 4,
+            "maxParticles": 25,
+            "region": "bottom_third",
+            "speedMin": 2,
+            "speedMax": 7,
+            "lifetimeMin": 6.0,
+            "lifetimeMax": 10.0
+          }
+        }
+      }
+    },
+    "rounded": {
+      "name": "Rounded",
+      "description": "Arms curved and rounded",
+      "detection": {
+        "armsCurved": true,
+        "elbowsOut": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["prime.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/water-lily.png",
+            "animationType": "floating",
+            "spawnRate": 5,
+            "maxParticles": 30,
+            "region": "bottom_third",
+            "speedMin": 1,
+            "speedMax": 5,
+            "lifetimeMin": 8.0,
+            "lifetimeMax": 15.0
+          }
+        }
+      }
+    },
+    "arms_up": {
+      "name": "Arms Up",
+      "description": "Both arms raised above head",
+      "detection": {
+        "armsAboveHead": true,
+        "armsStraight": true
+      },
+      "textures": {
+        "building": {
+          "variants": ["prime.png"]
+        },
+        "nature": {
+          "variants": [
+            {
+              "image": "mountain.png",
+              "position": "bottom_third",
+              "opacity": 1.0,
+              "blendMode": "normal"
+            }
+          ],
+          "particles": {
+            "enabled": true,
+            "texture": "front-images/water-lily.png",
+            "animationType": "floating",
+            "spawnRate": 4,
+            "maxParticles": 25,
+            "region": "bottom_third",
+            "speedMin": 2,
+            "speedMax": 8,
+            "lifetimeMin": 6.0,
+            "lifetimeMax": 10.0
+          }
+        }
+      }
+    },
     "neutral": {
       "name": "Neutral",
       "description": "Default relaxed pose",
@@ -114,7 +327,7 @@
         },
         "nature": {
           "variants": [
-          
+
           ],
           "particles": {
             "enabled": false

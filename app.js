@@ -274,19 +274,39 @@ class ExperienceApp {
 
         let detectedPose = 'neutral';
 
-        // Check for Mountain pose: both hands above head, close together
-        if (this.checkMountainPose(leftWrist, rightWrist, leftShoulder, rightShoulder, nose)) {
+        // Get additional landmarks for enhanced pose detection
+        const leftAnkle = landmarks[27];     // LEFT_ANKLE
+        const rightAnkle = landmarks[28];    // RIGHT_ANKLE
+
+        // Check for Star pose: arms and legs spread wide
+        if (this.checkStarPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip, leftAnkle, rightAnkle)) {
+            detectedPose = 'star';
+        }
+        // Check for Arms Out (T-pose): arms extended horizontally
+        else if (this.checkArmsOutPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
+            detectedPose = 'arms_out';
+        }
+        // Check for Zigzag pose: one arm up diagonally
+        else if (this.checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
+            detectedPose = 'zigzag';
+        }
+        // Check for Rounded pose: arms curved/rounded
+        else if (this.checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
+            detectedPose = 'rounded';
+        }
+        // Check for Arms Up pose: both arms raised up
+        else if (this.checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose)) {
+            detectedPose = 'arms_up';
+        }
+        // Check for Mountain pose: both hands above head, close together (keep existing)
+        else if (this.checkMountainPose(leftWrist, rightWrist, leftShoulder, rightShoulder, nose)) {
             detectedPose = 'mountain';
         }
-        // Check for Jesus/T-pose: arms extended horizontally
-        else if (this.checkJesusPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
-            detectedPose = 'jesus';
-        }
-        // Check for Tree pose: one leg raised, arms up
+        // Check for Tree pose: one leg raised, arms up (keep existing)
         else if (this.checkTreePose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
             detectedPose = 'tree';
         }
-        // Check for Warrior pose: wide stance, arms extended
+        // Check for Warrior pose: wide stance, arms extended (keep existing)
         else if (this.checkWarriorPose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
             detectedPose = 'warrior';
         }
@@ -356,6 +376,117 @@ class ExperienceApp {
                                    Math.abs(rightWrist.y - rightShoulder.y) < 0.15;
 
         return armsSeparated && armsAtShoulderLevel;
+    }
+
+    // Helper function to calculate angle between three points
+    calculateAngle(point1, point2, point3) {
+        const a = { x: point1.x, y: point1.y };
+        const b = { x: point2.x, y: point2.y }; // vertex point
+        const c = { x: point3.x, y: point3.y };
+
+        const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+        let angle = Math.abs(radians * 180.0 / Math.PI);
+
+        if (angle > 180.0) {
+            angle = 360 - angle;
+        }
+
+        return angle;
+    }
+
+    checkStarPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip, leftAnkle, rightAnkle) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
+        if (!leftHip || !rightHip || !leftAnkle || !rightAnkle) return false;
+
+        // Check arm angles (should be raised and spread)
+        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
+        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+
+        // Check if arms are raised (wrists above shoulders)
+        const armsRaised = (leftWrist.y < leftShoulder.y) && (rightWrist.y < rightShoulder.y);
+
+        // Check if legs are spread (ankles wider than hips)
+        const legSpread = Math.abs(leftAnkle.x - rightAnkle.x) > Math.abs(leftHip.x - rightHip.x) * 1.5;
+
+        // Arms should be relatively straight and spread
+        const armsStraight = (leftArmAngle > 140) && (rightArmAngle > 140);
+
+        return armsRaised && legSpread && armsStraight;
+    }
+
+    checkArmsOutPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
+
+        // Arms should be horizontal (wrists at shoulder level)
+        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.1;
+        const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 0.1;
+
+        // Arms should be straight out
+        const leftArmStraight = this.calculateAngle(leftWrist, leftElbow, leftShoulder) > 160;
+        const rightArmStraight = this.calculateAngle(rightWrist, rightElbow, rightShoulder) > 160;
+
+        return leftArmHorizontal && rightArmHorizontal && leftArmStraight && rightArmStraight;
+    }
+
+    checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
+
+        // One arm should be raised diagonally
+        const leftArmRaised = leftWrist.y < leftShoulder.y - 0.1;
+        const rightArmRaised = rightWrist.y < rightShoulder.y - 0.1;
+
+        // Only one arm should be raised
+        const oneArmUp = (leftArmRaised && !rightArmRaised) || (rightArmRaised && !leftArmRaised);
+
+        return oneArmUp;
+    }
+
+    checkSideArmsPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
+
+        // Similar to T-pose but more specific to side positioning
+        const armsLevel = (Math.abs(leftWrist.y - leftShoulder.y) < 0.08) &&
+                         (Math.abs(rightWrist.y - rightShoulder.y) < 0.08);
+
+        // Check if arms are extended to sides (not forward/back)
+        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
+        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+
+        const armsStraight = leftArmAngle > 150 && rightArmAngle > 150;
+
+        return armsLevel && armsStraight;
+    }
+
+    checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
+
+        // Arms should be bent/curved (not straight)
+        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
+        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+
+        // Curved arms have smaller angles
+        const armsCurved = leftArmAngle < 120 && rightArmAngle < 120;
+
+        // Elbows should be away from body (rounded shape)
+        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.1;
+        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.1;
+
+        return armsCurved && leftElbowOut && rightElbowOut;
+    }
+
+    checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose) {
+        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow || !nose) return false;
+
+        // Both arms should be raised above head
+        const armsRaised = (leftWrist.y < nose.y) && (rightWrist.y < nose.y);
+
+        // Arms should be relatively straight
+        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
+        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+
+        const armsStraight = leftArmAngle > 140 && rightArmAngle > 140;
+
+        return armsRaised && armsStraight;
     }
 
     updateTextureForPose(poseName) {
@@ -981,7 +1112,7 @@ class ExperienceApp {
                         // Ensure we have a valid overlay
                         if (!this.currentOverlay || !this.currentOverlay.image) {
                             this.currentOverlay = {
-                                image: 'iguazu.png',
+                                image: 'mountain.png',
                                 opacity: 1.0,
                                 blendMode: 'normal'
                             };
@@ -1092,7 +1223,7 @@ class ExperienceApp {
                 textures: {
                     nature: [
                         { file: 'matterhorn.jpeg', name: 'Matterhorn', country: 'switzerland' },
-                        { file: 'iguazu.png', name: 'Iguazu Falls', country: 'brazil' }
+                        { file: 'mountain.png', name: 'mountain Falls', country: 'brazil' }
                     ],
                     buildings: []
                 },
@@ -1423,5 +1554,15 @@ class ExperienceApp {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.experienceApp = new ExperienceApp();
+    // Load original app by default, unless optimized is requested
+    const urlParams = new URLSearchParams(window.location.search);
+    const useOptimized = urlParams.get('optimized') === 'true';
+
+    if (!useOptimized) {
+        console.log('Loading original ExperienceApp (default)');
+        window.experienceApp = new ExperienceApp();
+    } else {
+        console.log('Skipping original app - optimized version will be loaded');
+        // The optimized version will be loaded by the HTML script
+    }
 });

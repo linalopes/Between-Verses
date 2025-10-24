@@ -13,7 +13,7 @@ The system uses a clean 3-layer architecture:
 **Pose Detection:**
 - **Prime Tower**: Hands on head → shows building mesh
 - **Cristo Redentor**: Arms extended → shows building mesh
-- **Mountain/Warrior**: Various poses → triggers nature overlays (aletsch.png, iguazu.png, pantanal.png)
+- **Mountain/Warrior**: Various poses → triggers nature overlays (mountain.png, mountain.png, pantanal.png)
 
 ## ✨ Features
 
@@ -114,8 +114,8 @@ between-verses/
 │   ├── prime.png           # Building mesh texture
 │   ├── prime.svg           # Prime pose icon
 │   ├── cristoredentor.png  # Cristo pose icon
-│   ├── aletsch.png         # Alpine nature overlay
-│   ├── iguazu.png          # Waterfall nature overlay
+│   ├── mountain.png         # Alpine nature overlay
+│   ├── mountain.png          # Waterfall nature overlay
 │   ├── pantanal.png        # Wetland nature overlay
 │   └── neutral.png         # Neutral state texture
 ├── package.json            # Project configuration
