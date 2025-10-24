@@ -852,78 +852,39 @@
         console.log('ExperienceAppOptimized available:', typeof ExperienceAppOptimized);
         console.log('==========================');
 
-        // Use legacy (original) version by default, with option for optimized
-        const urlParams = new URLSearchParams(window.location.search);
-        const useOptimized = urlParams.get('optimized') === 'true';
+        // The main app.js now contains all optimizations integrated
+        console.log('🚀 Loading optimized ExperienceApp (all optimizations integrated)');
 
-        console.log('URL params:', urlParams.toString());
-        console.log('useOptimized:', useOptimized);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update version indicator
+            const versionIndicator = document.getElementById('versionIndicator');
+            if (versionIndicator) {
+                versionIndicator.textContent = 'Optimized ⚡';
+                versionIndicator.style.color = '#28a745';
+            }
 
-        if (useOptimized) {
-            console.log('🚀 Using optimized application version');
+            // Show performance section
+            const perfSection = document.getElementById('performanceSection');
+            if (perfSection) {
+                perfSection.style.display = 'block';
+            }
 
-            // Wait for DOM to be ready before accessing elements
-            document.addEventListener('DOMContentLoaded', () => {
-                // Update version indicator
-                const versionIndicator = document.getElementById('versionIndicator');
-                if (versionIndicator) {
-                    versionIndicator.textContent = 'Optimized ⚡';
-                    versionIndicator.style.color = '#28a745';
+            // Update performance metrics every second
+            setInterval(() => {
+                if (window.experienceApp && window.experienceApp.renderOptimizer) {
+                    const report = window.experienceApp.renderOptimizer.getPerformanceReport();
+
+                    // Update sidebar metrics
+                    const fpsEl = document.getElementById('perfFPS');
+                    const qualityEl = document.getElementById('perfQuality');
+                    const renderEl = document.getElementById('perfRender');
+
+                    if (fpsEl) fpsEl.textContent = report.fps;
+                    if (qualityEl) qualityEl.textContent = report.quality;
+                    if (renderEl) renderEl.textContent = report.metrics.renderTime;
                 }
-
-                // Show performance section for optimized version
-                const perfSection = document.getElementById('performanceSection');
-                if (perfSection) {
-                    perfSection.style.display = 'block';
-                }
-
-                // Prevent default app from loading
-                if (window.experienceApp) {
-                    window.experienceApp.stop && window.experienceApp.stop();
-                }
-                // Load optimized version
-                try {
-                    console.log('Creating ExperienceAppOptimized...');
-                    window.experienceApp = new ExperienceAppOptimized();
-                    console.log('✓ ExperienceAppOptimized created successfully');
-                } catch (error) {
-                    console.error('❌ Failed to create ExperienceAppOptimized:', error);
-                    console.log('Falling back to legacy app...');
-                    window.experienceApp = new ExperienceApp();
-                }
-
-                // Update performance metrics every second
-                setInterval(() => {
-                    if (window.experienceApp && window.experienceApp.optimizer) {
-                        const report = window.experienceApp.optimizer.getPerformanceReport();
-
-                        // Update sidebar metrics
-                        const fpsEl = document.getElementById('perfFPS');
-                        const qualityEl = document.getElementById('perfQuality');
-                        const renderEl = document.getElementById('perfRender');
-
-                        if (fpsEl) fpsEl.textContent = report.fps;
-                        if (qualityEl) qualityEl.textContent = report.quality;
-                        if (renderEl) renderEl.textContent = report.metrics.renderTime;
-                    }
-                }, 1000);
-            });
-        } else {
-            console.log('Using original application version (default)');
-
-            document.addEventListener('DOMContentLoaded', () => {
-                // Update version indicator for original
-                const versionIndicator = document.getElementById('versionIndicator');
-                if (versionIndicator) {
-                    versionIndicator.textContent = 'Original';
-                    versionIndicator.style.color = '#007bff';
-                }
-
-                // Hide performance section for original version
-                const perfSection = document.getElementById('performanceSection');
-                if (perfSection) perfSection.style.display = 'none';
-            });
-        }
+            }, 1000);
+        });
 
     </script>
 </body>

@@ -6,7 +6,7 @@ class ExperienceApp {
         // Make constants available globally
         window.STABLE_TIME = STABLE_TIME;
         this.canvas = document.getElementById('outputCanvas');
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.ctx = this.canvas.getContext('2d');
 
         // Separate overlay canvas for bottom third nature overlay
         this.overlayCanvas = document.getElementById('overlayCanvas');
@@ -60,14 +60,44 @@ class ExperienceApp {
         this.videoVisible = true;
         this.skeletonVisible = false;
 
-        // Initialize texture cache for better performance
-        this.textureCache = new Map();
+        // Initialize texture manager for better performance
+        this.textureManager = new TextureManager({
+            maxCacheSize: 30,
+            preloadTimeout: 5000
+        });
         this.textureImage = null;
+
+        // Pose detection throttling
+        this.lastPoseDetection = 0;
+        this.poseDetectionInterval = 100; // ms
+
+        // Event listener cleanup
+        this.eventHandlers = [];
+
+        // Performance monitoring
+        this.renderOptimizer = new RenderOptimizer({
+            targetFPS: 60,
+            adaptiveQuality: false // Start with fixed quality
+        });
 
         // Initialize with no overlay - will be set by pose detection
         this.currentOverlay = null;
 
         this.init();
+    }
+
+    // Event handler management
+    addEventHandler(element, event, handler) {
+        element.addEventListener(event, handler);
+        this.eventHandlers.push({ element, event, handler });
+    }
+
+    // Cleanup method
+    destroy() {
+        this.eventHandlers.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        this.eventHandlers = [];
     }
 
     async init() {
@@ -95,15 +125,15 @@ class ExperienceApp {
             }
 
             // Add fullscreen change event listeners
-            document.addEventListener('fullscreenchange', () => {
+            this.addEventHandler(document, 'fullscreenchange', () => {
                 console.log('Fullscreen change event fired:', !!document.fullscreenElement);
                 this.onFullscreenChange(!!document.fullscreenElement);
             });
-            document.addEventListener('webkitfullscreenchange', () => {
+            this.addEventHandler(document, 'webkitfullscreenchange', () => {
                 console.log('WebKit fullscreen change event fired:', !!document.webkitFullscreenElement);
                 this.onFullscreenChange(!!document.webkitFullscreenElement);
             });
-            document.addEventListener('mozfullscreenchange', () => {
+            this.addEventHandler(document, 'mozfullscreenchange', () => {
                 console.log('Mozilla fullscreen change event fired:', !!document.mozFullScreenElement);
                 this.onFullscreenChange(!!document.mozFullScreenElement);
             });
@@ -192,6 +222,8 @@ class ExperienceApp {
 
 
     async renderFrame() {
+        this.renderOptimizer.startFrame();
+
         if (!this.segmentationResults) return;
 
         const videoData = this.segmentationResults;
@@ -211,7 +243,7 @@ class ExperienceApp {
             const maskCanvas = document.createElement('canvas');
             maskCanvas.width = this.canvas.width;
             maskCanvas.height = this.canvas.height;
-            const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+            const maskCtx = maskCanvas.getContext('2d');
             maskCtx.drawImage(videoData.segmentationMask, 0, 0, this.canvas.width, this.canvas.height);
             maskData = maskCtx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
         }
@@ -247,9 +279,24 @@ class ExperienceApp {
         }
 
         this.ctx.restore();
+
+        const frameTime = this.renderOptimizer.endFrame();
+
+        // Optional: Adjust quality based on performance
+        if (frameTime > 33) { // > 30 FPS
+            console.warn('Frame time high:', frameTime + 'ms');
+        }
     }
 
     detectPose() {
+        const now = Date.now();
+
+        // Throttle pose detection
+        if (now - this.lastPoseDetection < this.poseDetectionInterval) {
+            return;
+        }
+        this.lastPoseDetection = now;
+
         // If pose detection is disabled or we're simulating a pose, don't run actual detection
         if (!this.poseDetectionEnabled || this.isSimulatingPose) {
             return;
@@ -312,16 +359,16 @@ class ExperienceApp {
         }
 
         // Only update if pose has been stable for a bit
-        const now = Date.now();
+        const poseNow = Date.now();
         if (detectedPose !== this.currentPose) {
-            if (now - this.lastPoseUpdate > this.STABLE_TIME) { // 1 second stability
+            if (poseNow - this.lastPoseUpdate > this.STABLE_TIME) { // 1 second stability
                 this.currentPose = detectedPose;
-                this.updateTextureForPose(detectedPose);
+                this.updateTextureForPose(detectedPose).catch(console.error);
                 this.updateDebugDisplay(detectedPose); // Update debug display
-                this.lastPoseUpdate = now;
+                this.lastPoseUpdate = poseNow;
             }
         } else {
-            this.lastPoseUpdate = now;
+            this.lastPoseUpdate = poseNow;
         }
     }
 
@@ -489,7 +536,7 @@ class ExperienceApp {
         return armsRaised && armsStraight;
     }
 
-    updateTextureForPose(poseName) {
+    async updateTextureForPose(poseName) {
         console.log(`Updating texture for pose: ${poseName}`);
         console.log(`🔧 Debug - poseMapping:`, !!this.poseMapping);
         console.log(`🔧 Debug - poseMapping.poses:`, !!this.poseMapping?.poses);
@@ -532,9 +579,15 @@ class ExperienceApp {
             }
 
             if (textureFile) {
-                this.currentTexture = `images/${textureFile}`;
-                // Building texture now handled by PixiSpriteLayer
-                console.log(`Building texture set to: ${textureFile}`);
+                const texturePath = `images/${textureFile}`;
+                try {
+                    await this.textureManager.loadTexture(texturePath);
+                    this.currentTexture = texturePath;
+                    console.log(`Building texture loaded: ${textureFile}`);
+                } catch (error) {
+                    console.warn('Failed to load texture:', textureFile, error);
+                    this.currentTexture = null;
+                }
 
                 // Update debug display
                 const buildingName = textureFile.replace('.png', '').replace('.jpg', '');
@@ -789,7 +842,7 @@ class ExperienceApp {
         const blurCanvas = document.createElement('canvas');
         blurCanvas.width = this.canvas.width;
         blurCanvas.height = this.canvas.height;
-        const blurCtx = blurCanvas.getContext('2d', { willReadFrequently: true });
+        const blurCtx = blurCanvas.getContext('2d');
 
         blurCtx.filter = 'blur(15px)';
         blurCtx.drawImage(originalImage, 0, 0, this.canvas.width, this.canvas.height);
@@ -824,7 +877,7 @@ class ExperienceApp {
         const bgCanvas = document.createElement('canvas');
         bgCanvas.width = this.canvas.width;
         bgCanvas.height = this.canvas.height;
-        const bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
+        const bgCtx = bgCanvas.getContext('2d');
 
         bgCtx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
         const bgData = bgCtx.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -856,7 +909,7 @@ class ExperienceApp {
             const textureCanvas = document.createElement('canvas');
             textureCanvas.width = this.canvas.width;
             textureCanvas.height = this.canvas.height;
-            const textureCtx = textureCanvas.getContext('2d', { willReadFrequently: true });
+            const textureCtx = textureCanvas.getContext('2d');
 
             const pattern = textureCtx.createPattern(this.textureImage, 'repeat');
             textureCtx.fillStyle = pattern;
@@ -879,7 +932,7 @@ class ExperienceApp {
         const textureCanvas = document.createElement('canvas');
         textureCanvas.width = this.canvas.width;
         textureCanvas.height = this.canvas.height;
-        const textureCtx = textureCanvas.getContext('2d', { willReadFrequently: true });
+        const textureCtx = textureCanvas.getContext('2d');
 
         // Scale the texture to fit within the bounding box
         textureCtx.drawImage(
@@ -1216,6 +1269,11 @@ class ExperienceApp {
                 this.settings.effectIntensity = config.settings.effectIntensity || 0.95;
                 this.settings.backgroundColor = config.settings.defaultBackgroundColor || '#1a1a2e';
             }
+
+            // Preload textures
+            const texturesToPreload = this.extractTexturePathsFromConfig(this.textureConfig);
+            await this.textureManager.preloadTextures(texturesToPreload);
+            console.log('✅ Textures preloaded successfully');
         } catch (error) {
             console.error('Failed to load experience config:', error);
             // Fallback to default configuration with proper poses
@@ -1264,6 +1322,29 @@ class ExperienceApp {
         // This method is kept for compatibility but does nothing
     }
 
+    extractTexturePathsFromConfig(config) {
+        const paths = [];
+
+        if (config.poses) {
+            Object.values(config.poses).forEach(pose => {
+                if (pose.textures?.building?.variants) {
+                    pose.textures.building.variants.forEach(variant => {
+                        paths.push(`images/${variant}`);
+                    });
+                }
+                if (pose.textures?.nature?.variants) {
+                    pose.textures.nature.variants.forEach(variant => {
+                        if (variant.image) {
+                            paths.push(`images/${variant.image}`);
+                        }
+                    });
+                }
+            });
+        }
+
+        return [...new Set(paths)]; // Remove duplicates
+    }
+
     simulatePose(poseType) {
         if (!this.poseMapping?.poses?.[poseType]) {
             console.warn(`Pose type "${poseType}" not found in configuration`);
@@ -1291,7 +1372,7 @@ class ExperienceApp {
     applyPoseTextures(poseType) {
         // Force update texture for the specified pose type
         this.currentPose = poseType;
-        this.updateTextureForPose(poseType);
+        this.updateTextureForPose(poseType).catch(console.error);
 
         // Immediately update nature layer
         const natureLayer = this.layerManager.getLayer('nature');
@@ -1551,18 +1632,31 @@ class ExperienceApp {
             debugNature.textContent = nature || 'none';
         }
     }
+
+    updatePerformanceDisplay() {
+        const report = this.renderOptimizer.getPerformanceReport();
+        const perfDisplay = document.getElementById('performanceDebug');
+        if (perfDisplay) {
+            perfDisplay.textContent = `FPS: ${report.fps} | Render: ${report.metrics.renderTime}`;
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Load original app by default, unless optimized is requested
-    const urlParams = new URLSearchParams(window.location.search);
-    const useOptimized = urlParams.get('optimized') === 'true';
+    console.log('Loading optimized ExperienceApp (all optimizations integrated)');
+    window.experienceApp = new ExperienceApp();
 
-    if (!useOptimized) {
-        console.log('Loading original ExperienceApp (default)');
-        window.experienceApp = new ExperienceApp();
-    } else {
-        console.log('Skipping original app - optimized version will be loaded');
-        // The optimized version will be loaded by the HTML script
-    }
+    // Add debugging tools to window
+    window.debugPerformance = () => {
+        if (window.experienceApp.renderOptimizer) {
+            console.table(window.experienceApp.renderOptimizer.getPerformanceReport());
+        }
+    };
+
+    window.debugTextures = () => {
+        if (window.experienceApp.textureManager) {
+            console.log(window.experienceApp.textureManager.getStats());
+            console.log(window.experienceApp.textureManager.estimateMemoryUsage());
+        }
+    };
 });
