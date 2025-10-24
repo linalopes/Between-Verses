@@ -50,37 +50,35 @@ class PixiSpriteLayer extends LayerInterface {
     // Get texture file for a given pose from configuration
     getTextureForPose(poseType) {
         // Check if we have pose configuration
-        if (!this.config.poseConfig || !this.config.poseConfig.poses) {
+        if (!this.config.poseConfig) {
             console.warn('No pose configuration available, using fallback texture');
-            return null; // No texture available
-        }
-
-        const pose = this.config.poseConfig.poses[poseType];
-        if (!pose || !pose.textures || !pose.textures.building) {
-            console.warn(`No building texture configuration for pose: ${poseType}`);
             return null;
         }
 
-        const buildingTextures = pose.textures.building;
+        console.log(`🔍 getTextureForPose("${poseType}") - checking imageMappings:`, !!this.config.poseConfig.imageMappings);
 
-        // Handle variants array
-        if (buildingTextures.variants && Array.isArray(buildingTextures.variants)) {
-            if (buildingTextures.variants.length === 0) {
-                console.log(`No building texture variants for pose: ${poseType}`);
-                return null; // Empty variants array means no texture
+        // Use imageMappings system
+        if (this.config.poseConfig.imageMappings && this.config.poseConfig.imageMappings[poseType]) {
+            const mapping = this.config.poseConfig.imageMappings[poseType];
+            console.log(`🔍 Found mapping for "${poseType}":`, mapping);
+            if (mapping.building) {
+                const texturePath = `images/${mapping.building}.png`;
+                console.log(`🔍 Returning texture path: ${texturePath}`);
+                return texturePath;
+            } else {
+                console.log(`🔍 Mapping found but building is null for "${poseType}" - returning null`);
+                return null;
             }
-
-            // Select random variant or first one
-            const randomIndex = Math.floor(Math.random() * buildingTextures.variants.length);
-            const textureFile = buildingTextures.variants[randomIndex];
-            return textureFile ? `images/${textureFile}` : null;
         }
 
-        // Legacy format support
-        if (buildingTextures.primary) {
-            return `images/${buildingTextures.primary}`;
+        // Fallback to globalImages default
+        if (this.config.poseConfig.globalImages?.defaultBuilding) {
+            const fallbackPath = `images/${this.config.poseConfig.globalImages.defaultBuilding}.png`;
+            console.log(`🔍 Using fallback texture: ${fallbackPath}`);
+            return fallbackPath;
         }
 
+        console.warn(`No building texture mapping for pose: ${poseType}`);
         return null;
     }
 
@@ -176,6 +174,10 @@ class PixiSpriteLayer extends LayerInterface {
                 const ts = new Date().toLocaleTimeString();
                 console.log(`📍 [${ts}] PixiSpriteLayer received pose: "${this.lastLoggedPoseType}" → "${poseType}"`);
                 this.lastLoggedPoseType = poseType;
+                
+                // Debug texture mapping for this pose
+                const targetTexture = this.getTextureForPose(poseType);
+                console.log(`🔍 PixiSpriteLayer texture lookup for "${poseType}": ${targetTexture}`);
             }
 
             // Apply pose effects (sprite scaling/positioning and texture switching)
@@ -391,11 +393,10 @@ class PixiSpriteLayer extends LayerInterface {
                     sprite.alpha = 1.0;
                 }
             } else {
-                // Keep sprite visible even when no texture is configured
-                // This prevents sprites from disappearing during pose detection
-                sprite.visible = true;
-                sprite.alpha = 1.0;
-                console.log(`⚠️ No texture configured for pose ${poseType} - keeping sprite visible`);
+                // No texture configured (e.g., neutral pose) - hide the sprite
+                sprite.visible = false;
+                sprite.alpha = 0.0;
+                console.log(`🚫 No texture configured for pose ${poseType} - hiding sprite`);
             }
         }
     }

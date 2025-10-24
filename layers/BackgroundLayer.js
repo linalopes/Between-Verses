@@ -7,7 +7,7 @@ class BackgroundLayer extends LayerInterface {
         super('background', {
             mode: 'mountain_cutout', // 'blur', 'remove', 'replace', 'none', 'mountain_cutout'
             blurStrength: 15,
-            backgroundImage: 'bg-images/mountain.png', // Default mountain backdrop
+            backgroundImage: null, // Will be set from globalImages
             backgroundColor: '#000000',
             confidenceThreshold: 0.7,
             personTint: { r: 255, g: 255, b: 255, a: 0.1 }, // Subtle white tint for person
@@ -19,28 +19,39 @@ class BackgroundLayer extends LayerInterface {
         this.backgroundImage = new Image();
         this.blurCache = new Map();
         this.mountainBackdrop = new Image();
+        this.poseConfig = null;
 
-        // Load mountain backdrop
-        this.loadMountainBackdrop();
-
-        // Load default background image if provided
-        if (this.config.backgroundImage && this.config.backgroundImage !== 'bg-images/mountain.png') {
-            this.setBackgroundImage(this.config.backgroundImage);
-        }
+        // Mountain backdrop will be loaded when pose config is set
+        // this.loadMountainBackdrop(); // Don't load until we have config
     }
 
     onInit() {
         console.log('BackgroundLayer initialized');
     }
 
+    setPoseConfig(poseConfig) {
+        this.poseConfig = poseConfig;
+        this.loadMountainBackdrop();
+    }
+
     loadMountainBackdrop() {
+        // Get background image from globalImages or use default
+        let backgroundPath = 'bg-images/mountain.png'; // fallback
+        
+        if (this.poseConfig?.globalImages?.background) {
+            backgroundPath = `bg-images/${this.poseConfig.globalImages.background}.png`;
+        }
+
+        console.log('🔄 Loading mountain backdrop from:', backgroundPath);
+
         this.mountainBackdrop.onload = () => {
             console.log('✅ Mountain backdrop loaded:', this.mountainBackdrop.width, 'x', this.mountainBackdrop.height);
+            this.invalidate(); // Trigger re-render when image loads
         };
         this.mountainBackdrop.onerror = (e) => {
-            console.error('❌ Failed to load mountain backdrop:', e);
+            console.error('❌ Failed to load mountain backdrop:', backgroundPath, e);
         };
-        this.mountainBackdrop.src = 'bg-images/mountain.png';
+        this.mountainBackdrop.src = backgroundPath;
     }
 
     async onRender(inputData, timestamp) {
@@ -80,8 +91,9 @@ class BackgroundLayer extends LayerInterface {
     }
 
     applyMountainCutout(pixels, mask) {
-        if (!this.mountainBackdrop.complete) {
-            console.warn('Mountain backdrop not loaded yet');
+        if (!this.mountainBackdrop.complete || !this.mountainBackdrop.src) {
+            console.warn('Mountain backdrop not loaded yet, loading now...');
+            this.loadMountainBackdrop();
             return false;
         }
 

@@ -1,0 +1,23 @@
+
+## Side Arms Pose Guide
+
+### What the pose should look like:
+1. **Stand upright** with feet shoulder-width apart
+2. **Raise both elbows** to shoulder level (like you're going to flex your biceps)
+3. **Point your hands/wrists upward** - like you're celebrating a victory
+4. **Keep elbows wide** - away from your body to the sides
+5. **Both arms should be symmetric** - same position on both sides
+
+### Think of it like:
+- 🏆 **Victory pose** - like you just won something
+- 💪 **Flex pose** - but with hands pointing up instead of making fists
+- 🙌 **Celebration** - but with elbows at shoulder level
+
+### Key points:
+- Wrists should be **higher than elbows**
+- Wrists should be **higher than shoulders** 
+- Elbows should be **out to the sides**
+- Both arms should be **in the same position**
+
+The pose should now be much easier to detect with the improved logic!
+

@@ -1,110 +1,46 @@
 {
+  "availablePoses": [
+    "star", "arms_out", "zigzag", "side_arms", "rounded", "arms_up", "neutral"
+  ],
+  
+  "imageMappings": {
+    "star": {
+      "building": "cathedral",
+      "particle": "alpine-aster"
+    }, 
+    "arms_out": {
+      "building": "cristoredentor",
+      "particle": "edelweiss"
+    },
+    "zigzag": {
+      "building": "copan",
+      "particle": "alpine-rose"
+    },
+    "side_arms": {
+      "building": "grossmuenster",
+      "particle": "water-lily"
+    },
+    "rounded": {
+      "building": "kapellbruecke",
+      "particle": "bromelia"
+    },
+    "arms_up": {
+      "building": "prime",
+      "particle": "ipe"
+    },
+    "neutral": {
+      "building": null,
+      "particle": null
+    }
+  },
+
+  "globalImages": {
+    "background": "mountain",
+    "defaultBuilding": "prime",
+    "defaultParticle": "water-lily"
+  },
+
   "poses": {
-    "mountain": {
-      "name": "Arms Up",
-      "description": "Both arms lifted up",
-      "detection": {
-        "handsAboveHead": true,
-        "handsCloseTogether": 0.3
-      },
-      "textures": {
-        "building": {
-          "variants": ["prime.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 4,
-            "maxParticles": 25,
-            "region": "bottom_third",
-            "speedMin": 2,
-            "speedMax": 8,
-            "lifetimeMin": 6.0,
-            "lifetimeMax": 10.0
-          }
-        }
-      }
-    },
-    "jesus": {
-      "name": "Arms Sides",
-      "description": "Arms stretched to the sides, closed legs",
-      "detection": {
-        "armsHorizontal": 0.1,
-        "armsExtended": 0.1
-      },
-      "textures": {
-        "building": {
-          "variants": ["cristoredentor.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 3,
-            "maxParticles": 20,
-            "region": "bottom_third",
-            "speedMin": 1,
-            "speedMax": 6,
-            "lifetimeMin": 8.0,
-            "lifetimeMax": 12.0
-          }
-        }
-      }
-    },
-    "warrior": {
-      "name": "Warrior",
-      "description": "Strong warrior stance with wide legs and arms",
-      "detection": {
-        "wideStance": 0.15,
-        "armsPartiallyExtended": 0.2
-      },
-      "textures": {
-        "building": {
-          "variants": ["cristoredentor.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/arara.png",
-            "animationType": "flying",
-            "spawnRate": 1.5,
-            "maxParticles": 8,
-            "region": "full_screen",
-            "speedMin": 15,
-            "speedMax": 25,
-            "lifetimeMin": 12.0,
-            "lifetimeMax": 18.0
-          }
-        }
-      }
-    },
     "star": {
       "name": "Star",
       "description": "Arms and legs spread wide like a star",
@@ -113,33 +49,6 @@
         "armsSpread": true,
         "legsSpread": true,
         "armsStraight": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["prime.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 6,
-            "maxParticles": 35,
-            "region": "full_screen",
-            "speedMin": 3,
-            "speedMax": 10,
-            "lifetimeMin": 5.0,
-            "lifetimeMax": 8.0
-          }
-        }
       }
     },
     "arms_out": {
@@ -148,139 +57,38 @@
       "detection": {
         "armsHorizontal": true,
         "armsStraight": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["cristoredentor.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 3,
-            "maxParticles": 20,
-            "region": "bottom_third",
-            "speedMin": 1,
-            "speedMax": 6,
-            "lifetimeMin": 8.0,
-            "lifetimeMax": 12.0
-          }
-        }
       }
     },
     "zigzag": {
       "name": "Zigzag",
-      "description": "One arm up diagonally",
+      "description": "One arm up, one arm down (asymmetric pose)",
       "detection": {
         "oneArmRaised": true,
-        "asymmetric": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["prime.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/arara.png",
-            "animationType": "flying",
-            "spawnRate": 2,
-            "maxParticles": 12,
-            "region": "full_screen",
-            "speedMin": 12,
-            "speedMax": 20,
-            "lifetimeMin": 8.0,
-            "lifetimeMax": 14.0
-          }
-        }
+        "oneArmDown": true,
+        "asymmetric": true,
+        "armsExtended": true
       }
     },
     "side_arms": {
       "name": "Side Arms",
-      "description": "Arms extended horizontally to sides",
+      "description": "Arms angled up at elbows (victory/celebration pose)",
       "detection": {
-        "armsLevel": true,
-        "armsStraight": true,
-        "armsToSides": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["cristoredentor.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 4,
-            "maxParticles": 25,
-            "region": "bottom_third",
-            "speedMin": 2,
-            "speedMax": 7,
-            "lifetimeMin": 6.0,
-            "lifetimeMax": 10.0
-          }
-        }
+        "elbowsOut": true,
+        "wristsAboveElbows": true,
+        "wristsAboveShoulders": true,
+        "armsAngled": true,
+        "symmetric": true
       }
     },
     "rounded": {
       "name": "Rounded",
-      "description": "Arms curved and rounded",
+      "description": "Hands on hips (elbows out, wrists at hip level)",
       "detection": {
-        "armsCurved": true,
-        "elbowsOut": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["prime.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 5,
-            "maxParticles": 30,
-            "region": "bottom_third",
-            "speedMin": 1,
-            "speedMax": 5,
-            "lifetimeMin": 8.0,
-            "lifetimeMax": 15.0
-          }
-        }
+        "handsOnHips": true,
+        "wristsAtHipLevel": true,
+        "elbowsOut": true,
+        "wristsInward": true,
+        "armsBent": true
       }
     },
     "arms_up": {
@@ -289,51 +97,11 @@
       "detection": {
         "armsAboveHead": true,
         "armsStraight": true
-      },
-      "textures": {
-        "building": {
-          "variants": ["prime.png"]
-        },
-        "nature": {
-          "variants": [
-            {
-              "image": "mountain.png",
-              "position": "bottom_third",
-              "opacity": 1.0,
-              "blendMode": "normal"
-            }
-          ],
-          "particles": {
-            "enabled": true,
-            "texture": "front-images/water-lily.png",
-            "animationType": "floating",
-            "spawnRate": 4,
-            "maxParticles": 25,
-            "region": "bottom_third",
-            "speedMin": 2,
-            "speedMax": 8,
-            "lifetimeMin": 6.0,
-            "lifetimeMax": 10.0
-          }
-        }
       }
     },
     "neutral": {
       "name": "Neutral",
-      "description": "Default relaxed pose",
-      "textures": {
-        "building": {
-          "variants": []
-        },
-        "nature": {
-          "variants": [
-
-          ],
-          "particles": {
-            "enabled": false
-          }
-        }
-      }
+      "description": "Default relaxed pose"
     }
   },
   "settings": {

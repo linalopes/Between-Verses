@@ -153,16 +153,23 @@ class ExperienceApp {
 
         // Set up event listeners for video layer
         this.videoLayer.on('camera-ready', (data) => {
-            console.log('Camera ready:', data);
+            console.log('📷 Camera ready:', data);
             // Update main canvas dimensions to match video
             this.canvas.width = data.width;
             this.canvas.height = data.height;
             // Update overlay canvas dimensions to match video
             this.overlayCanvas.width = data.width;
             this.overlayCanvas.height = data.height;
+            
+            // Hide status message when camera is ready
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.style.display = 'none';
+            }
         });
 
         this.videoLayer.on('segmentation-results', (data) => {
+            console.log('📹 Segmentation results received:', !!data.mask, !!data.originalImage);
             this.segmentationResults = data;
             this.renderFrame();
         });
@@ -186,7 +193,7 @@ class ExperienceApp {
             mode: 'mountain_cutout',
             confidenceThreshold: this.settings.confidenceThreshold,
             backgroundColor: this.settings.backgroundColor,
-            backgroundImage: 'bg-images/mountain.png'
+            backgroundImage: null // Will be set from globalImages
         });
 
         // Create and configure nature layer
@@ -205,9 +212,13 @@ class ExperienceApp {
             debugMode: true // Debug mode matches default checkbox state
         });
 
-        // Pass configuration to PixiSpriteLayer after it's created
+        // Pass configuration to layers after they're created
         if (this.poseMapping) {
+            console.log('🔧 Setting pose config on layers:', !!this.poseMapping.globalImages);
             this.pixiSpriteLayer.setPoseConfig(this.poseMapping);
+            this.backgroundLayer.setPoseConfig(this.poseMapping);
+        } else {
+            console.warn('⚠️ No pose mapping available when setting up layers');
         }
         console.log('PixiSpriteLayer created successfully:', !!this.pixiSpriteLayer);
 
@@ -218,20 +229,40 @@ class ExperienceApp {
         this.layerManager.addLayer(this.natureLayer);      // Nature overlays and particles
 
         console.log('Layer system initialized: Video (input), Background (segmentation), PixiSprite (building), Nature (overlays)');
+        
+        // Show status message while initializing
+        const statusEl = document.getElementById('status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color: #4CAF50;">Initializing camera and MediaPipe...</span>';
+            statusEl.style.display = 'block';
+        }
     }
 
 
     async renderFrame() {
         this.renderOptimizer.startFrame();
 
-        if (!this.segmentationResults) return;
+        if (!this.segmentationResults) {
+            console.log('🔍 No segmentation results available for rendering');
+            return;
+        }
+        
+        console.log('🎨 Rendering frame with segmentation data');
 
         const videoData = this.segmentationResults;
 
         // Draw base image to canvas
         this.ctx.save();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.drawImage(videoData.image, 0, 0, this.canvas.width, this.canvas.height);
+        
+        // Set a dark background instead of white
+        this.ctx.fillStyle = '#1a1a2e';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        if (videoData.image) {
+            this.ctx.drawImage(videoData.image, 0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            console.warn('⚠️ No video image available');
+        }
 
         // Get image data for layer processing
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -325,6 +356,7 @@ class ExperienceApp {
         const leftAnkle = landmarks[27];     // LEFT_ANKLE
         const rightAnkle = landmarks[28];    // RIGHT_ANKLE
 
+        // Only check for poses that have image mappings assigned
         // Check for Star pose: arms and legs spread wide
         if (this.checkStarPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip, leftAnkle, rightAnkle)) {
             detectedPose = 'star';
@@ -337,31 +369,29 @@ class ExperienceApp {
         else if (this.checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
             detectedPose = 'zigzag';
         }
+        // Check for Side Arms pose: arms extended horizontally to sides
+        else if (this.checkSideArmsPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
+            detectedPose = 'side_arms';
+        }
         // Check for Rounded pose: arms curved/rounded
-        else if (this.checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
+        else if (this.checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip)) {
             detectedPose = 'rounded';
         }
         // Check for Arms Up pose: both arms raised up
         else if (this.checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose)) {
             detectedPose = 'arms_up';
         }
-        // Check for Mountain pose: both hands above head, close together (keep existing)
-        else if (this.checkMountainPose(leftWrist, rightWrist, leftShoulder, rightShoulder, nose)) {
-            detectedPose = 'mountain';
-        }
-        // Check for Tree pose: one leg raised, arms up (keep existing)
-        else if (this.checkTreePose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
-            detectedPose = 'tree';
-        }
-        // Check for Warrior pose: wide stance, arms extended (keep existing)
-        else if (this.checkWarriorPose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
-            detectedPose = 'warrior';
+
+        // Debug: Log detected pose
+        if (detectedPose !== 'neutral') {
+            console.log('🎯 Pose detected:', detectedPose);
         }
 
         // Only update if pose has been stable for a bit
         const poseNow = Date.now();
         if (detectedPose !== this.currentPose) {
             if (poseNow - this.lastPoseUpdate > this.STABLE_TIME) { // 1 second stability
+                console.log('✅ Pose changed:', this.currentPose, '→', detectedPose);
                 this.currentPose = detectedPose;
                 this.updateTextureForPose(detectedPose).catch(console.error);
                 this.updateDebugDisplay(detectedPose); // Update debug display
@@ -372,58 +402,6 @@ class ExperienceApp {
         }
     }
 
-    checkMountainPose(leftWrist, rightWrist, leftShoulder, rightShoulder, nose) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
-
-        // Both wrists above shoulders (arms lifted up)
-        const leftArmUp = leftWrist.y < leftShoulder.y - 0.15;
-        const rightArmUp = rightWrist.y < rightShoulder.y - 0.15;
-
-        // Arms can be wider apart (more relaxed than mountain pose)
-        const handsDistance = Math.abs(leftWrist.x - rightWrist.x);
-        const armsReasonablyClose = handsDistance < 0.4;
-
-        return leftArmUp && rightArmUp && armsReasonablyClose;
-    }
-
-    checkJesusPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
-
-        // Arms stretched horizontally to the sides (more tolerant)
-        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.15;
-        const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 0.15;
-
-        // Arms fully extended to sides
-        const leftArmExtended = leftWrist.x < leftShoulder.x - 0.15;
-        const rightArmExtended = rightWrist.x > rightShoulder.x + 0.15;
-
-        // Good arm spread (Cristo Redentor pose)
-        const armSpread = Math.abs(leftWrist.x - rightWrist.x);
-        const goodSpread = armSpread > 0.4;
-
-        return leftArmHorizontal && rightArmHorizontal && leftArmExtended && rightArmExtended && goodSpread;
-    }
-
-    checkTreePose(leftWrist, rightWrist, leftShoulder, rightShoulder) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
-
-        // Both arms raised (simplified tree pose detection)
-        const armsRaised = (leftWrist.y < leftShoulder.y - 0.1) && (rightWrist.y < rightShoulder.y - 0.1);
-        const armsWide = Math.abs(leftWrist.x - rightWrist.x) > 0.2;
-
-        return armsRaised && armsWide;
-    }
-
-    checkWarriorPose(leftWrist, rightWrist, leftShoulder, rightShoulder) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
-
-        // One arm forward, one arm back (simplified)
-        const armsSeparated = Math.abs(leftWrist.x - rightWrist.x) > 0.3;
-        const armsAtShoulderLevel = Math.abs(leftWrist.y - leftShoulder.y) < 0.15 &&
-                                   Math.abs(rightWrist.y - rightShoulder.y) < 0.15;
-
-        return armsSeparated && armsAtShoulderLevel;
-    }
 
     // Helper function to calculate angle between three points
     calculateAngle(point1, point2, point3) {
@@ -464,15 +442,18 @@ class ExperienceApp {
     checkArmsOutPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
         if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
 
-        // Arms should be horizontal (wrists at shoulder level)
-        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.1;
-        const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 0.1;
+        // Arms should be horizontal (wrists at shoulder level) - T-pose
+        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.08;
+        const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 0.08;
 
-        // Arms should be straight out
+        // Arms should be straight out (not angled up like side_arms)
         const leftArmStraight = this.calculateAngle(leftWrist, leftElbow, leftShoulder) > 160;
         const rightArmStraight = this.calculateAngle(rightWrist, rightElbow, rightShoulder) > 160;
 
-        return leftArmHorizontal && rightArmHorizontal && leftArmStraight && rightArmStraight;
+        // Exclude side_arms pose: wrists should NOT be significantly above shoulders
+        const notSideArms = !(leftWrist.y < leftShoulder.y - 0.05 && rightWrist.y < rightShoulder.y - 0.05);
+
+        return leftArmHorizontal && rightArmHorizontal && leftArmStraight && rightArmStraight && notSideArms;
     }
 
     checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder) {
@@ -491,34 +472,115 @@ class ExperienceApp {
     checkSideArmsPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
         if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
 
-        // Similar to T-pose but more specific to side positioning
-        const armsLevel = (Math.abs(leftWrist.y - leftShoulder.y) < 0.08) &&
-                         (Math.abs(rightWrist.y - rightShoulder.y) < 0.08);
+        // Side arms: arms angled up at elbows (like a victory/celebration pose)
+        // More lenient detection - wrists should be higher than elbows (angled upward)
+        const leftWristAboveElbow = leftWrist.y < leftElbow.y - 0.03; // More lenient
+        const rightWristAboveElbow = rightWrist.y < rightElbow.y - 0.03;
 
-        // Check if arms are extended to sides (not forward/back)
+        // Wrists should be higher than shoulders (angled upward from shoulders) - more lenient
+        const leftWristAboveShoulder = leftWrist.y < leftShoulder.y - 0.01; // More lenient
+        const rightWristAboveShoulder = rightWrist.y < rightShoulder.y - 0.01;
+
+        // Elbows should be extended to the sides (not close to body) - more lenient
+        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.08; // More lenient
+        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.08;
+
+        // Elbows should be at or slightly below shoulder level (not too high)
+        const leftElbowAtShoulderLevel = leftElbow.y >= leftShoulder.y - 0.05 && leftElbow.y <= leftShoulder.y + 0.1;
+        const rightElbowAtShoulderLevel = rightElbow.y >= rightShoulder.y - 0.05 && rightElbow.y <= rightShoulder.y + 0.1;
+
+        // Arms should be clearly angled (not straight up or straight out) - more lenient
         const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
         const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+        const armsAngled = leftArmAngle > 100 && leftArmAngle < 160 && rightArmAngle > 100 && rightArmAngle < 160; // More lenient
 
-        const armsStraight = leftArmAngle > 150 && rightArmAngle > 150;
+        // Both arms should be symmetric (both angled up)
+        const symmetric = leftWristAboveElbow && rightWristAboveElbow && 
+                         leftWristAboveShoulder && rightWristAboveShoulder;
 
-        return armsLevel && armsStraight;
+        // Debug logging for side_arms pose
+        if (leftElbowOut && rightElbowOut) {
+            console.log('🔍 Side_arms pose debug:', {
+                leftWristAboveElbow, rightWristAboveElbow,
+                leftWristAboveShoulder, rightWristAboveShoulder,
+                leftElbowOut, rightElbowOut,
+                leftElbowAtShoulderLevel, rightElbowAtShoulderLevel,
+                armsAngled,
+                symmetric,
+                leftAngle: leftArmAngle?.toFixed(1),
+                rightAngle: rightArmAngle?.toFixed(1),
+                wristY: { left: leftWrist.y.toFixed(3), right: rightWrist.y.toFixed(3) },
+                elbowY: { left: leftElbow.y.toFixed(3), right: rightElbow.y.toFixed(3) },
+                shoulderY: { left: leftShoulder.y.toFixed(3), right: rightShoulder.y.toFixed(3) }
+            });
+        }
+
+        // Primary detection: all conditions
+        const primaryDetection = symmetric && leftElbowOut && rightElbowOut && 
+                               leftElbowAtShoulderLevel && rightElbowAtShoulderLevel && armsAngled;
+        
+        // Fallback detection: simpler version - just elbows out and wrists above elbows
+        const fallbackDetection = leftElbowOut && rightElbowOut && 
+                                 leftWristAboveElbow && rightWristAboveElbow;
+
+        // Ultra-simple detection: just check if both wrists are above shoulder level and elbows are out
+        const ultraSimple = leftWrist.y < leftShoulder.y && rightWrist.y < rightShoulder.y &&
+                           leftElbowOut && rightElbowOut;
+
+        return primaryDetection || fallbackDetection || ultraSimple;
     }
 
-    checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
+    checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip) {
         if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
+        if (!leftHip || !rightHip) return false;
 
-        // Arms should be bent/curved (not straight)
-        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
-        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+        // Hands on hips: wrists should be in torso area (between shoulders and hips)
+        const hipLevel = (leftHip.y + rightHip.y) / 2;
+        const shoulderLevel = (leftShoulder.y + rightShoulder.y) / 2;
+        const hipLevelExtended = hipLevel + 0.1; // Allow slightly below hips
+        
+        // Wrists should be in the torso area (between shoulders and hips)
+        const leftWristInTorso = leftWrist.y > shoulderLevel && leftWrist.y < hipLevelExtended;
+        const rightWristInTorso = rightWrist.y > shoulderLevel && rightWrist.y < hipLevelExtended;
+        
+        // Elbows should be out to the sides (creating the "rounded" shape)
+        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.06;
+        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.06;
+        
+        // Wrists should be closer to center than elbows (hands on hips, not extended out)
+        const leftWristInward = Math.abs(leftWrist.x - leftShoulder.x) < Math.abs(leftElbow.x - leftShoulder.x);
+        const rightWristInward = Math.abs(rightWrist.x - rightShoulder.x) < Math.abs(rightElbow.x - rightShoulder.x);
+        
+        // Arms should be bent (not straight) - more lenient range
+        const leftAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
+        const rightAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
+        const armsBent = leftAngle < 160 && rightAngle < 160 && leftAngle > 40 && rightAngle > 40;
 
-        // Curved arms have smaller angles
-        const armsCurved = leftArmAngle < 120 && rightArmAngle < 120;
+        // Debug logging for rounded pose
+        if (leftWristInTorso && rightWristInTorso) {
+            console.log('🔍 Rounded pose debug (app.js):', {
+                leftWristInTorso, rightWristInTorso,
+                leftElbowOut, rightElbowOut,
+                leftWristInward, rightWristInward,
+                armsBent,
+                leftAngle: leftAngle?.toFixed(1),
+                rightAngle: rightAngle?.toFixed(1),
+                wristY: { left: leftWrist.y.toFixed(3), right: rightWrist.y.toFixed(3) },
+                shoulderY: shoulderLevel.toFixed(3),
+                hipY: hipLevel.toFixed(3)
+            });
+        }
 
-        // Elbows should be away from body (rounded shape)
-        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.1;
-        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.1;
-
-        return armsCurved && leftElbowOut && rightElbowOut;
+        // Primary detection: all conditions
+        const primaryDetection = leftWristInTorso && rightWristInTorso && 
+                                leftElbowOut && rightElbowOut && 
+                                leftWristInward && rightWristInward && armsBent;
+        
+        // Fallback detection: simpler "hands on hips" - just check if wrists are in torso area and elbows are out
+        const fallbackDetection = leftWristInTorso && rightWristInTorso && 
+                                 leftElbowOut && rightElbowOut;
+        
+        return primaryDetection || fallbackDetection;
     }
 
     checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose) {
@@ -562,8 +624,50 @@ class ExperienceApp {
         const pose = this.poseMapping.poses[poseName];
         console.log(`Pose data:`, pose);
 
+        // Use new imageMappings system first, fallback to old system
+        let buildingTexture = null;
+        let particleTexture = null;
+
+        if (this.poseMapping.imageMappings && this.poseMapping.imageMappings[poseName]) {
+            const mapping = this.poseMapping.imageMappings[poseName];
+            buildingTexture = mapping.building;
+            particleTexture = mapping.particle;
+            console.log(`Using imageMappings for ${poseName}:`, mapping);
+        }
+
         // Update building texture if building overlay is enabled
-        if (pose.textures && pose.textures.building && this.settings.buildingOverlayEnabled) {
+        if (buildingTexture && this.settings.buildingOverlayEnabled) {
+            const textureFile = `${buildingTexture}.png`;
+            const texturePath = `images/${textureFile}`;
+            
+            try {
+                this.textureImage = await this.textureManager.loadTexture(texturePath);
+                this.currentTexture = texturePath;
+                console.log(`Building texture loaded from mapping: ${textureFile}`);
+            } catch (error) {
+                console.warn('Failed to load texture from mapping:', textureFile, error);
+                this.currentTexture = null;
+                this.textureImage = null;
+            }
+
+            // Update debug display
+            this.updateDebugDisplay(null, buildingTexture, null);
+        } else if (buildingTexture === null) {
+            // Explicitly handle neutral pose - clear building texture
+            this.currentTexture = null;
+            this.textureImage = null; // Also clear the texture image
+            console.log(`🚫 Neutral pose detected - clearing building texture and textureImage`);
+            this.updateDebugDisplay(null, 'none', null);
+            
+            // Also notify PixiSpriteLayer to clear textures
+            const pixiSpriteLayer = this.layerManager.getLayer('pixiSprite');
+            if (pixiSpriteLayer) {
+                console.log('🔄 Notifying PixiSpriteLayer to clear textures for neutral pose');
+                // Force update the sprite layer with neutral pose
+                pixiSpriteLayer.currentPoseType = 'neutral';
+            }
+        } else if (pose.textures && pose.textures.building && this.settings.buildingOverlayEnabled) {
+            // Fallback to old system
             const buildingTextures = pose.textures.building;
             let textureFile = null;
 
@@ -581,12 +685,13 @@ class ExperienceApp {
             if (textureFile) {
                 const texturePath = `images/${textureFile}`;
                 try {
-                    await this.textureManager.loadTexture(texturePath);
+                    this.textureImage = await this.textureManager.loadTexture(texturePath);
                     this.currentTexture = texturePath;
                     console.log(`Building texture loaded: ${textureFile}`);
                 } catch (error) {
                     console.warn('Failed to load texture:', textureFile, error);
                     this.currentTexture = null;
+                    this.textureImage = null;
                 }
 
                 // Update debug display
@@ -595,13 +700,14 @@ class ExperienceApp {
             } else {
                 // No texture available (empty variants array)
                 this.currentTexture = null;
+                this.textureImage = null;
                 console.log('No building texture variants available, clearing texture');
                 this.updateDebugDisplay(null, 'none', null);
             }
         } else if (!this.settings.buildingOverlayEnabled) {
             // Clear building textures if building overlay is disabled
-            // Building layer removed
             this.currentTexture = null;
+            this.textureImage = null;
 
             // Update debug display
             this.updateDebugDisplay(null, 'none', null);
@@ -610,7 +716,37 @@ class ExperienceApp {
 
         // Update nature layer with variant support
         let selectedNatureOverlay = null;
-        if (pose.textures?.nature) {
+        
+        // Use new imageMappings system for particles if available
+        if (particleTexture) {
+            selectedNatureOverlay = {
+                image: this.poseMapping?.globalImages?.background || "mountain", // Use configured background
+                position: "bottom_third",
+                opacity: 1.0,
+                blendMode: "normal",
+                particles: {
+                    enabled: true,
+                    texture: `front-images/${particleTexture}.png`,
+                    // Use existing particle config from pose or defaults
+                    ...(pose.textures?.nature?.particles || {
+                        animationType: "floating",
+                        spawnRate: 3,
+                        maxParticles: 20,
+                        region: "bottom_third",
+                        speedMin: 2,
+                        speedMax: 8,
+                        lifetimeMin: 6.0,
+                        lifetimeMax: 10.0
+                    })
+                }
+            };
+            console.log(`Using particle texture from mapping: ${particleTexture}.png`);
+        } else if (particleTexture === null) {
+            // Explicitly handle neutral pose - no particles
+            selectedNatureOverlay = null;
+            console.log(`Neutral pose detected - clearing particles`);
+        } else if (pose.textures?.nature) {
+            // Fallback to old system
             const natureTextures = pose.textures.nature;
 
             // Handle both old and new format
@@ -635,7 +771,15 @@ class ExperienceApp {
         this.currentOverlay = selectedNatureOverlay || null;
 
         // Update debug display for nature
-        const natureName = this.currentOverlay?.image ? this.currentOverlay.image.replace('.png', '').replace('.jpg', '') : 'none';
+        let natureName = 'none';
+        if (particleTexture) {
+            natureName = particleTexture;
+        } else if (this.currentOverlay?.particles?.texture) {
+            const texturePath = this.currentOverlay.particles.texture;
+            natureName = texturePath.split('/').pop().replace('.png', '').replace('.jpg', '');
+        } else if (this.currentOverlay?.image) {
+            natureName = this.currentOverlay.image.replace('.png', '').replace('.jpg', '');
+        }
         this.updateDebugDisplay(null, null, natureName);
 
         const natureLayer = this.layerManager.getLayer('nature');
@@ -899,7 +1043,10 @@ class ExperienceApp {
 
 
     async applyRegularTexture(pixels, mask) {
-        if (!this.textureImage.complete) return;
+        if (!this.textureImage || !this.textureImage.complete) {
+            console.log('🚫 No textureImage available or not complete - skipping texture application');
+            return;
+        }
 
         // Calculate the bounding box of the detected contour
         const boundingBox = this.calculateContourBoundingBox(mask);
@@ -1165,7 +1312,7 @@ class ExperienceApp {
                         // Ensure we have a valid overlay
                         if (!this.currentOverlay || !this.currentOverlay.image) {
                             this.currentOverlay = {
-                                image: 'mountain.png',
+                                image: this.poseMapping?.globalImages?.background || 'mountain',
                                 opacity: 1.0,
                                 blendMode: 'normal'
                             };
@@ -1258,9 +1405,13 @@ class ExperienceApp {
                 poseMapping: !!this.poseMapping
             });
 
-            // Update PixiSpriteLayer with new configuration
+            // Update layers with new configuration
+            console.log('🔄 Updating layers with new configuration:', !!this.poseMapping?.globalImages);
             if (this.pixiSpriteLayer) {
                 this.pixiSpriteLayer.setPoseConfig(this.poseMapping);
+            }
+            if (this.backgroundLayer) {
+                this.backgroundLayer.setPoseConfig(this.poseMapping);
             }
 
             // Load settings from config
@@ -1281,7 +1432,7 @@ class ExperienceApp {
                 textures: {
                     nature: [
                         { file: 'matterhorn.jpeg', name: 'Matterhorn', country: 'switzerland' },
-                        { file: 'mountain.png', name: 'mountain Falls', country: 'brazil' }
+                        { file: 'mountain.jpeg', name: 'mountain Falls', country: 'brazil' }
                     ],
                     buildings: []
                 },
@@ -1289,19 +1440,19 @@ class ExperienceApp {
                     mountain: {
                         name: "Arms Up",
                         textures: {
-                            building: { variants: ["prime.png"] }
+                            building: { variants: ["prime"] }
                         }
                     },
                     jesus: {
                         name: "Arms Sides",
                         textures: {
-                            building: { variants: ["cristoredentor.png"] }
+                            building: { variants: ["cristoredentor"] }
                         }
                     },
                     warrior: {
                         name: "Warrior",
                         textures: {
-                            building: { variants: ["cristoredentor.png"] }
+                            building: { variants: ["cristoredentor"] }
                         }
                     },
                     neutral: {
@@ -1325,21 +1476,25 @@ class ExperienceApp {
     extractTexturePathsFromConfig(config) {
         const paths = [];
 
-        if (config.poses) {
-            Object.values(config.poses).forEach(pose => {
-                if (pose.textures?.building?.variants) {
-                    pose.textures.building.variants.forEach(variant => {
-                        paths.push(`images/${variant}`);
-                    });
+        // Extract from new imageMappings system first
+        if (config.imageMappings) {
+            Object.values(config.imageMappings).forEach(mapping => {
+                if (mapping.building) {
+                    paths.push(`images/${mapping.building}.png`);
                 }
-                if (pose.textures?.nature?.variants) {
-                    pose.textures.nature.variants.forEach(variant => {
-                        if (variant.image) {
-                            paths.push(`images/${variant.image}`);
-                        }
-                    });
+                if (mapping.particle) {
+                    paths.push(`front-images/${mapping.particle}.png`);
                 }
             });
+        }
+
+        // No fallback - only use imageMappings system
+
+        // Always include background image from globalImages
+        if (config.globalImages?.background) {
+            paths.push(`bg-images/${config.globalImages.background}.png`);
+        } else {
+            paths.push('bg-images/mountain.png'); // fallback
         }
 
         return [...new Set(paths)]; // Remove duplicates

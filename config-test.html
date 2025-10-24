@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Config Test</title>
+</head>
+<body>
+    <h1>Configuration Test</h1>
+    <div id='output'></div>
+    <script>
+        fetch('experience-config.json')
+            .then(response => response.json())
+            .then(config => {
+                const output = document.getElementById('output');
+                output.innerHTML = `
+                    <h2>✅ Configuration loaded successfully</h2>
+                    <p><strong>Available poses:</strong> ${config.availablePoses?.length || 0}</p>
+                    <p><strong>Image mappings:</strong> ${Object.keys(config.imageMappings || {}).length}</p>
+                    <p><strong>Global images:</strong> ${JSON.stringify(config.globalImages)}</p>
+                    <p><strong>Background path:</strong> bg-images/${config.globalImages?.background || 'mountain'}.png</p>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('output').innerHTML = `
+                    <h2>❌ Configuration failed to load</h2>
+                    <p>Error: ${error.message}</p>
+                `;
+            });
+    </script>
+</body>
+</html>
+
