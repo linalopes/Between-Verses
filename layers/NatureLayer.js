@@ -28,6 +28,9 @@ class NatureLayer extends LayerInterface {
             spawnRate: 4,
             maxParticles: 25,
             baseScale: 0.125,
+            // Optional simplified scaling (like BirdLayer): desired on-screen height in pixels
+            // When provided, particle scale = pixelHeight / textureHeight * baseScale (then jitter)
+            pixelHeight: null,
             scaleJitter: 0.35,
             speedMin: 2,
             speedMax: 8,
@@ -49,6 +52,32 @@ class NatureLayer extends LayerInterface {
     onInit() {
         console.log('NatureLayer initialized (with integrated particles)');
         this.pixiInitializationPromise = this.initializePixiParticles();
+    }
+
+    onResize(width, height) {
+        console.log('NatureLayer onResize:', width, 'x', height);
+
+        if (this.pixiApp && this.pixiApp.renderer) {
+            // Resize the PixiJS renderer
+            this.pixiApp.renderer.resize(width, height);
+
+            // Update canvas styling - use viewport units in fullscreen
+            if (this.pixiApp.canvas) {
+                const isFullscreen = !!document.fullscreenElement;
+                if (isFullscreen) {
+                    this.pixiApp.canvas.style.width = '100vw';
+                    this.pixiApp.canvas.style.height = '100vh';
+                } else {
+                    this.pixiApp.canvas.style.width = width + 'px';
+                    this.pixiApp.canvas.style.height = height + 'px';
+                }
+            }
+
+            // Clear region bounds cache so it recalculates with new dimensions
+            this.regionBounds = null;
+
+            console.log('✓ NatureLayer PixiJS resized to:', width, 'x', height);
+        }
     }
 
     async initializePixiParticles() {
@@ -268,8 +297,16 @@ class NatureLayer extends LayerInterface {
             sprite.blendMode = PIXI.BLEND_MODES.NORMAL;
         }
 
-        // Random scale
-        const scale = this.settings.baseScale * (1 + this.settings.scaleJitter * (Math.random() * 2 - 1));
+        // Scale: if pixelHeight is provided, compute from texture height; otherwise use baseScale
+        let scale;
+        if (this.settings.pixelHeight && this.texture) {
+            const naturalHeight = sprite.texture?.orig?.height || sprite.texture?.height || sprite.height;
+            const baseHeight = Math.max(1, naturalHeight);
+            const jitter = 1 + this.settings.scaleJitter * (Math.random() * 2 - 1);
+            scale = (this.settings.pixelHeight / baseHeight) * (this.settings.baseScale || 1) * jitter;
+        } else {
+            scale = this.settings.baseScale * (1 + this.settings.scaleJitter * (Math.random() * 2 - 1));
+        }
         sprite.scale.set(scale);
 
         // Set initial position based on animation type

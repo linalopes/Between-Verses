@@ -38,7 +38,7 @@ class LayerManager {
         this.updateRenderOrder();
 
         // Initialize layer with appropriate canvas
-        if (layer.name === 'overlay' || layer.name === 'nature') {
+        if (layer.name === 'overlay' || layer.name === 'nature' || layer.name === 'birds') {
             layer.init(this.overlayCanvas, this.overlayCtx);
         } else {
             layer.init(this.mainCanvas, this.mainCtx);
@@ -73,6 +73,28 @@ class LayerManager {
     updateRenderOrder() {
         this.renderOrder = Array.from(this.layers.values())
             .sort((a, b) => a.config.zIndex - b.config.zIndex);
+    }
+
+    /**
+     * Update canvas dimensions for all layers when resizing
+     */
+    updateCanvasDimensions(width, height) {
+        console.log('Updating canvas dimensions for all layers:', width, 'x', height);
+
+        // Update main canvas dimensions
+        this.mainCanvas.width = width;
+        this.mainCanvas.height = height;
+        this.overlayCanvas.width = width;
+        this.overlayCanvas.height = height;
+
+        // Force all layers to invalidate their caches
+        this.layers.forEach(layer => {
+            layer.invalidate();
+            // Clear any cached mountain data in BackgroundLayer
+            if (layer.name === 'background' && layer.mountainData) {
+                layer.mountainData = null;
+            }
+        });
     }
 
     /**

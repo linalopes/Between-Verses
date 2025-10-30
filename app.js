@@ -6,11 +6,11 @@ class ExperienceApp {
         // Make constants available globally
         window.STABLE_TIME = STABLE_TIME;
         this.canvas = document.getElementById('outputCanvas');
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
         // Separate overlay canvas for bottom third nature overlay
         this.overlayCanvas = document.getElementById('overlayCanvas');
-        this.overlayCtx = this.overlayCanvas.getContext('2d');
+        this.overlayCtx = this.overlayCanvas.getContext('2d', { willReadFrequently: true });
 
         // Layer System
         this.layerManager = new LayerManager(this.canvas, this.overlayCanvas);
@@ -82,6 +82,8 @@ class ExperienceApp {
             targetFPS: 60,
             adaptiveQuality: false // Start with fixed quality
         });
+        // Store original canvas resolution for fullscreen restore
+        this.originalCanvasResolution = null;
 
         // Initialize with no overlay - will be set by pose detection
         this.currentOverlay = null;
@@ -106,7 +108,6 @@ class ExperienceApp {
     async init() {
         try {
             await this.loadTextureConfig();
-            await this.loadPoseMapping();
             this.setupLayers();
             this.setupControls();
 
@@ -172,7 +173,7 @@ class ExperienceApp {
         });
 
         this.videoLayer.on('segmentation-results', (data) => {
-            console.log('📹 Segmentation results received:', !!data.mask, !!data.originalImage);
+            // Segmentation results received
             this.segmentationResults = data;
             this.renderFrame();
         });
@@ -204,8 +205,24 @@ class ExperienceApp {
             currentOverlay: this.currentOverlay
         });
 
+        // Create and configure bird layer
+        if (typeof BirdLayer === 'undefined') {
+            console.error('❌ BirdLayer class is not defined!');
+            return;
+        }
+
+        try {
+            this.birdLayer = new BirdLayer({
+                zIndex: 25, // Above nature layer
+                enabled: true
+            });
+            
+        } catch (error) {
+            console.error('❌ Failed to create BirdLayer:', error);
+            this.birdLayer = null;
+        }
+
         // Create and configure PixiJS sprite layer
-        console.log('About to create PixiSpriteLayer, class available:', typeof PixiSpriteLayer);
         if (typeof PixiSpriteLayer === 'undefined') {
             console.error('PixiSpriteLayer class is not defined!');
             return;
@@ -217,19 +234,24 @@ class ExperienceApp {
 
         // Pass configuration to layers after they're created
         if (this.poseMapping) {
-            console.log('🔧 Setting pose config on layers:', !!this.poseMapping.globalImages);
             this.pixiSpriteLayer.setPoseConfig(this.poseMapping);
             this.backgroundLayer.setPoseConfig(this.poseMapping);
         } else {
             console.warn('⚠️ No pose mapping available when setting up layers');
         }
-        console.log('PixiSpriteLayer created successfully:', !!this.pixiSpriteLayer);
+        
 
         // Add layers to manager
         this.layerManager.addLayer(this.videoLayer);      // Base layer - provides video input
         this.layerManager.addLayer(this.backgroundLayer);  // Segmentation and mountain backdrop
         this.layerManager.addLayer(this.pixiSpriteLayer);  // Building sprites
         this.layerManager.addLayer(this.natureLayer);      // Nature overlays and particles
+
+        if (this.birdLayer) {
+            this.layerManager.addLayer(this.birdLayer);        // Flying birds in top third
+        } else {
+            console.error('❌ BirdLayer is null, not adding to LayerManager');
+        }
 
         console.log('Layer system initialized: Video (input), Background (segmentation), PixiSprite (building), Nature (overlays)');
         
@@ -246,23 +268,55 @@ class ExperienceApp {
         this.renderOptimizer.startFrame();
 
         if (!this.segmentationResults) {
-            console.log('🔍 No segmentation results available for rendering');
             return;
         }
         
-        console.log('🎨 Rendering frame with segmentation data');
+        // Rendering frame
 
         const videoData = this.segmentationResults;
 
         // Draw base image to canvas
         this.ctx.save();
-        
+
         // Set a dark background instead of white
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         if (videoData.image) {
-            this.ctx.drawImage(videoData.image, 0, 0, this.canvas.width, this.canvas.height);
+            // Debug video scaling
+            const isFullscreen = !!document.fullscreenElement;
+            if (isFullscreen) {
+                console.log('🔍 Video scaling debug (FULLSCREEN):');
+                console.log('  Canvas size:', this.canvas.width, 'x', this.canvas.height);
+                console.log('  Video size:', videoData.image.width, 'x', videoData.image.height);
+            }
+
+            // Calculate aspect ratio and scaling for COVER mode (fill entire screen)
+            const videoAspect = videoData.image.width / videoData.image.height;
+            const canvasAspect = this.canvas.width / this.canvas.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            // Use cover mode: scale video to cover entire canvas
+            // We want the smallest scale that covers the entire canvas
+            const scaleX = this.canvas.width / videoData.image.width;
+            const scaleY = this.canvas.height / videoData.image.height;
+            const scale = Math.max(scaleX, scaleY); // Use larger scale to ensure coverage
+
+            drawWidth = videoData.image.width * scale;
+            drawHeight = videoData.image.height * scale;
+            offsetX = (this.canvas.width - drawWidth) / 2;
+            offsetY = (this.canvas.height - drawHeight) / 2;
+
+            if (isFullscreen) {
+                console.log('  Video aspect:', videoAspect.toFixed(3), 'Canvas aspect:', canvasAspect.toFixed(3));
+                console.log('  Scale factors - X:', scaleX.toFixed(3), 'Y:', scaleY.toFixed(3), 'Used:', scale.toFixed(3));
+                console.log('  Draw size:', Math.round(drawWidth), 'x', Math.round(drawHeight));
+                console.log('  Offset:', Math.round(offsetX), ',', Math.round(offsetY));
+            }
+
+            // Draw the video covering the entire canvas
+            this.ctx.drawImage(videoData.image, offsetX, offsetY, drawWidth, drawHeight);
         } else {
             console.warn('⚠️ No video image available');
         }
@@ -278,7 +332,23 @@ class ExperienceApp {
             maskCanvas.width = this.canvas.width;
             maskCanvas.height = this.canvas.height;
             const maskCtx = maskCanvas.getContext('2d');
-            maskCtx.drawImage(videoData.segmentationMask, 0, 0, this.canvas.width, this.canvas.height);
+
+            // Scale mask to match video cover scaling
+            if (videoData.image) {
+                const scaleX = this.canvas.width / videoData.image.width;
+                const scaleY = this.canvas.height / videoData.image.height;
+                const scale = Math.max(scaleX, scaleY); // Match video scaling
+
+                const drawWidth = videoData.image.width * scale;
+                const drawHeight = videoData.image.height * scale;
+                const offsetX = (this.canvas.width - drawWidth) / 2;
+                const offsetY = (this.canvas.height - drawHeight) / 2;
+
+                maskCtx.drawImage(videoData.segmentationMask, offsetX, offsetY, drawWidth, drawHeight);
+            } else {
+                maskCtx.drawImage(videoData.segmentationMask, 0, 0, this.canvas.width, this.canvas.height);
+            }
+
             maskData = maskCtx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
         }
 
@@ -318,7 +388,7 @@ class ExperienceApp {
 
         // Optional: Adjust quality based on performance
         if (frameTime > 33) { // > 30 FPS
-            console.warn('Frame time high:', frameTime + 'ms');
+            // Frame time monitoring disabled
         }
     }
 
@@ -337,12 +407,17 @@ class ExperienceApp {
         // Use centralized pose detector
         const detectedPose = this.poseDetector.detect(landmarks);
 
-        // Debug: Log detected pose changes
+        // Pose change handling
         if (detectedPose !== this.currentPose) {
-            console.log('✅ Pose changed:', this.currentPose, '→', detectedPose);
             this.currentPose = detectedPose;
             this.updateTextureForPose(detectedPose).catch(console.error);
             this.updateDebugDisplay(detectedPose); // Update debug display
+
+            // Trigger birds for new pose
+            if (this.birdLayer) {
+                this.birdLayer.setPose(detectedPose).catch(console.error);
+            }
+
             this.lastPoseUpdate = Date.now();
         }
     }
@@ -351,10 +426,7 @@ class ExperienceApp {
     // Pose detection methods moved to PoseDetector module
 
     async updateTextureForPose(poseName) {
-        console.log(`Updating texture for pose: ${poseName}`);
-        console.log(`🔧 Debug - poseMapping:`, !!this.poseMapping);
-        console.log(`🔧 Debug - poseMapping.poses:`, !!this.poseMapping?.poses);
-        console.log(`🔧 Debug - available poses:`, Object.keys(this.poseMapping?.poses || {}));
+        
 
         if (!this.poseMapping || !this.poseMapping.poses[poseName]) {
             console.warn(`Pose "${poseName}" not found in mapping`);
@@ -374,7 +446,7 @@ class ExperienceApp {
         }
 
         const pose = this.poseMapping.poses[poseName];
-        console.log(`Pose data:`, pose);
+        
 
         // Use new imageMappings system first, fallback to old system
         let buildingTexture = null;
@@ -384,7 +456,7 @@ class ExperienceApp {
             const mapping = this.poseMapping.imageMappings[poseName];
             buildingTexture = mapping.building;
             particleTexture = mapping.particle;
-            console.log(`Using imageMappings for ${poseName}:`, mapping);
+            
         }
 
         // Update building texture if building overlay is enabled
@@ -395,7 +467,6 @@ class ExperienceApp {
             try {
                 this.textureImage = await this.textureManager.loadTexture(texturePath);
                 this.currentTexture = texturePath;
-                console.log(`Building texture loaded from mapping: ${textureFile}`);
             } catch (error) {
                 console.warn('Failed to load texture from mapping:', textureFile, error);
                 this.currentTexture = null;
@@ -408,7 +479,6 @@ class ExperienceApp {
             // Explicitly handle neutral pose - clear building texture
             this.currentTexture = null;
             this.textureImage = null; // Also clear the texture image
-            console.log(`🚫 Neutral pose detected - clearing building texture and textureImage`);
             this.updateDebugDisplay(null, 'none', null);
             
             // Also notify PixiSpriteLayer to clear textures
@@ -428,7 +498,6 @@ class ExperienceApp {
                 // New variant format - randomly select from available options
                 const randomIndex = Math.floor(Math.random() * buildingTextures.variants.length);
                 textureFile = buildingTextures.variants[randomIndex];
-                console.log(`Selected building texture variant ${randomIndex + 1}/${buildingTextures.variants.length}: ${textureFile}`);
             } else if (buildingTextures.primary) {
                 // Legacy format support
                 textureFile = buildingTextures.primary;
@@ -439,7 +508,6 @@ class ExperienceApp {
                 try {
                     this.textureImage = await this.textureManager.loadTexture(texturePath);
                     this.currentTexture = texturePath;
-                    console.log(`Building texture loaded: ${textureFile}`);
                 } catch (error) {
                     console.warn('Failed to load texture:', textureFile, error);
                     this.currentTexture = null;
@@ -635,18 +703,18 @@ class ExperienceApp {
 
         // Only proceed if we have a current overlay (no hardcoded fallback)
         if (!this.currentOverlay) {
-            console.log('No nature overlay configured - skipping overlay rendering');
+            
             return;
         }
 
-        console.log(`Loading nature texture: ${this.currentOverlay.image}`);
+        
 
         // Create and load the overlay image
         const overlayImg = new Image();
         overlayImg.crossOrigin = 'anonymous';
 
         overlayImg.onload = () => {
-            console.log(`Image loaded successfully: ${overlayImg.width}x${overlayImg.height}`);
+            
 
             // Clear and render the final overlay
             this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
@@ -664,7 +732,7 @@ class ExperienceApp {
             );
 
             this.overlayCtx.restore();
-            console.log(`✓ Nature overlay rendered and persisted: ${this.currentOverlay.image}`);
+            
         };
 
         overlayImg.onerror = (e) => {
@@ -680,7 +748,7 @@ class ExperienceApp {
 
         // Try loading the image
         const imagePath = `images/${this.currentOverlay.image}`;
-        console.log(`Loading image from: ${imagePath}`);
+        
         overlayImg.src = imagePath;
     }
 
@@ -1011,17 +1079,38 @@ class ExperienceApp {
 
             // Enable the layer initially since checkbox is checked
             if (this.pixiSpriteLayer) {
-                console.log('🔧 Enabling PixiJS sprite layer initially...');
                 this.pixiSpriteLayer.setEnabled(true);
             }
 
             pixiMeshesCheckbox.addEventListener('change', () => {
                 const isEnabled = pixiMeshesCheckbox.checked;
-                console.log('PixiJS sprite layer enabled:', isEnabled);
+                
 
                 // Enable/disable the PixiJS sprite layer
                 if (this.pixiSpriteLayer) {
                     this.pixiSpriteLayer.setEnabled(isEnabled);
+                }
+            });
+        }
+
+        // Bird layer checkbox
+        const birdLayerCheckbox = document.getElementById('birdLayer');
+        if (birdLayerCheckbox) {
+            // Set initial state
+            birdLayerCheckbox.checked = true;
+
+            // Enable the layer initially since checkbox is checked
+            if (this.birdLayer) {
+                this.birdLayer.setEnabled(true);
+            }
+
+            birdLayerCheckbox.addEventListener('change', () => {
+                const isEnabled = birdLayerCheckbox.checked;
+                
+
+                // Enable/disable the BirdLayer
+                if (this.birdLayer) {
+                    this.birdLayer.setEnabled(isEnabled);
                 }
             });
         }
@@ -1112,6 +1201,36 @@ class ExperienceApp {
             poseLandmarksCheckbox.addEventListener('change', () => {
                 this.togglePixiDebug(poseLandmarksCheckbox.checked);
             });
+
+            // Insert Bird Region Overlay toggle just below tracking visualization controls
+            const parent = poseLandmarksCheckbox.closest('label')?.parentElement || poseLandmarksCheckbox.parentElement || document.querySelector('.sidebar') || document.body;
+            const wrapper = document.createElement('div');
+            wrapper.style.marginTop = '6px';
+
+            const label = document.createElement('label');
+            label.style.display = 'flex';
+            label.style.alignItems = 'center';
+            label.style.gap = '6px';
+
+            const birdOverlayCheckbox = document.createElement('input');
+            birdOverlayCheckbox.type = 'checkbox';
+            birdOverlayCheckbox.id = 'birdDebugOverlay';
+            birdOverlayCheckbox.checked = false;
+
+            const span = document.createElement('span');
+            span.textContent = 'Bird Region Overlay';
+
+            label.appendChild(birdOverlayCheckbox);
+            label.appendChild(span);
+            wrapper.appendChild(label);
+            parent.appendChild(wrapper);
+
+            birdOverlayCheckbox.addEventListener('change', () => {
+                const enabled = birdOverlayCheckbox.checked;
+                if (this.birdLayer) {
+                    this.birdLayer.setDebugEnabled(enabled);
+                }
+            });
         }
 
         // Mesh wireframe control removed
@@ -1157,51 +1276,8 @@ class ExperienceApp {
             await this.textureManager.preloadTextures(texturesToPreload);
             console.log('✅ Textures preloaded successfully');
         } catch (error) {
-            console.error('Failed to load experience config:', error);
-            // Fallback to default configuration with proper poses
-            this.textureConfig = {
-                textures: {
-                    nature: [
-                        { file: 'matterhorn.jpeg', name: 'Matterhorn', country: 'switzerland' },
-                        { file: 'mountain.jpeg', name: 'mountain Falls', country: 'brazil' }
-                    ],
-                    buildings: []
-                },
-                poses: {
-                    mountain: {
-                        name: "Arms Up",
-                        textures: {
-                            building: { variants: ["prime"] }
-                        }
-                    },
-                    jesus: {
-                        name: "Arms Sides",
-                        textures: {
-                            building: { variants: ["cristoredentor"] }
-                        }
-                    },
-                    warrior: {
-                        name: "Warrior",
-                        textures: {
-                            building: { variants: ["cristoredentor"] }
-                        }
-                    },
-                    neutral: {
-                        name: "Neutral",
-                        textures: {
-                            building: { variants: [] }
-                        }
-                    }
-                },
-                settings: {}
-            };
-            this.poseMapping = this.textureConfig;
+            console.error('Failed to load experience config:', error);     
         }
-    }
-
-    async loadPoseMapping() {
-        // No longer needed as it's part of the unified config
-        // This method is kept for compatibility but does nothing
     }
 
     extractTexturePathsFromConfig(config) {
@@ -1252,6 +1328,11 @@ class ExperienceApp {
 
         // Trigger texture mapping for this pose
         this.applyPoseTextures(poseType);
+
+        // Trigger birds for simulated pose
+        if (this.birdLayer) {
+            this.birdLayer.setPose(poseType).catch(console.error);
+        }
 
         console.log(`Simulating pose: ${poseType} - Auto tracking disabled`);
     }
@@ -1343,8 +1424,11 @@ class ExperienceApp {
             if (fullscreenBtn) fullscreenBtn.innerHTML = '📱 Exit Fullscreen';
             if (sidebar) sidebar.style.transform = 'translateX(-100%)';
 
-            // Scale canvas to fit screen
-            this.scaleCanvasForFullscreen();
+            // Wait a bit for fullscreen to stabilize, then scale canvas
+            setTimeout(() => {
+                console.log('🔄 Delayed fullscreen scaling after 100ms');
+                this.scaleCanvasForFullscreen();
+            }, 100);
         } else {
             // Restore normal view
             if (fullscreenBtn) fullscreenBtn.innerHTML = '📺 Fullscreen';
@@ -1391,30 +1475,140 @@ class ExperienceApp {
             }
         };
 
-        // Scale to screen size while maintaining aspect ratio
-        const scaleX = window.innerWidth / canvas.width;
-        const scaleY = window.innerHeight / canvas.height;
-        const scale = Math.min(scaleX, scaleY);
-
-        const scaledWidth = canvas.width * scale;
-        const scaledHeight = canvas.height * scale;
-
-        // Position video container for fullscreen
-        if (videoContainer) {
-            videoContainer.style.position = 'fixed';
-            videoContainer.style.top = '50%';
-            videoContainer.style.left = '50%';
-            videoContainer.style.transform = 'translate(-50%, -50%)';
-            videoContainer.style.width = `${scaledWidth}px`;
-            videoContainer.style.height = `${scaledHeight}px`;
-            videoContainer.style.zIndex = '1000';
+        // Save original pixel resolution once
+        if (!this.originalCanvasResolution) {
+            this.originalCanvasResolution = { width: canvas.width, height: canvas.height };
         }
 
-        // Scale canvases
-        canvas.style.width = `${scaledWidth}px`;
-        canvas.style.height = `${scaledHeight}px`;
-        overlayCanvas.style.width = `${scaledWidth}px`;
-        overlayCanvas.style.height = `${scaledHeight}px`;
+        // Get actual fullscreen viewport dimensions (not screen dimensions)
+        const fullscreenWidth = window.innerWidth;
+        const fullscreenHeight = window.innerHeight;
+
+        console.log('🔍 Fullscreen scaling debug:');
+        console.log('  Screen dimensions:', screen.width, 'x', screen.height);
+        console.log('  Window viewport dimensions:', window.innerWidth, 'x', window.innerHeight);
+        console.log('  Document element dimensions:', document.documentElement.clientWidth, 'x', document.documentElement.clientHeight);
+        console.log('  Canvas current size:', canvas.width, 'x', canvas.height);
+        console.log('  Using fullscreen dimensions:', fullscreenWidth, 'x', fullscreenHeight);
+
+        // Try multiple detection methods
+        const altWidth = document.documentElement.clientWidth;
+        const altHeight = document.documentElement.clientHeight;
+        if (altWidth !== fullscreenWidth || altHeight !== fullscreenHeight) {
+            console.log('⚠️ Alternative dimensions:', altWidth, 'x', altHeight);
+        }
+
+        // Ensure page allows full viewport usage
+        document.documentElement.style.height = '100%';
+        document.body.style.height = '100%';
+        document.body.style.overflow = 'hidden';
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+
+        // Make container cover the full screen
+        if (videoContainer) {
+            videoContainer.style.position = 'fixed';
+            videoContainer.style.top = '0';
+            videoContainer.style.left = '0';
+            videoContainer.style.width = '100vw';
+            videoContainer.style.height = '100vh';
+            videoContainer.style.transform = 'none';
+            videoContainer.style.margin = '0';
+            videoContainer.style.padding = '0';
+            videoContainer.style.borderRadius = '0';
+            videoContainer.style.overflow = 'hidden';
+            videoContainer.style.zIndex = '1000';
+            videoContainer.style.display = 'block';
+            videoContainer.style.backgroundColor = '#000000';
+        }
+
+        // Also resize the PixiJS container to fill the screen
+        const pixiContainer = document.getElementById('pixiContainer');
+        if (pixiContainer) {
+            pixiContainer.style.width = '100%';
+            pixiContainer.style.height = '100%';
+        }
+
+        // Use screen dimensions for true fullscreen
+        canvas.width = fullscreenWidth;
+        canvas.height = fullscreenHeight;
+        overlayCanvas.width = fullscreenWidth;
+        overlayCanvas.height = fullscreenHeight;
+
+        // Make canvases fill viewport visually and be at top-left
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.margin = '0';
+        canvas.style.padding = '0';
+        canvas.style.transform = 'none';
+
+        overlayCanvas.style.position = 'fixed';
+        overlayCanvas.style.top = '0';
+        overlayCanvas.style.left = '0';
+        overlayCanvas.style.width = '100vw';
+        overlayCanvas.style.height = '100vh';
+        overlayCanvas.style.margin = '0';
+        overlayCanvas.style.padding = '0';
+        overlayCanvas.style.transform = 'none';
+
+        // Update all layer canvas dimensions for proper scaling
+        if (this.layerManager && typeof this.layerManager.updateCanvasDimensions === 'function') {
+            this.layerManager.updateCanvasDimensions(canvas.width, canvas.height);
+        } else {
+            console.warn('LayerManager.updateCanvasDimensions not available, using fallback');
+            // Fallback: directly update canvas dimensions
+            if (this.layerManager) {
+                this.layerManager.mainCanvas.width = canvas.width;
+                this.layerManager.mainCanvas.height = canvas.height;
+                this.layerManager.overlayCanvas.width = canvas.width;
+                this.layerManager.overlayCanvas.height = canvas.height;
+
+                // Invalidate all layers
+                this.layerManager.layers.forEach(layer => {
+                    if (layer.invalidate) layer.invalidate();
+                    if (layer.name === 'background' && layer.mountainData) {
+                        layer.mountainData = null;
+                    }
+                });
+            }
+        }
+
+        // Notify all PixiJS layers to resize
+        try {
+            const birds = this.layerManager.getLayer('birds');
+            if (birds && typeof birds.onResize === 'function') {
+                birds.onResize(fullscreenWidth, fullscreenHeight);
+            }
+        } catch (e) { console.warn('BirdLayer resize failed:', e); }
+
+        try {
+            const nature = this.layerManager.getLayer('nature');
+            if (nature && typeof nature.onResize === 'function') {
+                nature.onResize(fullscreenWidth, fullscreenHeight);
+            }
+        } catch (e) { console.warn('NatureLayer resize failed:', e); }
+
+        // Resize PixiSpriteLayer using onResize method
+        try {
+            if (this.pixiSpriteLayer && typeof this.pixiSpriteLayer.onResize === 'function') {
+                this.pixiSpriteLayer.onResize(fullscreenWidth, fullscreenHeight);
+            }
+        } catch (e) { console.warn('PixiSpriteLayer resize failed:', e); }
+
+        // Notify video layer if it supports resize
+        try {
+            if (this.videoLayer && typeof this.videoLayer.onResize === 'function') {
+                this.videoLayer.onResize(canvas.width, canvas.height);
+            }
+        } catch (e) { /* ignore */ }
+
+        // Force one render to refresh visuals after resize
+        try {
+            this.layerManager.render({}, performance.now());
+        } catch (e) { /* ignore */ }
     }
 
     restoreCanvasSize() {
@@ -1462,6 +1656,82 @@ class ExperienceApp {
                 videoContainer.style.zIndex = '';
             }
         }
+
+        // Restore original pixel resolution
+        const orig = this.originalCanvasResolution;
+        if (orig) {
+            canvas.width = orig.width;
+            canvas.height = orig.height;
+            overlayCanvas.width = orig.width;
+            overlayCanvas.height = orig.height;
+        }
+
+        // Clear fullscreen-specific canvas CSS
+        canvas.style.position = '';
+        canvas.style.top = '';
+        canvas.style.left = '';
+        canvas.style.width = '';
+        canvas.style.height = '';
+
+        overlayCanvas.style.position = '';
+        overlayCanvas.style.top = '';
+        overlayCanvas.style.left = '';
+        overlayCanvas.style.width = '';
+        overlayCanvas.style.height = '';
+
+        // Restore document/body scroll
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.height = '';
+
+        // Update all layers with restored dimensions
+        if (this.layerManager && typeof this.layerManager.updateCanvasDimensions === 'function') {
+            this.layerManager.updateCanvasDimensions(canvas.width, canvas.height);
+        } else {
+            console.warn('LayerManager.updateCanvasDimensions not available in restore, using fallback');
+            // Fallback: directly update canvas dimensions
+            if (this.layerManager) {
+                this.layerManager.mainCanvas.width = canvas.width;
+                this.layerManager.mainCanvas.height = canvas.height;
+                this.layerManager.overlayCanvas.width = canvas.width;
+                this.layerManager.overlayCanvas.height = canvas.height;
+
+                // Invalidate all layers
+                this.layerManager.layers.forEach(layer => {
+                    if (layer.invalidate) layer.invalidate();
+                    if (layer.name === 'background' && layer.mountainData) {
+                        layer.mountainData = null;
+                    }
+                });
+            }
+        }
+
+        // Notify all PixiJS layers after restore
+        try {
+            const birds = this.layerManager.getLayer('birds');
+            if (birds && typeof birds.onResize === 'function') {
+                birds.onResize(canvas.width, canvas.height);
+            }
+        } catch (e) { console.warn('BirdLayer resize failed (restore):', e); }
+
+        try {
+            const nature = this.layerManager.getLayer('nature');
+            if (nature && typeof nature.onResize === 'function') {
+                nature.onResize(canvas.width, canvas.height);
+            }
+        } catch (e) { console.warn('NatureLayer resize failed (restore):', e); }
+
+        // Resize PixiSpriteLayer back using onResize method
+        try {
+            if (this.pixiSpriteLayer && typeof this.pixiSpriteLayer.onResize === 'function') {
+                this.pixiSpriteLayer.onResize(canvas.width, canvas.height);
+            }
+        } catch (e) { console.warn('PixiSpriteLayer resize failed (restore):', e); }
+
+        // Force one render after restore
+        try {
+            this.layerManager.render({}, performance.now());
+        } catch (e) { /* ignore */ }
     }
 
 
@@ -1532,6 +1802,20 @@ class ExperienceApp {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Loading optimized ExperienceApp (all optimizations integrated)');
     window.experienceApp = new ExperienceApp();
+
+    // Add bird test method for debugging
+    window.testBirds = () => {
+        console.log('🧪 testBirds() called');
+        console.log('🔍 experienceApp available:', !!window.experienceApp);
+        console.log('🔍 birdLayer available:', !!window.experienceApp?.birdLayer);
+        if (window.experienceApp?.birdLayer) {
+            console.log('🔍 Calling birdLayer.testBirds()...');
+            window.experienceApp.birdLayer.testBirds();
+        } else {
+            console.log('❌ BirdLayer not available on experienceApp');
+            console.log('🔍 Available properties:', Object.keys(window.experienceApp || {}));
+        }
+    };
 
     // Add debugging tools to window
     window.debugPerformance = () => {

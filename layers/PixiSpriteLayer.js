@@ -4,7 +4,7 @@
  */
 class PixiSpriteLayer extends LayerInterface {
     constructor(config = {}) {
-        console.log('PixiSpriteLayer constructor called');
+        
         super('pixiSprite', {
             zIndex: 15, // Above nature layer but below UI
             alwaysRender: true, // Always render to update sprite positions
@@ -44,7 +44,7 @@ class PixiSpriteLayer extends LayerInterface {
     // Method to update pose configuration from segmentation
     setPoseConfig(poseConfig) {
         this.config.poseConfig = poseConfig;
-        console.log('PixiSpriteLayer: Pose configuration updated');
+        
     }
 
     // Get texture file for a given pose from configuration
@@ -55,18 +55,13 @@ class PixiSpriteLayer extends LayerInterface {
             return null;
         }
 
-        console.log(`🔍 getTextureForPose("${poseType}") - checking imageMappings:`, !!this.config.poseConfig.imageMappings);
-
         // Use imageMappings system
         if (this.config.poseConfig.imageMappings && this.config.poseConfig.imageMappings[poseType]) {
             const mapping = this.config.poseConfig.imageMappings[poseType];
-            console.log(`🔍 Found mapping for "${poseType}":`, mapping);
             if (mapping.building) {
                 const texturePath = `images/${mapping.building}.png`;
-                console.log(`🔍 Returning texture path: ${texturePath}`);
                 return texturePath;
             } else {
-                console.log(`🔍 Mapping found but building is null for "${poseType}" - returning null`);
                 return null;
             }
         }
@@ -74,7 +69,7 @@ class PixiSpriteLayer extends LayerInterface {
         // Fallback to globalImages default
         if (this.config.poseConfig.globalImages?.defaultBuilding) {
             const fallbackPath = `images/${this.config.poseConfig.globalImages.defaultBuilding}.png`;
-            console.log(`🔍 Using fallback texture: ${fallbackPath}`);
+            
             return fallbackPath;
         }
 
@@ -83,23 +78,22 @@ class PixiSpriteLayer extends LayerInterface {
     }
 
     onInit() {
-        console.log('PixiSpriteLayer onInit() called');
-        console.log('PixiSpriteLayer enabled state:', this.enabled);
+        
         this.setupPixiApp();
 
         // Debug: Set up interval to check if this layer is being called
-        setInterval(() => {
-            console.log('🔍 PixiSpriteLayer status check:', {
-                enabled: this.enabled,
-                renderCallCount: this.renderCallCount || 0,
-                pixiAppExists: !!this.pixiApp
-            });
-        }, 3000); // Every 3 seconds
+        // setInterval(() => {
+        //     console.log('🔍 PixiSpriteLayer status check:', {
+        //         enabled: this.enabled,
+        //         renderCallCount: this.renderCallCount || 0,
+        //         pixiAppExists: !!this.pixiApp
+        //     });
+        // }, 3000); // Every 3 seconds
     }
 
     async setupPixiApp() {
         if (this.pixiApp) {
-            console.log('PixiJS app already exists');
+            
             return;
         }
 
@@ -134,27 +128,21 @@ class PixiSpriteLayer extends LayerInterface {
             this.pixiApp.canvas.style.pointerEvents = 'none';
             this.pixiApp.canvas.style.opacity = '1.0'; // Ensure full opacity
 
-            console.log('✅ PixiJS canvas positioned and styled');
+            
 
             // Create test sprite
             this.createTestSprite().catch(error => {
                 console.error('Failed to create test sprite:', error);
             });
-            console.log('Test sprite creation initiated');
+            
 
-            console.log('✓ PixiJS application created successfully');
-            console.log('📊 PixiJS app details:', {
-                width: this.pixiApp.screen.width,
-                height: this.pixiApp.screen.height,
-                canvas: !!this.pixiApp.canvas,
-                stage: !!this.pixiApp.stage
-            });
+            
 
             // Start render loop
             this.pixiApp.ticker.add(() => {
                 // Ensures the stage is rendered every frame
             });
-            console.log('✓ PixiJS render loop started');
+            
 
         } catch (error) {
             console.error('Failed to create PixiJS application:', error);
@@ -175,9 +163,6 @@ class PixiSpriteLayer extends LayerInterface {
                 console.log(`📍 [${ts}] PixiSpriteLayer received pose: "${this.lastLoggedPoseType}" → "${poseType}"`);
                 this.lastLoggedPoseType = poseType;
                 
-                // Debug texture mapping for this pose
-                const targetTexture = this.getTextureForPose(poseType);
-                console.log(`🔍 PixiSpriteLayer texture lookup for "${poseType}": ${targetTexture}`);
             }
 
             // Apply pose effects (sprite scaling/positioning and texture switching)
@@ -185,18 +170,18 @@ class PixiSpriteLayer extends LayerInterface {
         }
 
         if (!this.pixiApp) {
-            console.log('PixiJS app not ready, attempting setup...');
+            
             await this.setupPixiApp();
             if (!this.pixiApp) {
-                console.log('PixiJS setup failed');
+                
                 return false;
             }
-            console.log('PixiJS setup completed successfully');
+            
         }
 
         // If sprites are empty, try to create test sprite
         if (this.sprites.size === 0) {
-            console.log('No sprites found, creating test sprite...');
+            
             this.createTestSprite().catch(error => {
                 console.error('Failed to create test sprite:', error);
             });
@@ -221,6 +206,29 @@ class PixiSpriteLayer extends LayerInterface {
         }
     }
 
+    onResize(width, height) {
+        console.log('PixiSpriteLayer onResize:', width, 'x', height);
+
+        if (this.pixiApp && this.pixiApp.renderer) {
+            // Resize the PixiJS renderer
+            this.pixiApp.renderer.resize(width, height);
+
+            // Update canvas styling - use viewport units in fullscreen
+            if (this.pixiApp.canvas) {
+                const isFullscreen = !!document.fullscreenElement;
+                if (isFullscreen) {
+                    this.pixiApp.canvas.style.width = '100vw';
+                    this.pixiApp.canvas.style.height = '100vh';
+                } else {
+                    this.pixiApp.canvas.style.width = width + 'px';
+                    this.pixiApp.canvas.style.height = height + 'px';
+                }
+            }
+
+            console.log('✓ PixiSpriteLayer PixiJS resized to:', width, 'x', height);
+        }
+    }
+
     updatePixiSize() {
         if (!this.pixiApp) return;
 
@@ -231,9 +239,11 @@ class PixiSpriteLayer extends LayerInterface {
         const containerWidth = pixiContainer.clientWidth;
         const containerHeight = pixiContainer.clientHeight;
 
-        if (this.pixiApp.renderer.width !== containerWidth || this.pixiApp.renderer.height !== containerHeight) {
+        // Only resize if container has valid dimensions and they don't match current renderer size
+        if (containerWidth > 0 && containerHeight > 0 &&
+            (this.pixiApp.renderer.width !== containerWidth || this.pixiApp.renderer.height !== containerHeight)) {
             this.pixiApp.renderer.resize(containerWidth, containerHeight);
-            console.log(`PixiJS resized to ${containerWidth}x${containerHeight}`);
+            console.log('PixiSpriteLayer auto-resized to container:', containerWidth, 'x', containerHeight);
         }
     }
 
@@ -249,7 +259,7 @@ class PixiSpriteLayer extends LayerInterface {
 
         // Check if sprites exist, if not create them
         if (this.sprites.size === 0) {
-            console.log('No sprites found in updateSpritesFromPoses, creating test sprite...');
+            
             this.createTestSprite().catch(error => {
                 console.error('Failed to create test sprite:', error);
             });
@@ -270,7 +280,7 @@ class PixiSpriteLayer extends LayerInterface {
 
         // Log pose changes
         if (!this.currentPoseType || this.currentPoseType !== poseType) {
-            console.log(`Pose changed: ${this.currentPoseType} → ${poseType}`);
+           // console.log(`Pose changed: ${this.currentPoseType} → ${poseType}`);
             this.currentPoseType = poseType;
         }
 
@@ -336,7 +346,7 @@ class PixiSpriteLayer extends LayerInterface {
 
         // If pose changed, start stability timer
         if (this.lastPoseType.get(spriteId) !== poseType) {
-            console.log(`⏱️ [${timestamp}] Pose change detected: "${this.lastPoseType.get(spriteId)}" → "${poseType}" - Starting 500ms stability timer`);
+           // console.log(`⏱️ [${timestamp}] Pose change detected: "${this.lastPoseType.get(spriteId)}" → "${poseType}" - Starting 500ms stability timer`);
             this.lastPoseType.set(spriteId, poseType);
             this.poseChangeTime = now;
             return; // Wait for pose to stabilize
@@ -347,7 +357,7 @@ class PixiSpriteLayer extends LayerInterface {
         if (poseStableTime < window.STABLE_TIME) {
             // Log every 200ms to show progress
             if (Math.floor(poseStableTime / 200) !== Math.floor((poseStableTime - 16) / 200)) {
-                console.log(`⏳ [${timestamp}] Pose "${poseType}" stable for ${Math.floor(poseStableTime)}ms / 500ms`);
+               // console.log(`⏳ [${timestamp}] Pose "${poseType}" stable for ${Math.floor(poseStableTime)}ms / 500ms`);
             }
             return; // Pose not stable yet
         }
@@ -367,7 +377,7 @@ class PixiSpriteLayer extends LayerInterface {
                 // Check if we need to change texture
                 const currentTexturePath = this.currentSpriteTextures.get(spriteId);
                 if (currentTexturePath !== targetTexture) {
-                    console.log(`🔄 Switching from ${currentTexturePath} to ${poseType} texture: ${targetTexture}`);
+                    
 
                     this.currentSpriteTextures.set(spriteId, targetTexture);
                     this.lastTextureChange.set(spriteId, now);
@@ -379,7 +389,7 @@ class PixiSpriteLayer extends LayerInterface {
                             // Size is controlled by landmark-based scaling
                             sprite.visible = true;
                             sprite.alpha = 1.0;
-                            console.log(`✅ Applied ${poseType} texture to sprite`);
+                            
                         }
                     }).catch(error => {
                         console.warn('Failed to load texture:', targetTexture, error);
@@ -396,7 +406,7 @@ class PixiSpriteLayer extends LayerInterface {
                 // No texture configured (e.g., neutral pose) - hide the sprite
                 sprite.visible = false;
                 sprite.alpha = 0.0;
-                console.log(`🚫 No texture configured for pose ${poseType} - hiding sprite`);
+                // Hide sprite for unconfigured poses
             }
         }
     }
@@ -439,13 +449,13 @@ class PixiSpriteLayer extends LayerInterface {
             const clampedWidth = Math.max(minWidth, Math.min(maxWidth, targetSpriteWidth));
 
             // Debug logging for scaling
-            console.log(`🔍 Sprite scaling debug:`, {
-                shoulderWidth: Math.round(shoulderWidth),
-                scaleFactor: this.spriteConfig.scaleFactor,
-                targetWidth: Math.round(targetSpriteWidth),
-                clampedWidth: Math.round(clampedWidth),
-                minWidth, maxWidth
-            });
+            // console.log(`🔍 Sprite scaling debug:`, {
+            //     shoulderWidth: Math.round(shoulderWidth),
+            //     scaleFactor: this.spriteConfig.scaleFactor,
+            //     targetWidth: Math.round(targetSpriteWidth),
+            //     clampedWidth: Math.round(clampedWidth),
+            //     minWidth, maxWidth
+            // });
 
 
             // Apply smoothing for stable positioning
@@ -600,7 +610,7 @@ class PixiSpriteLayer extends LayerInterface {
 
     async createTestSprite() {
         try {
-            console.log('🔧 Creating building sprite...');
+            //console.log('🔧 Creating building sprite...');
 
             // Create sprite with a transparent texture (no visible placeholder)
             const emptyTexture = PIXI.Texture.EMPTY; // Use built-in transparent texture as placeholder
