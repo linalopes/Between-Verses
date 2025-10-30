@@ -29,7 +29,7 @@
         if (typeof BirdLayer !== 'undefined') {
             try {
                 log('Step 3: Attempting to create BirdLayer...');
-                const testBird = new BirdLayer();
+                new BirdLayer();
                 log('✅ BirdLayer created successfully!');
             } catch (error) {
                 log('❌ Error creating BirdLayer: ' + error.message);
