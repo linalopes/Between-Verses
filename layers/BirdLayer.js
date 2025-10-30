@@ -487,7 +487,6 @@ class BirdLayer extends LayerInterface {
     }
 
     updateExistingBirds(dt) {
-        const bounds = this.regionBounds;
 
         for (let i = this.birds.length - 1; i >= 0; i--) {
             const sprite = this.birds[i];
