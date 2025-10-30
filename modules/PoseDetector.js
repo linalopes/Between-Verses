@@ -202,17 +202,17 @@ class PoseDetector {
         const rightAngle = this.calculateAngle(pts.rightWrist, pts.rightElbow, pts.rightShoulder);
         const armsBent = leftAngle < 160 && rightAngle < 160 && leftAngle > 40 && rightAngle > 40;
 
-        // Debug logging (remove in production)
-        if (leftWristInTorso && rightWristInTorso) {
-            console.log('🔍 Rounded pose debug:', {
-                leftWristInTorso, rightWristInTorso,
-                leftElbowOut, rightElbowOut,
-                leftWristInward, rightWristInward,
-                armsBent,
-                leftAngle: leftAngle.toFixed(1),
-                rightAngle: rightAngle.toFixed(1)
-            });
-        }
+        // // Debug logging (remove in production)
+        // if (leftWristInTorso && rightWristInTorso) {
+        //     console.log('🔍 Rounded pose debug:', {
+        //         leftWristInTorso, rightWristInTorso,
+        //         leftElbowOut, rightElbowOut,
+        //         leftWristInward, rightWristInward,
+        //         armsBent,
+        //         leftAngle: leftAngle.toFixed(1),
+        //         rightAngle: rightAngle.toFixed(1)
+        //     });
+        // }
 
         // Primary detection: all conditions
         const primaryDetection = leftWristInTorso && rightWristInTorso && 

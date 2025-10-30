@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BirdLayer Debug Test</title>
+</head>
+<body>
+    <h1>BirdLayer Loading Test</h1>
+    <div id="output"></div>
+
+    <script>
+        console.log('🔍 Starting BirdLayer debug test...');
+
+        function log(message) {
+            console.log(message);
+            document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+        }
+
+        log('Step 1: Testing basic JavaScript');
+    </script>
+
+    <script src="layers/LayerInterface.js"></script>
+    <script src="layers/BirdLayer.js"></script>
+
+    <script>
+        log('Step 2: Scripts loaded, checking classes...');
+        log('LayerInterface available: ' + (typeof LayerInterface !== 'undefined'));
+        log('BirdLayer available: ' + (typeof BirdLayer !== 'undefined'));
+
+        if (typeof BirdLayer !== 'undefined') {
+            try {
+                log('Step 3: Attempting to create BirdLayer...');
+                const testBird = new BirdLayer();
+                log('✅ BirdLayer created successfully!');
+            } catch (error) {
+                log('❌ Error creating BirdLayer: ' + error.message);
+            }
+        } else {
+            log('❌ BirdLayer class not defined');
+        }
+    </script>
+</body>
+</html>
