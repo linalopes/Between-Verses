@@ -467,7 +467,7 @@ class BirdLayer extends LayerInterface {
         const data = {
             type: birdType,
             age: 0,
-            life: 30, // TEST: 30 seconds lifetime instead of random
+            life: Utils.lerp(this.settings.lifetimeMin, this.settings.lifetimeMax, Math.random()),
             wingPhase: Math.random() * Math.PI * 2,
             wingFlapSpeed: this.settings.wingFlapFreq * birdConfig.wingFlap,
 
