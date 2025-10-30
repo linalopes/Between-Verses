@@ -67,9 +67,12 @@ class ExperienceApp {
         });
         this.textureImage = null;
 
-        // Pose detection throttling
-        this.lastPoseDetection = 0;
-        this.poseDetectionInterval = 100; // ms
+        // Initialize centralized pose detector
+        this.poseDetector = new PoseDetector({
+            stableTime: STABLE_TIME,
+            throttleMs: 100,
+            minConfidence: 0.3
+        });
 
         // Event listener cleanup
         this.eventHandlers = [];
@@ -320,14 +323,6 @@ class ExperienceApp {
     }
 
     detectPose() {
-        const now = Date.now();
-
-        // Throttle pose detection
-        if (now - this.lastPoseDetection < this.poseDetectionInterval) {
-            return;
-        }
-        this.lastPoseDetection = now;
-
         // If pose detection is disabled or we're simulating a pose, don't run actual detection
         if (!this.poseDetectionEnabled || this.isSimulatingPose) {
             return;
@@ -339,264 +334,21 @@ class ExperienceApp {
 
         const landmarks = this.poses[0].poseLandmarks;
 
-        // Get key landmark positions (MediaPipe pose landmarks)
-        const leftShoulder = landmarks[11];  // LEFT_SHOULDER
-        const rightShoulder = landmarks[12]; // RIGHT_SHOULDER
-        const leftElbow = landmarks[13];     // LEFT_ELBOW
-        const rightElbow = landmarks[14];    // RIGHT_ELBOW
-        const leftWrist = landmarks[15];     // LEFT_WRIST
-        const rightWrist = landmarks[16];    // RIGHT_WRIST
-        const leftHip = landmarks[23];       // LEFT_HIP
-        const rightHip = landmarks[24];      // RIGHT_HIP
-        const nose = landmarks[0];           // NOSE
+        // Use centralized pose detector
+        const detectedPose = this.poseDetector.detect(landmarks);
 
-        let detectedPose = 'neutral';
-
-        // Get additional landmarks for enhanced pose detection
-        const leftAnkle = landmarks[27];     // LEFT_ANKLE
-        const rightAnkle = landmarks[28];    // RIGHT_ANKLE
-
-        // Only check for poses that have image mappings assigned
-        // Check for Star pose: arms and legs spread wide
-        if (this.checkStarPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip, leftAnkle, rightAnkle)) {
-            detectedPose = 'star';
-        }
-        // Check for Arms Out (T-pose): arms extended horizontally
-        else if (this.checkArmsOutPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
-            detectedPose = 'arms_out';
-        }
-        // Check for Zigzag pose: one arm up diagonally
-        else if (this.checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder)) {
-            detectedPose = 'zigzag';
-        }
-        // Check for Side Arms pose: arms extended horizontally to sides
-        else if (this.checkSideArmsPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow)) {
-            detectedPose = 'side_arms';
-        }
-        // Check for Rounded pose: arms curved/rounded
-        else if (this.checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip)) {
-            detectedPose = 'rounded';
-        }
-        // Check for Arms Up pose: both arms raised up
-        else if (this.checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose)) {
-            detectedPose = 'arms_up';
-        }
-
-        // Debug: Log detected pose
-        if (detectedPose !== 'neutral') {
-            console.log('🎯 Pose detected:', detectedPose);
-        }
-
-        // Only update if pose has been stable for a bit
-        const poseNow = Date.now();
+        // Debug: Log detected pose changes
         if (detectedPose !== this.currentPose) {
-            if (poseNow - this.lastPoseUpdate > this.STABLE_TIME) { // 1 second stability
-                console.log('✅ Pose changed:', this.currentPose, '→', detectedPose);
-                this.currentPose = detectedPose;
-                this.updateTextureForPose(detectedPose).catch(console.error);
-                this.updateDebugDisplay(detectedPose); // Update debug display
-                this.lastPoseUpdate = poseNow;
-            }
-        } else {
-            this.lastPoseUpdate = poseNow;
+            console.log('✅ Pose changed:', this.currentPose, '→', detectedPose);
+            this.currentPose = detectedPose;
+            this.updateTextureForPose(detectedPose).catch(console.error);
+            this.updateDebugDisplay(detectedPose); // Update debug display
+            this.lastPoseUpdate = Date.now();
         }
     }
 
 
-    // Helper function to calculate angle between three points
-    calculateAngle(point1, point2, point3) {
-        const a = { x: point1.x, y: point1.y };
-        const b = { x: point2.x, y: point2.y }; // vertex point
-        const c = { x: point3.x, y: point3.y };
-
-        const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-        let angle = Math.abs(radians * 180.0 / Math.PI);
-
-        if (angle > 180.0) {
-            angle = 360 - angle;
-        }
-
-        return angle;
-    }
-
-    checkStarPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip, leftAnkle, rightAnkle) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
-        if (!leftHip || !rightHip || !leftAnkle || !rightAnkle) return false;
-
-        // Check arm angles (should be raised and spread)
-        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
-        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
-
-        // Check if arms are raised (wrists above shoulders)
-        const armsRaised = (leftWrist.y < leftShoulder.y) && (rightWrist.y < rightShoulder.y);
-
-        // Check if legs are spread (ankles wider than hips)
-        const legSpread = Math.abs(leftAnkle.x - rightAnkle.x) > Math.abs(leftHip.x - rightHip.x) * 1.5;
-
-        // Arms should be relatively straight and spread
-        const armsStraight = (leftArmAngle > 140) && (rightArmAngle > 140);
-
-        return armsRaised && legSpread && armsStraight;
-    }
-
-    checkArmsOutPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
-
-        // Arms should be horizontal (wrists at shoulder level) - T-pose
-        const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 0.08;
-        const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 0.08;
-
-        // Arms should be straight out (not angled up like side_arms)
-        const leftArmStraight = this.calculateAngle(leftWrist, leftElbow, leftShoulder) > 160;
-        const rightArmStraight = this.calculateAngle(rightWrist, rightElbow, rightShoulder) > 160;
-
-        // Exclude side_arms pose: wrists should NOT be significantly above shoulders
-        const notSideArms = !(leftWrist.y < leftShoulder.y - 0.05 && rightWrist.y < rightShoulder.y - 0.05);
-
-        return leftArmHorizontal && rightArmHorizontal && leftArmStraight && rightArmStraight && notSideArms;
-    }
-
-    checkZigzagPose(leftWrist, rightWrist, leftShoulder, rightShoulder) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder) return false;
-
-        // One arm should be raised diagonally
-        const leftArmRaised = leftWrist.y < leftShoulder.y - 0.1;
-        const rightArmRaised = rightWrist.y < rightShoulder.y - 0.1;
-
-        // Only one arm should be raised
-        const oneArmUp = (leftArmRaised && !rightArmRaised) || (rightArmRaised && !leftArmRaised);
-
-        return oneArmUp;
-    }
-
-    checkSideArmsPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
-
-        // Side arms: arms angled up at elbows (like a victory/celebration pose)
-        // More lenient detection - wrists should be higher than elbows (angled upward)
-        const leftWristAboveElbow = leftWrist.y < leftElbow.y - 0.03; // More lenient
-        const rightWristAboveElbow = rightWrist.y < rightElbow.y - 0.03;
-
-        // Wrists should be higher than shoulders (angled upward from shoulders) - more lenient
-        const leftWristAboveShoulder = leftWrist.y < leftShoulder.y - 0.01; // More lenient
-        const rightWristAboveShoulder = rightWrist.y < rightShoulder.y - 0.01;
-
-        // Elbows should be extended to the sides (not close to body) - more lenient
-        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.08; // More lenient
-        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.08;
-
-        // Elbows should be at or slightly below shoulder level (not too high)
-        const leftElbowAtShoulderLevel = leftElbow.y >= leftShoulder.y - 0.05 && leftElbow.y <= leftShoulder.y + 0.1;
-        const rightElbowAtShoulderLevel = rightElbow.y >= rightShoulder.y - 0.05 && rightElbow.y <= rightShoulder.y + 0.1;
-
-        // Arms should be clearly angled (not straight up or straight out) - more lenient
-        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
-        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
-        const armsAngled = leftArmAngle > 100 && leftArmAngle < 160 && rightArmAngle > 100 && rightArmAngle < 160; // More lenient
-
-        // Both arms should be symmetric (both angled up)
-        const symmetric = leftWristAboveElbow && rightWristAboveElbow && 
-                         leftWristAboveShoulder && rightWristAboveShoulder;
-
-        // Debug logging for side_arms pose
-        if (leftElbowOut && rightElbowOut) {
-            console.log('🔍 Side_arms pose debug:', {
-                leftWristAboveElbow, rightWristAboveElbow,
-                leftWristAboveShoulder, rightWristAboveShoulder,
-                leftElbowOut, rightElbowOut,
-                leftElbowAtShoulderLevel, rightElbowAtShoulderLevel,
-                armsAngled,
-                symmetric,
-                leftAngle: leftArmAngle?.toFixed(1),
-                rightAngle: rightArmAngle?.toFixed(1),
-                wristY: { left: leftWrist.y.toFixed(3), right: rightWrist.y.toFixed(3) },
-                elbowY: { left: leftElbow.y.toFixed(3), right: rightElbow.y.toFixed(3) },
-                shoulderY: { left: leftShoulder.y.toFixed(3), right: rightShoulder.y.toFixed(3) }
-            });
-        }
-
-        // Primary detection: all conditions
-        const primaryDetection = symmetric && leftElbowOut && rightElbowOut && 
-                               leftElbowAtShoulderLevel && rightElbowAtShoulderLevel && armsAngled;
-        
-        // Fallback detection: simpler version - just elbows out and wrists above elbows
-        const fallbackDetection = leftElbowOut && rightElbowOut && 
-                                 leftWristAboveElbow && rightWristAboveElbow;
-
-        // Ultra-simple detection: just check if both wrists are above shoulder level and elbows are out
-        const ultraSimple = leftWrist.y < leftShoulder.y && rightWrist.y < rightShoulder.y &&
-                           leftElbowOut && rightElbowOut;
-
-        return primaryDetection || fallbackDetection || ultraSimple;
-    }
-
-    checkRoundedPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, leftHip, rightHip) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow) return false;
-        if (!leftHip || !rightHip) return false;
-
-        // Hands on hips: wrists should be in torso area (between shoulders and hips)
-        const hipLevel = (leftHip.y + rightHip.y) / 2;
-        const shoulderLevel = (leftShoulder.y + rightShoulder.y) / 2;
-        const hipLevelExtended = hipLevel + 0.1; // Allow slightly below hips
-        
-        // Wrists should be in the torso area (between shoulders and hips)
-        const leftWristInTorso = leftWrist.y > shoulderLevel && leftWrist.y < hipLevelExtended;
-        const rightWristInTorso = rightWrist.y > shoulderLevel && rightWrist.y < hipLevelExtended;
-        
-        // Elbows should be out to the sides (creating the "rounded" shape)
-        const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > 0.06;
-        const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > 0.06;
-        
-        // Wrists should be closer to center than elbows (hands on hips, not extended out)
-        const leftWristInward = Math.abs(leftWrist.x - leftShoulder.x) < Math.abs(leftElbow.x - leftShoulder.x);
-        const rightWristInward = Math.abs(rightWrist.x - rightShoulder.x) < Math.abs(rightElbow.x - rightShoulder.x);
-        
-        // Arms should be bent (not straight) - more lenient range
-        const leftAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
-        const rightAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
-        const armsBent = leftAngle < 160 && rightAngle < 160 && leftAngle > 40 && rightAngle > 40;
-
-        // Debug logging for rounded pose
-        if (leftWristInTorso && rightWristInTorso) {
-            console.log('🔍 Rounded pose debug (app.js):', {
-                leftWristInTorso, rightWristInTorso,
-                leftElbowOut, rightElbowOut,
-                leftWristInward, rightWristInward,
-                armsBent,
-                leftAngle: leftAngle?.toFixed(1),
-                rightAngle: rightAngle?.toFixed(1),
-                wristY: { left: leftWrist.y.toFixed(3), right: rightWrist.y.toFixed(3) },
-                shoulderY: shoulderLevel.toFixed(3),
-                hipY: hipLevel.toFixed(3)
-            });
-        }
-
-        // Primary detection: all conditions
-        const primaryDetection = leftWristInTorso && rightWristInTorso && 
-                                leftElbowOut && rightElbowOut && 
-                                leftWristInward && rightWristInward && armsBent;
-        
-        // Fallback detection: simpler "hands on hips" - just check if wrists are in torso area and elbows are out
-        const fallbackDetection = leftWristInTorso && rightWristInTorso && 
-                                 leftElbowOut && rightElbowOut;
-        
-        return primaryDetection || fallbackDetection;
-    }
-
-    checkArmsUpPose(leftWrist, rightWrist, leftShoulder, rightShoulder, leftElbow, rightElbow, nose) {
-        if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !leftElbow || !rightElbow || !nose) return false;
-
-        // Both arms should be raised above head
-        const armsRaised = (leftWrist.y < nose.y) && (rightWrist.y < nose.y);
-
-        // Arms should be relatively straight
-        const leftArmAngle = this.calculateAngle(leftWrist, leftElbow, leftShoulder);
-        const rightArmAngle = this.calculateAngle(rightWrist, rightElbow, rightShoulder);
-
-        const armsStraight = leftArmAngle > 140 && rightArmAngle > 140;
-
-        return armsRaised && armsStraight;
-    }
+    // Pose detection methods moved to PoseDetector module
 
     async updateTextureForPose(poseName) {
         console.log(`Updating texture for pose: ${poseName}`);
@@ -1256,6 +1008,7 @@ class ExperienceApp {
                     // Clear any simulated pose when re-enabling
                     this.isSimulatingPose = false;
                     this.currentSimulatedPose = null;
+                    this.poseDetector.setEnabled(true);
                     console.log('Auto tracking re-enabled, clearing simulated pose');
                 } else {
                     poseDetectionBtn.classList.remove('active');
@@ -1265,6 +1018,7 @@ class ExperienceApp {
                     this.currentSimulatedPose = null;
                     this.poses = [];  // Clear detected poses
                     this.currentPose = 'neutral';  // Reset to neutral pose
+                    this.poseDetector.setEnabled(false);
                     console.log('Auto tracking disabled, poses cleared');
                 }
             });
@@ -1512,6 +1266,7 @@ class ExperienceApp {
 
         // Disable automatic tracking when pose is manually selected
         this.poseDetectionEnabled = false;
+        this.poseDetector.setEnabled(false);
         const poseDetectionBtn = document.getElementById('poseDetection');
         if (poseDetectionBtn) {
             poseDetectionBtn.classList.remove('active');
