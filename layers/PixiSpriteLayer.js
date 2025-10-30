@@ -457,9 +457,9 @@ class PixiSpriteLayer extends LayerInterface {
                 };
             }
 
-            const smoothX = this.lerp(this.lastSpriteTransform.x, centerX, 0.3);
-            const smoothY = this.lerp(this.lastSpriteTransform.y, centerY, 0.3);
-            const smoothWidth = this.lerp(this.lastSpriteTransform.width, clampedWidth, 0.3);
+            const smoothX = Utils.lerp(this.lastSpriteTransform.x, centerX, 0.3);
+            const smoothY = Utils.lerp(this.lastSpriteTransform.y, centerY, 0.3);
+            const smoothWidth = Utils.lerp(this.lastSpriteTransform.width, clampedWidth, 0.3);
 
 
             // Position sprite at calculated center (works with anchor 0.5, 0.5)
@@ -498,9 +498,7 @@ class PixiSpriteLayer extends LayerInterface {
         return new PIXI.Point(pixiX, pixiY);
     }
 
-    lerp(start, end, factor) {
-        return start + (end - start) * factor;
-    }
+    // lerp moved to Utils module
 
     addDebugLandmarkIndicators(leftShoulder, rightShoulder, centerX, centerY, allLandmarks = null) {
         // Clear previous debug indicators

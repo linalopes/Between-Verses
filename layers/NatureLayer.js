@@ -312,7 +312,7 @@ class NatureLayer extends LayerInterface {
     createParticleData(sprite) {
         const data = {
             age: 0,
-            life: this.lerp(this.settings.lifetimeMin, this.settings.lifetimeMax, Math.random()),
+            life: Utils.lerp(this.settings.lifetimeMin, this.settings.lifetimeMax, Math.random()),
             phase: Math.random() * Math.PI * 2,
             sineAmp: this.settings.sineAmp * (0.7 + Math.random() * 0.6),
             sineFreq: this.settings.sineFreq * (0.8 + Math.random() * 0.4),
@@ -322,10 +322,10 @@ class NatureLayer extends LayerInterface {
         switch (this.settings.animationType) {
             case 'floating':
                 const dir = Math.random() < 0.5 ? -1 : 1;
-                data.speed = this.lerp(this.settings.speedMin, this.settings.speedMax, Math.random()) * dir;
+                data.speed = Utils.lerp(this.settings.speedMin, this.settings.speedMax, Math.random()) * dir;
                 break;
             case 'flying':
-                data.speed = this.lerp(this.settings.speedMin, this.settings.speedMax, Math.random());
+                data.speed = Utils.lerp(this.settings.speedMin, this.settings.speedMax, Math.random());
                 if (sprite.x < 0) data.speed = Math.abs(data.speed);
                 else data.speed = -Math.abs(data.speed);
                 data.verticalSpeed = (Math.random() - 0.5) * 10;
@@ -358,7 +358,7 @@ class NatureLayer extends LayerInterface {
 
             // Update alpha (lifetime fade)
             const t = Math.min(data.age / data.life, 1);
-            sprite.alpha = this.lerp(this.settings.alphaStart, this.settings.alphaEnd, t);
+            sprite.alpha = Utils.lerp(this.settings.alphaStart, this.settings.alphaEnd, t);
 
             // Remove expired particles
             if (data.age >= data.life || this.isParticleOutOfBounds(sprite)) {
@@ -428,9 +428,7 @@ class NatureLayer extends LayerInterface {
         this.spawnAccumulator = 0;
     }
 
-    lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
+    // lerp moved to Utils module
 
     // LayerInterface interface methods
     async onRender(inputData, timestamp) {

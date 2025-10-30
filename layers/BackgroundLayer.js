@@ -250,7 +250,7 @@ class BackgroundLayer extends LayerInterface {
 
     replaceBackground(pixels, mask) {
         // Parse the background color
-        const color = this.hexToRgb(this.config.backgroundColor);
+        const color = Utils.hexToRgb(this.config.backgroundColor);
 
         for (let i = 0; i < pixels.length; i += 4) {
             const maskValue = mask[i] / 255;
@@ -263,14 +263,7 @@ class BackgroundLayer extends LayerInterface {
         }
     }
 
-    hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : { r: 0, g: 0, b: 0 };
-    }
+    // hexToRgb moved to Utils module
 
     // Configuration methods
     setMode(mode) {
