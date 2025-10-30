@@ -588,9 +588,9 @@ class BirdLayer extends LayerInterface {
         }
     }
 
-    
 
     destroy() {
+        super.destroy();
         super.destroy();
         this.stop();
 
