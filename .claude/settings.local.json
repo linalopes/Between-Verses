@@ -11,7 +11,8 @@
       "Bash(open http://localhost:3000/app.html)",
       "Bash(open http://localhost:8000/test-mesh.html)",
       "Bash(curl:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

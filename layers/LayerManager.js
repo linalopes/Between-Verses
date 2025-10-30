@@ -1,6 +1,6 @@
 /**
- * Layer Manager
- * Coordinates rendering between all visual layers and manages the compositing pipeline
+ * Layer Manager (Optimized)
+ * Coordinates rendering between all visual layers with resource pooling and batch operations
  */
 class LayerManager {
     constructor(mainCanvas, overlayCanvas) {
@@ -13,6 +13,17 @@ class LayerManager {
         this.layers = new Map();
         this.renderOrder = [];
         this.lastRender = 0;
+
+        // Resource pooling for better performance
+        this.resourcePool = {
+            canvases: [],
+            contexts: [],
+            maxPoolSize: 5
+        };
+
+        // Batch rendering optimization
+        this.renderQueue = [];
+        this.batchRenderTimeout = null;
     }
 
     /**
@@ -65,27 +76,84 @@ class LayerManager {
     }
 
     /**
-     * Main render method - orchestrates all layer rendering
+     * Main render method - orchestrates all layer rendering with batching
      */
     async render(inputData, timestamp = Date.now()) {
         try {
             // Prepare input data for layers
             const layerInputData = this.prepareInputData(inputData);
 
-            // Render layers in z-index order
-            for (const layer of this.renderOrder) {
-                if (!layer.config.enabled) continue;
+            // Queue render operations for batching
+            this.queueRenderOperations(layerInputData, timestamp);
 
-                try {
-                    await layer.render(layerInputData, timestamp);
-                } catch (error) {
-                    console.error(`Error rendering ${layer.name} layer:`, error);
-                }
-            }
+            // Execute batch render
+            await this.executeBatchRender();
 
             this.lastRender = timestamp;
         } catch (error) {
             console.error('LayerManager render error:', error);
+        }
+    }
+
+    /**
+     * Queue render operations for batch processing
+     */
+    queueRenderOperations(layerInputData, timestamp) {
+        this.renderQueue = [];
+
+        for (const layer of this.renderOrder) {
+            if (layer.config.enabled) {
+                this.renderQueue.push({ layer, inputData: layerInputData, timestamp });
+            }
+        }
+    }
+
+    /**
+     * Execute batch render operations
+     */
+    async executeBatchRender() {
+        const renderPromises = this.renderQueue.map(async ({ layer, inputData, timestamp }) => {
+            try {
+                return await layer.render(inputData, timestamp);
+            } catch (error) {
+                console.error(`Error rendering ${layer.name} layer:`, error);
+                return false;
+            }
+        });
+
+        await Promise.all(renderPromises);
+        this.renderQueue = [];
+    }
+
+    /**
+     * Get a pooled canvas resource
+     */
+    getPooledCanvas(width, height) {
+        let canvas = this.resourcePool.canvases.pop();
+
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        return {
+            canvas,
+            ctx: canvas.getContext('2d'),
+            release: () => this.returnToPool(canvas)
+        };
+    }
+
+    /**
+     * Return canvas to resource pool
+     */
+    returnToPool(canvas) {
+        if (this.resourcePool.canvases.length < this.resourcePool.maxPoolSize) {
+            // Clear canvas for reuse
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            this.resourcePool.canvases.push(canvas);
         }
     }
 
@@ -206,6 +274,15 @@ class LayerManager {
         this.layers.clear();
         this.renderOrder = [];
 
-        console.log('LayerManager destroyed');
+        // Clean up resource pool
+        this.resourcePool.canvases = [];
+        this.resourcePool.contexts = [];
+        this.renderQueue = [];
+
+        if (this.batchRenderTimeout) {
+            clearTimeout(this.batchRenderTimeout);
+        }
+
+        console.log('LayerManager destroyed with resource cleanup');
     }
 }
