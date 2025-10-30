@@ -735,6 +735,14 @@
                         <span class="debug-label">Nature:</span>
                         <span class="debug-value" id="debugNature">none</span>
                     </div>
+                    <div class="debug-item">
+                        <span class="debug-label">Birds:</span>
+                        <span class="debug-value" id="birdInfo">None</span>
+                    </div>
+                    <div class="debug-item">
+                        <span class="debug-label">Bird Count:</span>
+                        <span class="debug-value" id="birdCount">0</span>
+                    </div>
                 </div>
             </div>
 
@@ -830,11 +838,13 @@
     <!-- BuildingLayer removed - using PixiSpriteLayer for building sprites -->
     <!-- NatureParticleSystem merged into NatureLayer -->
     <script src="layers/NatureLayer.js"></script>
+    <script src="layers/BirdLayer.js"></script>
     <script src="layers/VideoLayer.js"></script>
     <script src="layers/PixiSpriteLayer.js"></script>
     <script src="layers/LayerManager.js"></script>
 
     <!-- Optimization Modules -->
+    <script src="modules/utils.js"></script>
     <script src="modules/PoseDetector.js"></script>
     <script src="modules/TextureManager.js"></script>
     <script src="modules/RenderOptimizer.js"></script>
@@ -881,10 +891,80 @@
 
                     if (fpsEl) fpsEl.textContent = report.fps;
                     if (qualityEl) qualityEl.textContent = report.quality;
-                    if (renderEl) renderEl.textContent = report.metrics.renderTime;
+                    if (renderEl) renderEl.textContent = report.metrics?.renderTime || '0ms';
+                }
+
+                // Update bird debug info
+                if (window.experienceApp && window.experienceApp.birdLayer) {
+                    const birdLayer = window.experienceApp.birdLayer;
+                    const birdInfoEl = document.getElementById('birdInfo');
+                    const birdCountEl = document.getElementById('birdCount');
+
+                    if (birdInfoEl && birdCountEl) {
+                        const activeBirds = birdLayer.activeBirdTypes || [];
+                        const birdCount = birdLayer.birds ? birdLayer.birds.length : 0;
+
+                        birdInfoEl.textContent = activeBirds.length > 0 ? activeBirds.join(', ') : 'None';
+                        birdCountEl.textContent = birdCount;
+                    }
                 }
             }, 1000);
         });
+
+        // Simple test function
+        window.testBirdLayer = () => {
+            console.log('🧪 Testing BirdLayer creation...');
+            try {
+                const test = new BirdLayer();
+                console.log('✅ BirdLayer can be created manually');
+                return test;
+            } catch (error) {
+                console.error('❌ BirdLayer creation failed:', error.message);
+                return null;
+            }
+        };
+
+        // Force birds test function
+        window.enableBirds = () => {
+            console.log('🧪 Testing bird enablement...');
+            console.log('🔍 experienceApp:', !!window.experienceApp);
+            console.log('🔍 birdLayer:', !!window.experienceApp?.birdLayer);
+
+            if (window.experienceApp?.birdLayer) {
+                console.log('🐦 Calling setPose("star") directly...');
+                try {
+                    window.experienceApp.birdLayer.setPose('star');
+                    console.log('✅ setPose called successfully');
+                } catch (error) {
+                    console.error('❌ setPose failed:', error);
+                }
+
+                setTimeout(() => {
+                    const count = window.experienceApp.birdLayer.birds?.length || 0;
+                    console.log(`🐦 Birds active: ${count}`);
+
+                    if (count === 0) {
+                        console.log('❌ No birds created - checking BirdLayer state');
+                        console.log('🔍 BirdLayer active:', window.experienceApp.birdLayer.active);
+                        console.log('🔍 BirdLayer activeBirdTypes:', window.experienceApp.birdLayer.activeBirdTypes);
+                    }
+                }, 2000);
+            } else {
+                console.log('❌ BirdLayer not found on experienceApp');
+                if (window.experienceApp) {
+                    console.log('🔍 Available properties:', Object.keys(window.experienceApp));
+                }
+            }
+        };
+
+        window.testBirds = () => {
+            if (window.experienceApp?.birdLayer) {
+                window.experienceApp.birdLayer.testBirds();
+            } else {
+                console.log('❌ No birdLayer - testing manual creation...');
+                window.testBirdLayer();
+            }
+        };
 
     </script>
 </body>

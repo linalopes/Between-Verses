@@ -56,6 +56,17 @@ class VideoLayer extends LayerInterface {
         }
     }
 
+    onResize(width, height) {
+        // If you keep an internal canvas/video, resize them here
+        if (this.canvas) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.canvas.style.width = '100%';
+            this.canvas.style.height = '100%';
+        }
+        this.emit && this.emit('resize', { width, height });
+    }
+
     async setupCamera() {
         console.log('Setting up camera...');
 

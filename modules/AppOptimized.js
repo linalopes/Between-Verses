@@ -363,18 +363,16 @@ class ExperienceAppOptimized {
     }
 
     /**
-     * Update performance overlay
+     * Update performance overlay (simplified)
      */
     updatePerformanceOverlay() {
         const report = this.optimizer.getPerformanceReport();
 
-        // Update UI with performance metrics
+        // Update UI with essential performance metrics only
         const perfElement = document.getElementById('performanceMetrics');
         if (perfElement) {
             perfElement.innerHTML = `
-                FPS: ${report.fps} |
-                Quality: ${report.quality} |
-                Render: ${report.metrics.renderTime}
+                FPS: ${report.fps} | Quality: ${report.quality} | Render: ${report.renderTime}
             `;
         }
     }

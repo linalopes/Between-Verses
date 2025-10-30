@@ -1,218 +1,194 @@
 # Between Verses
 
-An interactive pose detection experience with a simplified 3-layer rendering system: Background, PixiJS building mesh, and Nature overlays. Features real-time pose detection with MediaPipe integration.
+An interactive pose-driven visual experience. It combines camera input, MediaPipe-based pose detection, and a layered renderer: Background (Canvas2D), PixiJS buildings, Nature particles/overlays, and PixiJS birds.
 
 ## Overview
 
-The system uses a clean 3-layer architecture:
+- Live camera feed is drawn to the base canvas.
+- MediaPipe detects a pose name (e.g., star, arms_out).
+- The app maps poses to images/particles/birds, then updates each layer.
+- PixiJS layers render via their own canvases stacked over the base.
 
-1. **Background Layer** - Solid background canvas
-2. **PixiJS Mesh Layer** - Building mesh that deforms with pose (shows prime.png texture)
-3. **Nature Layer** - Pose-responsive nature overlays on top
+## Architecture
 
-**Pose Detection:**
-- **Prime Tower**: Hands on head → shows building mesh
-- **Cristo Redentor**: Arms extended → shows building mesh
-- **Mountain/Warrior**: Various poses → triggers nature overlays (mountain.png, mountain.png, pantanal.png)
+- `app.js`: Bootstraps the app, config, pose detection, layers, and UI.
+- `layers/LayerManager.js`: Manages order and rendering of layers.
+- Layers (implement `LayerInterface`):
+  - `BackgroundLayer.js`: Composites camera/background on the base canvas.
+  - `PixiSpriteLayer.js`: Renders building sprites/meshes with Pixi v8.
+  - `NatureLayer.js`: Renders nature particles in a region (usually bottom third).
+  - `BirdLayer.js`: Renders bird sprites flying across the top third.
 
-## ✨ Features
+All Pixi layers create an absolutely positioned `<canvas>` and add it to the app’s overlay container. Layer z-order is controlled by the constructor `zIndex`.
 
-- **3-Layer Architecture**: Clean separation of Background, PixiJS Mesh, and Nature layers
-- **Real-time Pose Detection**: MediaPipe integration for accurate body tracking
-- **Mesh Deformation**: PixiJS v8 mesh with vertex manipulation based on pose landmarks
-- **Building Mesh**: Always-visible building mesh that responds to poses
-- **Nature Overlays**: Bottom-third nature scene overlays triggered by specific poses
-- **Simplified Controls**: Toggle building mesh and nature overlays independently
-- **Fullscreen Mode**: Immersive experience with ESC key to exit
-- **Video Toggle**: Hide video feed to show only layers
-- **Debug Interface**: Real-time pose state and mesh information display
-- **Responsive Design**: Adaptive scaling for different screen sizes
+## Data flow
 
-## 🛠️ Tech Stack
+1. MediaPipe → pose landmarks → `PoseDetector` → logical pose name.
+2. `ExperienceApp.updateTextureForPose(name)` selects assets from `experience-config.json`.
+3. Layers are notified:
+   - PixiSpriteLayer gets building texture/config.
+   - NatureLayer gets overlay + particle texture/config.
+   - BirdLayer receives the pose to choose species and start spawning.
 
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Rendering**: PixiJS v8 for mesh layer, Canvas2D for other layers
-- **Pose Detection**: MediaPipe via CDN integration
-- **Styling**: Bootstrap 5 with custom CSS
-- **Images**: PNG/SVG files stored in `images/` folder
+## Configuration and assets
 
-## 📋 Prerequisites
+- `experience-config.json`: central pose → assets mapping.
+  - building textures → `images/`
+  - background images → `bg-images/`
+  - particle/bird textures → `front-images/`
+- The app preloads referenced assets and passes the chosen ones to layers.
 
-- Python 3 (for local web server)
-- Modern web browser with camera access
-- No external API keys required
+## Layer specifics (what to modify)
 
-## 🚀 Installation & Setup
+BackgroundLayer
+- Mostly static; sets clear color and draws the camera feed.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/linalopes/expolat-prototype.git
-cd expolat-prototype
+PixiSpriteLayer
+- Togglable via UI; used for building visuals.
+- Set pose config via `setPoseConfig()` from `experience-config.json`.
+
+NatureLayer
+- Region: defaults depend on `animationType` (e.g., floating → bottom third).
+- Particle sizing:
+  - `settings.pixelHeight` sets average on-screen height (in pixels).
+  - Final scale = `pixelHeight / textureHeight * baseScale * jitter`.
+  - If `pixelHeight` is unset, uses `baseScale` + `scaleJitter`.
+
+BirdLayer
+- Region: top third of the Pixi screen.
+- Pose → species: `poseBirdMappings`.
+- Species config: `{ texture, speed, scale, wingFlap }` in `birdTypes`.
+- Bird sizing:
+  - `settings.pixelHeight` sets average on-screen height (in pixels).
+  - Final scale = `pixelHeight / textureHeight * species.scale`.
+- Spawning: slightly offscreen left/right, flies across the region.
+
+## Controls and debug
+
+- Auto Tracking: toggles pose detection.
+- Building Mesh (Pixi): toggle PixiSpriteLayer.
+- Nature Overlay: toggle nature particles overlay.
+- Pose Skeleton / Landmarks: toggle tracking visualization.
+- Bird Region Overlay: shows cyan (canvas) and magenta (top-third region); programmatic API: `birdLayer.setDebugEnabled(bool)`.
+- Fullscreen: scales UI/canvases to screen.
+
+## Common edits (cheat sheet)
+
+- Change birds for a pose: `BirdLayer.poseBirdMappings`.
+- Change bird image/relative size: `BirdLayer.birdTypes[...].texture/scale`.
+- Change all bird sizes: `BirdLayer.settings.pixelHeight`.
+- Change flower/particle size: `NatureLayer.settings.pixelHeight` (plus `baseScale/jitter` as needed).
+- Change speeds: `BirdLayer.settings.flightSpeedMin/Max` and species `speed`.
+- Reorder layers: pass `zIndex` when constructing layers in `app.js`.
+
+## Project structure (relevant parts)
+
+```
+expolat-prototype/
+├── app.html, app.js
+├── experience-config.json
+├── layers/
+│   ├── LayerInterface.js
+│   ├── LayerManager.js
+│   ├── BackgroundLayer.js
+│   ├── PixiSpriteLayer.js
+│   ├── NatureLayer.js
+│   └── BirdLayer.js
+├── images/        # buildings/mesh
+├── bg-images/     # backgrounds
+└── front-images/  # nature particles + birds
 ```
 
-### 2. Start the Web Server
+## Setup
+
 ```bash
 python3 -m http.server 8000
+# open http://localhost:8000/app.html
+```
+Allow camera access.
+
+## Troubleshooting
+
+Birds not visible
+- Enable “Bird Region Overlay” to verify region/canvas.
+- Check console for texture load logs and 404s.
+- Temporarily increase `flightSpeedMin/Max` to ensure offscreen spawns enter.
+
+Nature particles not visible
+- Ensure the pose’s overlay contains `particles.enabled: true` and a valid `texture`.
+
+Canvas misalignment
+- Cyan outline should match visible Pixi canvas. Ensure `onResize` is called and no CSS clipping occurs.
+
+## License
+
+MIT
+
+## Debugging visuals (cyan/magenta)
+
+- BirdLayer draws a debug overlay on its Pixi stage:
+  - Cyan: full Pixi canvas
+  - Magenta: active bird region (top third)
+  - Green: canvas center crosshair
+- Toggle in UI: “Bird Region Overlay” checkbox, just below the tracking/pose landmark controls.
+- Programmatic toggle: `birdLayer.setDebugEnabled(true|false)`.
+
+## Controls (UI)
+
+- Auto Tracking ON/OFF
+- PixiJS meshes ON/OFF
+- BirdLayer ON/OFF
+- Nature Overlay ON/OFF
+- Pose Skeleton / Landmarks
+- Bird Region Overlay (debug)
+- Fullscreen
+
+## Common changes and where to make them
+
+- Change which birds appear for a pose: `BirdLayer.poseBirdMappings`
+- Change a bird’s image: `BirdLayer.birdTypes[species].texture`
+- Change bird size globally: `BirdLayer.settings.pixelHeight`
+- Change bird size per species: `BirdLayer.birdTypes[species].scale`
+- Change bird speeds: `BirdLayer.settings.flightSpeedMin/Max` and `birdTypes[...].speed`
+- Change nature particle for a pose: `experience-config.json → imageMappings → <pose>.particle`
+- Move Pixi canvases above/below others: pass `zIndex` in layer constructor
+
+## Asset paths
+
+- Buildings/meshes: `images/`
+- Background images: `bg-images/`
+- Birds/nature particles: `front-images/`
+
+Ensure these folders are served by your dev server. If you use a CDN/base path, set `assetBaseUrl` in `BirdLayer` config.
+
+## Troubleshooting
+
+- Birds don’t appear
+  - Check console: textures should log as loaded
+  - Enable “Bird Region Overlay” to confirm region is on-screen
+  - Temporarily raise `flightSpeedMin/Max` so offscreen spawns enter quickly
+  - Verify `front-images/*.png` are accessible (no 404)
+
+- Canvas looks misaligned
+  - Cyan overlay outlines full Pixi canvas; if it doesn’t match what you see, verify the app calls `birdLayer.onResize(w,h)` on resize and that `overlayCanvas`/video container CSS isn’t clipping.
+
+- Nature particles not visible
+  - Confirm the overlay for the current pose contains `particles.enabled: true` and a valid `texture` path
+
+## Setup
+
+```bash
+python3 -m http.server 8000
+# Open http://localhost:8000/app.html
 ```
 
-### 3. Open the Application
-Navigate to `http://localhost:8000` in your browser and allow camera access.
+Allow camera access when prompted.
 
-## 🎯 How to Play
+## Notes
 
-1. **Allow Camera Access**: Grant permission when prompted
-2. **Position Yourself**: Stand in front of the camera with good lighting
-3. **Strike a Pose**:
-   - **Prime Tower**: Place both hands on top of your head, close together
-   - **Jesus**: Extend your arms horizontally to the sides
-4. **Watch the Magic**: Overlay stickers will appear anchored to your shoulders
-5. **Multiple People**: The system supports multiple people with individual stickers
-6. **Use Controls**:
-   - **Fullscreen**: Click to enter immersive mode
-   - **Hide Video**: Toggle to show only pose tracking
-   - **Hide Tracking**: Toggle skeleton lines and keypoints for clean interface
-   - **ESC Key**: Exit fullscreen mode
+- No external APIs; all assets are local
+- MediaPipe runs in-browser; pose data is not sent elsewhere
 
-## 🎨 Pose Detection Logic
+## License
 
-### Prime Tower Pose
-- Both wrists are above the nose level
-- Wrists are horizontally close together (within 100 pixels)
-
-### Jesus Pose
-- Arms are extended (wrist further from shoulder than elbow)
-- Arms are spread horizontally (wrists to the sides of shoulders)
-- Arms are roughly horizontal (elbow and wrist at similar heights)
-
-## 🏗️ Architecture Overview
-
-### 3-Layer Rendering System
-- **Layer 1 - Background**: Solid color background canvas
-- **Layer 2 - PixiJS Mesh**: Building mesh with pose-based deformation
-- **Layer 3 - Nature**: Bottom-third nature overlays triggered by specific poses
-
-### Pose Detection System
-- **MediaPipe Integration**: Real-time pose landmark detection
-- **Stability Checking**: 12-frame debouncing for reliable pose recognition
-- **Layer Coordination**: Seamless communication between pose detection and rendering layers
-
-## 📁 Project Structure
-
-```
-between-verses/
-├── index.html              # Landing page
-├── app.html                # Main application
-├── segmentation.js         # Main application logic
-├── experience-config.json  # Pose and texture configuration
-├── layers/                 # 3-Layer system components
-│   ├── LayerInterface.js   # Layer interface class
-│   ├── BackgroundLayer.js  # Layer 1: Background rendering
-│   ├── NatureLayer.js      # Layer 3: Nature scene overlays
-│   ├── PixiMeshLayer.js    # Layer 2: PixiJS building mesh
-│   └── LayerManager.js     # Layer coordination
-├── images/                 # Texture and overlay images
-│   ├── prime.png           # Building mesh texture
-│   ├── prime.svg           # Prime pose icon
-│   ├── cristoredentor.png  # Cristo pose icon
-│   ├── mountain.png         # Alpine nature overlay
-│   ├── mountain.png          # Waterfall nature overlay
-│   ├── pantanal.png        # Wetland nature overlay
-│   └── neutral.png         # Neutral state texture
-├── package.json            # Project configuration
-└── README.md               # This file
-```
-
-## 🔧 Configuration
-
-### Pose Detection
-- **Confidence Threshold**: 0.3 (30%)
-- **Canvas Size**: 640x480 (original), scales in fullscreen
-- **Keypoint Tracking**: Wrists, elbows, shoulders, nose
-- **Stability Frames**: 12 frames for pose confirmation
-
-### Layer Configuration
-- **Background**: Solid white background (#ffffff)
-- **Building Mesh**: 6x6 grid mesh with prime.png texture
-- **Nature Overlays**: Bottom-third overlays with configurable opacity and blend modes
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Camera not working:**
-- Ensure HTTPS or localhost
-- Check browser permissions
-- Try refreshing the page
-
-**Pose detection not accurate:**
-- Improve lighting conditions
-- Ensure full body is visible
-- Stand 2-3 feet from camera
-- Make sure both shoulders are visible
-
-**Building mesh not appearing:**
-- Check that images exist in `images/` folder
-- Verify PixiJS loaded correctly (check console)
-- Ensure "Building Mesh" checkbox is enabled
-
-**Nature overlays not working:**
-- Check pose detection is working (see debug info)
-- Ensure "Nature Overlay" checkbox is enabled
-- Verify pose is held steady for stability frames
-
-## 🎮 Controls Reference
-
-| Control | Function |
-|---------|----------|
-| **Building Mesh** | Toggle PixiJS building mesh visibility |
-| **Nature Overlay** | Toggle nature overlays (bottom third) |
-| **Pose Skeleton** | Toggle skeleton lines |
-| **Pose Landmarks** | Toggle landmark dots |
-| **Fullscreen** | Enter/exit fullscreen mode |
-| **Hide Video** | Toggle video feed visibility |
-| **ESC Key** | Exit fullscreen mode |
-
-## 🔒 Security Notes
-
-- No external API calls or data transmission
-- All images are stored locally
-- Camera access only used for pose detection
-- No personal data is collected or stored
-
-## 🚀 Deployment
-
-For production deployment:
-
-1. Set up a proper web server (not Python's simple server)
-2. Enable HTTPS for camera access
-3. Ensure all image files are properly served
-4. Test with multiple people simultaneously
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test with multiple people
-5. Submit a pull request
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgments
-
-- [p5.js](https://p5js.org/) - Creative coding library
-- [ml5.js](https://ml5js.org/) - Machine learning for the web
-- [Bootstrap](https://getbootstrap.com/) - CSS framework
-
-## 📞 Support
-
-If you encounter any issues or have questions, please:
-1. Check the troubleshooting section
-2. Review the browser console for errors
-3. Open an issue on GitHub
-
----
-
-**Have fun striking poses with friends! 🎨✨👥**
+MIT

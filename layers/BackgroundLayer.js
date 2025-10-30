@@ -9,7 +9,7 @@ class BackgroundLayer extends LayerInterface {
             blurStrength: 15,
             backgroundImage: null, // Will be set from globalImages
             backgroundColor: '#000000',
-            confidenceThreshold: 0.7,
+            confidenceThreshold: 0.5, // Lower threshold for better person detection
             personTint: { r: 255, g: 255, b: 255, a: 0.1 }, // Subtle white tint for person
             personOpacity: 0.2, // Overall opacity of the person layer (0.0-1.0)
             zIndex: 1,
@@ -55,11 +55,15 @@ class BackgroundLayer extends LayerInterface {
     }
 
     async onRender(inputData, timestamp) {
-        const { originalImage, mask, pixels } = inputData;
+        const { originalImage, mask, pixels, imageData } = inputData;
 
         if (!originalImage || !mask || !pixels) {
             return false;
         }
+
+        // Store canvas dimensions from imageData
+        this.canvasWidth = imageData ? imageData.width : this.canvas.width;
+        this.canvasHeight = imageData ? imageData.height : this.canvas.height;
 
         switch (this.config.mode) {
             case 'blur':
@@ -97,6 +101,15 @@ class BackgroundLayer extends LayerInterface {
             return false;
         }
 
+        const isFullscreen = !!document.fullscreenElement;
+        if (isFullscreen) {
+            console.log('🔍 BackgroundLayer debug (FULLSCREEN):');
+            console.log('  Canvas dimensions:', this.canvasWidth, 'x', this.canvasHeight);
+            console.log('  Mountain backdrop:', this.mountainBackdrop.width, 'x', this.mountainBackdrop.height);
+            console.log('  Person opacity:', this.config.personOpacity);
+            console.log('  Confidence threshold:', this.config.confidenceThreshold);
+        }
+
         // First, replace the background with the mountain image
         this.drawMountainBackground(pixels, mask);
 
@@ -106,23 +119,34 @@ class BackgroundLayer extends LayerInterface {
         return true;
     }
 
+    getMaskValue(pixelIndex, mask) {
+        // Get mask value at pixel index
+        // Mask is RGBA format from canvas.getImageData()
+        // MediaPipe mask is typically in the red channel or all channels
+        if (!mask) return 0;
+
+        // Try red channel first (MediaPipe format)
+        const maskValue = mask[pixelIndex] / 255;
+        return maskValue;
+    }
+
     drawMountainBackground(pixels, mask) {
         // Create a temporary canvas to get mountain image data
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = this.canvas.width;
-        tempCanvas.height = this.canvas.height;
+        tempCanvas.width = this.canvasWidth;
+        tempCanvas.height = this.canvasHeight;
         const tempCtx = tempCanvas.getContext('2d');
 
         // Draw mountain scaled to fill canvas (cover mode)
-        const scaleX = this.canvas.width / this.mountainBackdrop.width;
-        const scaleY = this.canvas.height / this.mountainBackdrop.height;
+        const scaleX = this.canvasWidth / this.mountainBackdrop.width;
+        const scaleY = this.canvasHeight / this.mountainBackdrop.height;
         const scale = Math.max(scaleX, scaleY);
 
         const scaledWidth = this.mountainBackdrop.width * scale;
         const scaledHeight = this.mountainBackdrop.height * scale;
 
-        const offsetX = (this.canvas.width - scaledWidth) / 2;
-        const offsetY = (this.canvas.height - scaledHeight) / 2;
+        const offsetX = (this.canvasWidth - scaledWidth) / 2;
+        const offsetY = (this.canvasHeight - scaledHeight) / 2;
 
         tempCtx.drawImage(
             this.mountainBackdrop,
@@ -131,7 +155,12 @@ class BackgroundLayer extends LayerInterface {
         );
 
         // Get mountain image data
-        const mountainData = tempCtx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+        const mountainData = tempCtx.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data;
+
+        // Debug: Count person vs background pixels
+        const isFullscreen = !!document.fullscreenElement;
+        let personPixels = 0;
+        let backgroundPixels = 0;
 
         // Replace background pixels with mountain pixels
         for (let i = 0; i < pixels.length; i += 4) {
@@ -143,7 +172,16 @@ class BackgroundLayer extends LayerInterface {
                 pixels[i + 1] = mountainData[i + 1]; // G
                 pixels[i + 2] = mountainData[i + 2]; // B
                 pixels[i + 3] = 255;                 // A (fully opaque)
+                backgroundPixels++;
+            } else {
+                personPixels++;
             }
+        }
+
+        if (isFullscreen) {
+            const totalPixels = personPixels + backgroundPixels;
+            const personPercent = ((personPixels / totalPixels) * 100).toFixed(1);
+            console.log(`  Person pixels: ${personPixels} (${personPercent}%) Background: ${backgroundPixels}`);
         }
     }
 
@@ -156,13 +194,16 @@ class BackgroundLayer extends LayerInterface {
 
             // If this pixel is person (foreground)
             if (maskValue >= this.config.confidenceThreshold) {
-                // Apply white tint
-                const tintAlpha = a * maskValue; // Stronger tint for higher confidence
+                // Keep the original video pixels mostly intact for person visibility
+                // Only apply a very subtle tint to preserve the "white ghost" effect
+
+                // Apply subtle white tint for ghost effect
+                const tintAlpha = a * maskValue;
                 pixels[i] = pixels[i] * (1 - tintAlpha) + r * tintAlpha;         // R
                 pixels[i + 1] = pixels[i + 1] * (1 - tintAlpha) + g * tintAlpha; // G
                 pixels[i + 2] = pixels[i + 2] * (1 - tintAlpha) + b * tintAlpha; // B
 
-                // Apply overall person opacity by blending with mountain background
+                // Apply overall person opacity by blending with mountain background for ghost effect
                 if (personOpacity < 1.0) {
                     // Get corresponding mountain pixel
                     const mountainPixel = this.getMountainPixel(i);
@@ -181,21 +222,21 @@ class BackgroundLayer extends LayerInterface {
         if (!this.mountainData) {
             // Cache mountain data for efficiency
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = this.canvas.width;
-            tempCanvas.height = this.canvas.height;
+            tempCanvas.width = this.canvasWidth;
+            tempCanvas.height = this.canvasHeight;
             const tempCtx = tempCanvas.getContext('2d');
 
-            const scaleX = this.canvas.width / this.mountainBackdrop.width;
-            const scaleY = this.canvas.height / this.mountainBackdrop.height;
+            const scaleX = this.canvasWidth / this.mountainBackdrop.width;
+            const scaleY = this.canvasHeight / this.mountainBackdrop.height;
             const scale = Math.max(scaleX, scaleY);
 
             const scaledWidth = this.mountainBackdrop.width * scale;
             const scaledHeight = this.mountainBackdrop.height * scale;
-            const offsetX = (this.canvas.width - scaledWidth) / 2;
-            const offsetY = (this.canvas.height - scaledHeight) / 2;
+            const offsetX = (this.canvasWidth - scaledWidth) / 2;
+            const offsetY = (this.canvasHeight - scaledHeight) / 2;
 
             tempCtx.drawImage(this.mountainBackdrop, offsetX, offsetY, scaledWidth, scaledHeight);
-            this.mountainData = tempCtx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+            this.mountainData = tempCtx.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data;
         }
 
         return {
@@ -250,7 +291,7 @@ class BackgroundLayer extends LayerInterface {
 
     replaceBackground(pixels, mask) {
         // Parse the background color
-        const color = this.hexToRgb(this.config.backgroundColor);
+        const color = Utils.hexToRgb(this.config.backgroundColor);
 
         for (let i = 0; i < pixels.length; i += 4) {
             const maskValue = mask[i] / 255;
@@ -263,14 +304,7 @@ class BackgroundLayer extends LayerInterface {
         }
     }
 
-    hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : { r: 0, g: 0, b: 0 };
-    }
+    // hexToRgb moved to Utils module
 
     // Configuration methods
     setMode(mode) {

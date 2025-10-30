@@ -28,6 +28,9 @@ class NatureLayer extends LayerInterface {
             spawnRate: 4,
             maxParticles: 25,
             baseScale: 0.125,
+            // Optional simplified scaling (like BirdLayer): desired on-screen height in pixels
+            // When provided, particle scale = pixelHeight / textureHeight * baseScale (then jitter)
+            pixelHeight: null,
             scaleJitter: 0.35,
             speedMin: 2,
             speedMax: 8,
@@ -49,6 +52,32 @@ class NatureLayer extends LayerInterface {
     onInit() {
         console.log('NatureLayer initialized (with integrated particles)');
         this.pixiInitializationPromise = this.initializePixiParticles();
+    }
+
+    onResize(width, height) {
+        console.log('NatureLayer onResize:', width, 'x', height);
+
+        if (this.pixiApp && this.pixiApp.renderer) {
+            // Resize the PixiJS renderer
+            this.pixiApp.renderer.resize(width, height);
+
+            // Update canvas styling - use viewport units in fullscreen
+            if (this.pixiApp.canvas) {
+                const isFullscreen = !!document.fullscreenElement;
+                if (isFullscreen) {
+                    this.pixiApp.canvas.style.width = '100vw';
+                    this.pixiApp.canvas.style.height = '100vh';
+                } else {
+                    this.pixiApp.canvas.style.width = width + 'px';
+                    this.pixiApp.canvas.style.height = height + 'px';
+                }
+            }
+
+            // Clear region bounds cache so it recalculates with new dimensions
+            this.regionBounds = null;
+
+            console.log('✓ NatureLayer PixiJS resized to:', width, 'x', height);
+        }
     }
 
     async initializePixiParticles() {
@@ -268,8 +297,16 @@ class NatureLayer extends LayerInterface {
             sprite.blendMode = PIXI.BLEND_MODES.NORMAL;
         }
 
-        // Random scale
-        const scale = this.settings.baseScale * (1 + this.settings.scaleJitter * (Math.random() * 2 - 1));
+        // Scale: if pixelHeight is provided, compute from texture height; otherwise use baseScale
+        let scale;
+        if (this.settings.pixelHeight && this.texture) {
+            const naturalHeight = sprite.texture?.orig?.height || sprite.texture?.height || sprite.height;
+            const baseHeight = Math.max(1, naturalHeight);
+            const jitter = 1 + this.settings.scaleJitter * (Math.random() * 2 - 1);
+            scale = (this.settings.pixelHeight / baseHeight) * (this.settings.baseScale || 1) * jitter;
+        } else {
+            scale = this.settings.baseScale * (1 + this.settings.scaleJitter * (Math.random() * 2 - 1));
+        }
         sprite.scale.set(scale);
 
         // Set initial position based on animation type
@@ -312,7 +349,7 @@ class NatureLayer extends LayerInterface {
     createParticleData(sprite) {
         const data = {
             age: 0,
-            life: this.lerp(this.settings.lifetimeMin, this.settings.lifetimeMax, Math.random()),
+            life: Utils.lerp(this.settings.lifetimeMin, this.settings.lifetimeMax, Math.random()),
             phase: Math.random() * Math.PI * 2,
             sineAmp: this.settings.sineAmp * (0.7 + Math.random() * 0.6),
             sineFreq: this.settings.sineFreq * (0.8 + Math.random() * 0.4),
@@ -322,10 +359,10 @@ class NatureLayer extends LayerInterface {
         switch (this.settings.animationType) {
             case 'floating':
                 const dir = Math.random() < 0.5 ? -1 : 1;
-                data.speed = this.lerp(this.settings.speedMin, this.settings.speedMax, Math.random()) * dir;
+                data.speed = Utils.lerp(this.settings.speedMin, this.settings.speedMax, Math.random()) * dir;
                 break;
             case 'flying':
-                data.speed = this.lerp(this.settings.speedMin, this.settings.speedMax, Math.random());
+                data.speed = Utils.lerp(this.settings.speedMin, this.settings.speedMax, Math.random());
                 if (sprite.x < 0) data.speed = Math.abs(data.speed);
                 else data.speed = -Math.abs(data.speed);
                 data.verticalSpeed = (Math.random() - 0.5) * 10;
@@ -358,7 +395,7 @@ class NatureLayer extends LayerInterface {
 
             // Update alpha (lifetime fade)
             const t = Math.min(data.age / data.life, 1);
-            sprite.alpha = this.lerp(this.settings.alphaStart, this.settings.alphaEnd, t);
+            sprite.alpha = Utils.lerp(this.settings.alphaStart, this.settings.alphaEnd, t);
 
             // Remove expired particles
             if (data.age >= data.life || this.isParticleOutOfBounds(sprite)) {
@@ -428,9 +465,7 @@ class NatureLayer extends LayerInterface {
         this.spawnAccumulator = 0;
     }
 
-    lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
+    // lerp moved to Utils module
 
     // LayerInterface interface methods
     async onRender(inputData, timestamp) {
