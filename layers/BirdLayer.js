@@ -589,16 +589,6 @@ class BirdLayer extends LayerInterface {
         }
     }
 
-    onResize(width, height) {
-        if (this.pixiApp) {
-            const displayWidth = this.canvas.clientWidth || width;
-            const displayHeight = this.canvas.clientHeight || height;
-            this.pixiApp.renderer.resize(displayWidth, displayHeight);
-            this.calculateRegionBounds();
-            this.drawDebugBounds();
-        }
-    }
-
     
 
     destroy() {
