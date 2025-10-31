@@ -282,6 +282,9 @@ class ExperienceApp {
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Calculate video transform for all layers
+        let videoTransform = { scale: 1, offsetX: 0, offsetY: 0, drawWidth: this.canvas.width, drawHeight: this.canvas.height };
+
         if (videoData.image) {
             // Debug video scaling
             const isFullscreen = !!document.fullscreenElement;
@@ -295,18 +298,19 @@ class ExperienceApp {
             const videoAspect = videoData.image.width / videoData.image.height;
             const canvasAspect = this.canvas.width / this.canvas.height;
 
-            let drawWidth, drawHeight, offsetX, offsetY;
-
             // Use cover mode: scale video to cover entire canvas
             // We want the smallest scale that covers the entire canvas
             const scaleX = this.canvas.width / videoData.image.width;
             const scaleY = this.canvas.height / videoData.image.height;
             const scale = Math.max(scaleX, scaleY); // Use larger scale to ensure coverage
 
-            drawWidth = videoData.image.width * scale;
-            drawHeight = videoData.image.height * scale;
-            offsetX = (this.canvas.width - drawWidth) / 2;
-            offsetY = (this.canvas.height - drawHeight) / 2;
+            const drawWidth = videoData.image.width * scale;
+            const drawHeight = videoData.image.height * scale;
+            const offsetX = (this.canvas.width - drawWidth) / 2;
+            const offsetY = (this.canvas.height - drawHeight) / 2;
+
+            // Store transform for layers to use
+            videoTransform = { scale, offsetX, offsetY, drawWidth, drawHeight };
 
             if (isFullscreen) {
                 console.log('  Video aspect:', videoAspect.toFixed(3), 'Canvas aspect:', canvasAspect.toFixed(3));
@@ -358,7 +362,8 @@ class ExperienceApp {
             mask: maskData,
             poses: this.poses,
             imageData: imageData,
-            currentPose: this.currentPose  // Pass the already-detected pose
+            currentPose: this.currentPose,  // Pass the already-detected pose
+            videoTransform: videoTransform  // Pass video scaling/offset for coordinate conversion
         };
 
         // Use layer system for rendering
@@ -1443,6 +1448,7 @@ class ExperienceApp {
         const canvas = this.canvas;
         const overlayCanvas = this.overlayCanvas;
         const videoContainer = document.querySelector('.video-container');
+        const pixiContainer = document.getElementById('pixiContainer');
 
         // Store original styles
         this.originalCanvasStyles = {
@@ -1472,6 +1478,14 @@ class ExperienceApp {
                 left: videoContainer?.style.left,
                 transform: videoContainer?.style.transform,
                 zIndex: videoContainer?.style.zIndex
+            },
+            pixiContainer: {
+                width: pixiContainer?.style.width,
+                height: pixiContainer?.style.height,
+                position: pixiContainer?.style.position,
+                top: pixiContainer?.style.top,
+                left: pixiContainer?.style.left,
+                transform: pixiContainer?.style.transform
             }
         };
 
@@ -1506,12 +1520,13 @@ class ExperienceApp {
         document.body.style.padding = '0';
 
         // Make container cover the full screen
+        // Use explicit pixel dimensions for consistent sizing
         if (videoContainer) {
             videoContainer.style.position = 'fixed';
             videoContainer.style.top = '0';
             videoContainer.style.left = '0';
-            videoContainer.style.width = '100vw';
-            videoContainer.style.height = '100vh';
+            videoContainer.style.width = fullscreenWidth + 'px';
+            videoContainer.style.height = fullscreenHeight + 'px';
             videoContainer.style.transform = 'none';
             videoContainer.style.margin = '0';
             videoContainer.style.padding = '0';
@@ -1523,10 +1538,11 @@ class ExperienceApp {
         }
 
         // Also resize the PixiJS container to fill the screen
-        const pixiContainer = document.getElementById('pixiContainer');
+        // pixiContainer already declared at top of function
         if (pixiContainer) {
-            pixiContainer.style.width = '100%';
-            pixiContainer.style.height = '100%';
+            // Use explicit pixel dimensions to ensure exact sizing
+            pixiContainer.style.width = fullscreenWidth + 'px';
+            pixiContainer.style.height = fullscreenHeight + 'px';
         }
 
         // Use screen dimensions for true fullscreen
@@ -1535,12 +1551,23 @@ class ExperienceApp {
         overlayCanvas.width = fullscreenWidth;
         overlayCanvas.height = fullscreenHeight;
 
+        // Debug: Log all dimension values to identify mismatches
+        console.log('🔍 Main Canvas Dimensions:', {
+            canvasWidth: canvas.width,
+            canvasHeight: canvas.height,
+            canvasClientWidth: canvas.clientWidth,
+            canvasClientHeight: canvas.clientHeight,
+            windowInner: window.innerWidth + 'x' + window.innerHeight,
+            canvasBoundingRect: canvas.getBoundingClientRect()
+        });
+
         // Make canvases fill viewport visually and be at top-left
+        // Use explicit pixel dimensions to match canvas resolution exactly
         canvas.style.position = 'fixed';
         canvas.style.top = '0';
         canvas.style.left = '0';
-        canvas.style.width = '100vw';
-        canvas.style.height = '100vh';
+        canvas.style.width = fullscreenWidth + 'px';
+        canvas.style.height = fullscreenHeight + 'px';
         canvas.style.margin = '0';
         canvas.style.padding = '0';
         canvas.style.transform = 'none';
@@ -1548,8 +1575,8 @@ class ExperienceApp {
         overlayCanvas.style.position = 'fixed';
         overlayCanvas.style.top = '0';
         overlayCanvas.style.left = '0';
-        overlayCanvas.style.width = '100vw';
-        overlayCanvas.style.height = '100vh';
+        overlayCanvas.style.width = fullscreenWidth + 'px';
+        overlayCanvas.style.height = fullscreenHeight + 'px';
         overlayCanvas.style.margin = '0';
         overlayCanvas.style.padding = '0';
         overlayCanvas.style.transform = 'none';
@@ -1615,6 +1642,7 @@ class ExperienceApp {
         const canvas = this.canvas;
         const overlayCanvas = this.overlayCanvas;
         const videoContainer = document.querySelector('.video-container');
+        const pixiContainer = document.getElementById('pixiContainer');
 
         // Restore original styles if they were stored
         if (this.originalCanvasStyles) {
@@ -1625,6 +1653,11 @@ class ExperienceApp {
             // Restore container styles
             if (videoContainer && this.originalCanvasStyles.container) {
                 Object.assign(videoContainer.style, this.originalCanvasStyles.container);
+            }
+
+            // Restore pixiContainer styles
+            if (pixiContainer && this.originalCanvasStyles.pixiContainer) {
+                Object.assign(pixiContainer.style, this.originalCanvasStyles.pixiContainer);
             }
 
             this.originalCanvasStyles = null;
@@ -1654,6 +1687,15 @@ class ExperienceApp {
                 videoContainer.style.left = '';
                 videoContainer.style.transform = '';
                 videoContainer.style.zIndex = '';
+            }
+
+            if (pixiContainer) {
+                pixiContainer.style.width = '';
+                pixiContainer.style.height = '';
+                pixiContainer.style.position = '';
+                pixiContainer.style.top = '';
+                pixiContainer.style.left = '';
+                pixiContainer.style.transform = '';
             }
         }
 

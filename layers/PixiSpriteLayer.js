@@ -162,7 +162,7 @@ class PixiSpriteLayer extends LayerInterface {
                 const ts = new Date().toLocaleTimeString();
                 console.log(`📍 [${ts}] PixiSpriteLayer received pose: "${this.lastLoggedPoseType}" → "${poseType}"`);
                 this.lastLoggedPoseType = poseType;
-                
+
             }
 
             // Apply pose effects (sprite scaling/positioning and texture switching)
@@ -213,19 +213,28 @@ class PixiSpriteLayer extends LayerInterface {
             // Resize the PixiJS renderer
             this.pixiApp.renderer.resize(width, height);
 
-            // Update canvas styling - use viewport units in fullscreen
+            // Update canvas styling - always use pixel dimensions to match renderer resolution
             if (this.pixiApp.canvas) {
-                const isFullscreen = !!document.fullscreenElement;
-                if (isFullscreen) {
-                    this.pixiApp.canvas.style.width = '100vw';
-                    this.pixiApp.canvas.style.height = '100vh';
-                } else {
-                    this.pixiApp.canvas.style.width = width + 'px';
-                    this.pixiApp.canvas.style.height = height + 'px';
-                }
+                this.pixiApp.canvas.style.width = width + 'px';
+                this.pixiApp.canvas.style.height = height + 'px';
             }
 
             console.log('✓ PixiSpriteLayer PixiJS resized to:', width, 'x', height);
+
+            // Debug: Log all dimension values to identify mismatches
+            if (this.pixiApp.canvas) {
+                console.log('🔍 PixiJS Dimensions:', {
+                    rendererWidth: this.pixiApp.renderer.width,
+                    rendererHeight: this.pixiApp.renderer.height,
+                    canvasWidth: this.pixiApp.canvas.width,
+                    canvasHeight: this.pixiApp.canvas.height,
+                    canvasStyleWidth: this.pixiApp.canvas.style.width,
+                    canvasStyleHeight: this.pixiApp.canvas.style.height,
+                    canvasClientWidth: this.pixiApp.canvas.clientWidth,
+                    canvasClientHeight: this.pixiApp.canvas.clientHeight,
+                    canvasBoundingRect: this.pixiApp.canvas.getBoundingClientRect()
+                });
+            }
         }
     }
 
@@ -502,6 +511,8 @@ class PixiSpriteLayer extends LayerInterface {
         }
 
         // Convert MediaPipe coordinates to PixiJS coordinates
+        // MediaPipe landmarks are normalized (0-1) and work correctly with simple scaling
+        // because the video is centered using cover mode
         const pixiX = landmark.x * this.pixiApp.renderer.width;
         const pixiY = landmark.y * this.pixiApp.renderer.height;
 
