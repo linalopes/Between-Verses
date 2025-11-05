@@ -1,5 +1,5 @@
 // Feature flag to control p5 sticker rendering
-const USE_P5_STICKERS = false; // When set to true, p5 stickers render again alongside Pixi mesh
+const USE_P5_STICKERS = true; // Enable p5 stickers rendering
 
 // Declare global variables for video capture, body pose detection, and poses
 let video;
@@ -26,90 +26,8 @@ const STABLE_FRAMES = 12; // Number of frames to wait before considering a state
 let jesusImage = null; // Jesus_1.png
 let primeImage = null; // Prime_1.png
 
-// PixiJS overlay variables
-let pixiApp = null; // PixiJS application instance
-let debugMarkers = []; // Debug markers for vertices 14, 15, 26, 27
-
-// PixiJS container layers for organized rendering
-let bgContainer, meshesContainer, fgContainer;
-
-// Foreground mask for bottom 30% band
-let fgMask;
-
-// Foreground particle system for lilies
-let fgParticles = [];
-let fgSpawnAccumulator = 0;
-let fgPaused = false;
-let lilyTex = null;
-
-// Multi-person PixiJS plane management
-let planes = [];                    // PIXI.SimplePlane per person
-let planeContainers = [];           // PIXI.Container per person for positioning/scaling
-let planePosBufs = [];              // Cached aVertexPosition buffer per plane
-let planePoseType = [];             // "Prime" | "Jesus" | "Neutral" for each person
-let lastVertexPositions = [];       // Per-person cache for smoothing
-
-// Per-person anchor/scale smoothing caches
-let anchorPos = [];                 // [{x,y}, ...] per person for position smoothing
-let anchorScale = [];               // [number, ...] per person for scale smoothing
-
-// Mesh grid dimensions
-const COLS = 6;
-const ROWS = 6;
-
-// Plane positioning factor (0 = shoulders, 1 = hips, 0.5 = halfway/torso center)
-const TORSO_OFFSET_FACTOR = 0.5; // Adjust to move plane up/down between shoulders and hips
-
-// Foreground mask configuration
-const FG_FRACTION = 0.30; // fraction of screen height for foreground band
-
-// Background image opacity
-const BG_ALPHA = 0.0; // background image opacity (fully opaque)
-
-// p5 canvas opacity
-const P5_ALPHA = 0.8; // p5 canvas opacity (50% transparent)
-
-// Foreground particle system settings
-const FG_SETTINGS = {
-    spawnRate: 6,           // particles per second
-    maxParticles: 40,       // safety cap
-    baseScale: 0.25,        // base scale relative to texture
-    scaleJitter: 0.35,      // random extra scale
-    speedMin: 2,            // px/sec horizontal speed
-    speedMax: 10,
-    sineAmp: 6,             // vertical sine amplitude (px)
-    sineFreq: 1.1,          // sine frequency multiplier
-    lifetimeMin: 6.0,       // seconds
-    lifetimeMax: 10.0,
-    alphaStart: 0.90,
-    alphaEnd: 0.0,
-    blendMode: PIXI.BLEND_MODES.NORMAL
-};
-
-// Jitter reduction constants
-const ANCHOR_SMOOTH = 0.15;      // 0..1, higher = more smoothing for container position
-const SCALE_SMOOTH = 0.15;       // 0..1, smoothing for container scale
-const DEAD_ZONE_PX = 0.4;        // px threshold for anchor X/Y changes
-const SCALE_DEAD = 0.002;        // unit threshold for scale changes
-
-// Preloaded textures
-let primeTex = null; // generated/Prime_1.png texture
-let jesusTex = null; // generated/Jesus_1.png texture
-let bgTex = null;
-let bgSprite = null; // Background sprite
-
-// Pose-to-mesh vertex mapping
-const POSE_VERTEX_MAP = {
-    left_shoulder: 14,   // Row 2, Col 2
-    right_shoulder: 15,  // Row 2, Col 3
-    left_hip: 20,        // Row 4, Col 2
-    right_hip: 21        // Row 4, Col 3
-};
-const SMOOTHING_FACTOR = 0.25; // Lerp factor for jitter reduction
-
-// Mesh blend mode for SimplePlane overlays
-const MESH_BLEND_MODE = PIXI.BLEND_MODES.ADD;
-// Alternative options to try later: SCREEN, OVERLAY, ADD, MULTIPLY
+// Navel anchor blend factor (0 = shoulders, 1 = hips, 0.60 = near navel)
+window.NAVEL_BLEND = 0.60; // Adjustable at runtime via devtools
 
 /*
 ===========================================================
@@ -125,10 +43,10 @@ function preload() {
     bodyPose = ml5.bodyPose({ flipHorizontal: true });
 
     // Load local images for poses
-    jesusImage = loadImage('./generated/Jesus.png');
-    primeImage = loadImage('./generated/Prime_1.png');
+    jesusImage = loadImage('./generated/Jesus_1.svg');
+    primeImage = loadImage('./generated/Prime.png');
 
-    console.log("Loading local images: Jesus_1.png and Prime_1.png");
+    console.log("Loading local images: Jesus_1.png and Prime.png");
 }
 
 function setup() {
@@ -137,12 +55,10 @@ function setup() {
     canvas = createCanvas(640, 480);
     canvas.parent(videoWrapper);
 
-    // Set p5 canvas absolute positioning to align with Pixi overlay
+    // Set p5 canvas positioning
     canvas.elt.style.position = 'absolute';
     canvas.elt.style.top = '0';
     canvas.elt.style.left = '0';
-    canvas.elt.style.opacity = P5_ALPHA;
-    canvas.elt.style.zIndex = '5';  // Above background (-1) but below meshes (10)
 
     // Initialize video capture and hide the video element (only show the canvas)
     video = createCapture(VIDEO);
@@ -155,337 +71,17 @@ function setup() {
     // Get skeleton connection information for drawing lines between keypoints
     connections = bodyPose.getSkeleton();
 
-    // Initialize PixiJS overlay
-    initializePixiOverlay();
-
     // Setup control buttons
     setupControls();
 
-    console.log("Setup complete - multi-person pose detection with PixiJS overlay ready");
+    console.log("Setup complete - multi-person pose detection ready");
 }
 
-/*
-===========================================================
-PIXIJS OVERLAY SETUP
-This section initializes the PixiJS application and creates
-a random overlay sprite from the generated images pool.
-===========================================================
-*/
-
-async function initializePixiOverlay() {
-    // Create PixiJS application with same dimensions as p5 canvas
-    pixiApp = new PIXI.Application({
-        width: originalWidth,
-        height: originalHeight,
-        backgroundAlpha: 0, // Fully transparent background
-        antialias: true
-    });
-
-    // Add PixiJS canvas to the video wrapper, positioned over p5 canvas
-    videoWrapper.appendChild(pixiApp.view);
-
-    // Position PixiJS canvas absolutely over p5 canvas with pixel-perfect sizing
-    pixiApp.view.style.position = 'absolute';
-    pixiApp.view.style.top = '0';
-    pixiApp.view.style.left = '0';
-    pixiApp.view.style.width = originalWidth + 'px';
-    pixiApp.view.style.height = originalHeight + 'px';
-    pixiApp.view.style.pointerEvents = 'none'; // Allow clicks to pass through to p5 canvas
-
-    // Ensure video wrapper has relative positioning for absolute overlay
-    videoWrapper.style.position = 'relative';
-
-    // Enable zIndex sorting for layered containers
-    pixiApp.stage.sortableChildren = true;
-
-    // Create container layers with zIndex for organized rendering
-    bgContainer = new PIXI.Container();
-    bgContainer.zIndex = -1;  // Background behind everything
-
-    meshesContainer = new PIXI.Container();
-    meshesContainer.zIndex = 10;  // Meshes above p5 canvas
-
-    fgContainer = new PIXI.Container();
-    fgContainer.zIndex = 20;  // Lilies on top
-
-    // Add containers to stage in order
-    pixiApp.stage.addChild(bgContainer, meshesContainer, fgContainer);
-
-    // Create mask for fgContainer (bottom 30% band)
-    fgMask = new PIXI.Graphics();
-    fgContainer.mask = fgMask;
-    pixiApp.stage.addChild(fgMask);
-
-    // Draw initial mask for bottom 30% of canvas
-    const w = pixiApp.renderer.width;
-    const h = pixiApp.renderer.height;
-    const yTop = Math.floor(h * (1 - FG_FRACTION));
-    fgMask.clear().beginFill(0xffffff).drawRect(0, yTop, w, h - yTop).endFill();
-
-    try {
-        // Preload all textures once
-        primeTex = await PIXI.Assets.load("generated/Prime_1.png");
-        jesusTex = await PIXI.Assets.load("generated/Jesus_1.png");
-        lilyTex = await PIXI.Assets.load("./front-images/water-lily.png");
-        bgTex = await PIXI.Assets.load("./bg-images/Cloud 1.png");
-
-        // Create background sprite from texture
-        bgSprite = new PIXI.Sprite(bgTex);
-        bgSprite.anchor.set(0.5);
-        bgSprite.x = pixiApp.renderer.width / 2;
-        bgSprite.y = pixiApp.renderer.height / 2;
-
-        // Background should render normally
-        bgSprite.blendMode = PIXI.BLEND_MODES.NORMAL;
-
-        // Set background opacity to 70%
-        bgSprite.alpha = BG_ALPHA;
-
-        // Scale to fit canvas while preserving aspect ratio (cover mode)
-        const scaleX = pixiApp.renderer.width / bgTex.width;
-        const scaleY = pixiApp.renderer.height / bgTex.height;
-        const scale = Math.max(scaleX, scaleY);
-        bgSprite.scale.set(scale);
-
-        // Add to background container
-        bgContainer.addChild(bgSprite);
-
-        // Create debug markers for vertices 14, 15, 26, 27
-        // createDebugMarkers();
-
-        // Start foreground particle ticker
-        let last = performance.now() / 1000;
-        pixiApp.ticker.add(() => {
-            const now = performance.now() / 1000;
-            const dt = Math.min(now - last, 0.05);
-            last = now;
-            if (!fgPaused) updateFgParticles(dt);
-        });
-
-        console.log("PixiJS overlay initialized with multi-person support, preloaded textures, layered containers, fgContainer mask, and particle system");
-    } catch (error) {
-        console.error('Error loading PixiJS textures:', error);
-    }
-}
-
-// Resize both p5 canvas and PixiJS overlay to specified dimensions
+// Resize p5 canvas to specified dimensions
 function resizeAllTo(w, h) {
-    resizeCanvas(w, h);                  // p5
-    canvas.elt.style.opacity = P5_ALPHA; // Maintain p5 canvas opacity
-    canvas.elt.style.zIndex = '5';       // Maintain p5 canvas z-index
+    resizeCanvas(w, h);
     videoWrapper.style.width = w + 'px';
     videoWrapper.style.height = h + 'px';
-    if (pixiApp) {
-        pixiApp.renderer.resize(w, h);
-        pixiApp.view.style.width = w + 'px';
-        pixiApp.view.style.height = h + 'px';
-        updateFgMask();                   // also rescale bgSprite inside it
-    }
-}
-
-// Update foreground mask when canvas is resized
-function updateFgMask() {
-    if (!pixiApp || !fgMask) return;
-
-    const w = pixiApp.renderer.width;
-    const h = pixiApp.renderer.height;
-    const yTop = Math.floor(h * (1 - FG_FRACTION));
-    fgMask.clear().beginFill(0xffffff).drawRect(0, yTop, w, h - yTop).endFill();
-
-    // Update background sprite size and position
-    if (bgSprite && bgTex) {
-        bgSprite.x = w / 2;
-        bgSprite.y = h / 2;
-        const scaleX = w / bgTex.width;
-        const scaleY = h / bgTex.height;
-        const scale = Math.max(scaleX, scaleY);
-        bgSprite.scale.set(scale);
-    }
-}
-
-// Spawn a new lily particle in the foreground container
-function spawnFgParticle() {
-    if (!lilyTex || fgParticles.length >= FG_SETTINGS.maxParticles) return;
-
-    const w = pixiApp.renderer.width;
-    const h = pixiApp.renderer.height;
-    const yBandTop = Math.floor(h * (1 - FG_FRACTION));
-    const yBandH = h - yBandTop;
-
-    const spr = new PIXI.Sprite(lilyTex);
-    spr.anchor.set(0.5);
-    spr.alpha = FG_SETTINGS.alphaStart;
-    spr.blendMode = FG_SETTINGS.blendMode;
-
-    // Randomize initial horizontal placement
-    spr.x = Math.random() * w;
-
-    // Random scale (uniform), based on baseScale
-    const s = FG_SETTINGS.baseScale * (1 + FG_SETTINGS.scaleJitter * (Math.random() * 2 - 1));
-    spr.scale.set(s);
-
-    // Compute half-height and sine amplitude margin for safe spawning
-    const half = spr.height * 0.5;
-    const amp = FG_SETTINGS.sineAmp;
-
-    // Define minY so the sprite never crosses above the band
-    const minY = yBandTop + half + amp;
-
-    // Allow downward slack (can go below screen)
-    const downSlack = yBandH + amp;
-
-    // Set Y position with downward freedom
-    spr.y = minY + Math.random() * downSlack;
-
-    // Random horizontal direction & speed
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    const speed = smoothLerp(FG_SETTINGS.speedMin, FG_SETTINGS.speedMax, Math.random()) * dir;
-
-    // Lifetime seconds
-    const life = smoothLerp(FG_SETTINGS.lifetimeMin, FG_SETTINGS.lifetimeMax, Math.random());
-
-    // Per-particle state
-    spr.__p = {
-        age: 0,
-        life,
-        speed,
-        phase: Math.random() * Math.PI * 2, // sine seed
-        sineAmp: FG_SETTINGS.sineAmp * (0.7 + Math.random()*0.6),
-        sineFreq: FG_SETTINGS.sineFreq * (0.8 + Math.random()*0.4),
-        baseY: spr.y
-    };
-
-    fgContainer.addChild(spr);
-    fgParticles.push(spr);
-}
-
-// Update all foreground particles
-function updateFgParticles(dt) {
-    const w = pixiApp.renderer.width;
-    const h = pixiApp.renderer.height;
-    const yBandTop = Math.floor(h * (1 - FG_FRACTION));
-
-    // Spawn at rate (particles/sec)
-    fgSpawnAccumulator += dt * FG_SETTINGS.spawnRate;
-    while (fgSpawnAccumulator >= 1) {
-        spawnFgParticle();
-        fgSpawnAccumulator -= 1;
-    }
-
-    // Update & recycle
-    for (let i = fgParticles.length - 1; i >= 0; i--) {
-        const spr = fgParticles[i];
-        const p = spr.__p;
-
-        p.age += dt;
-
-        // Horizontal move + wrap
-        spr.x += p.speed * dt;
-        if (spr.x < -spr.width) spr.x = w + spr.width * 0.5;
-        if (spr.x > w + spr.width) spr.x = -spr.width * 0.5;
-
-        // Gentle sine drift around baseY with clamping
-        p.phase += p.sineFreq * dt;
-        spr.y = p.baseY + Math.sin(p.phase) * p.sineAmp;
-
-        // Clamp Y only at the top - allow downward movement
-        const half = spr.height * 0.5;
-        const topLimit = yBandTop + half;
-        if (spr.y < topLimit) spr.y = topLimit;
-
-        // Lifetime alpha fade (ease-in-out-ish)
-        const t = Math.min(p.age / p.life, 1);
-        spr.alpha = smoothLerp(FG_SETTINGS.alphaStart, FG_SETTINGS.alphaEnd, t);
-
-        // Recycle when dead
-        if (p.age >= p.life) {
-            fgContainer.removeChild(spr);
-            fgParticles.splice(i, 1);
-        }
-    }
-}
-
-// Reset mesh vertices for a specific plane to fill the current canvas area
-function resetMesh(plane, width, height) {
-    if (!plane || !pixiApp) return;
-
-    // Get the position buffer for vertex coordinates
-    const posBuffer = plane.geometry.getBuffer('aVertexPosition');
-    const positions = posBuffer.data; // Float32Array [x0,y0, x1,y1, ...]
-
-    // Fill positions row-major to cover the entire canvas
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            const vertexIndex = (row * COLS + col) * 2; // Each vertex has x,y coordinates
-
-            // Calculate normalized position (0 to 1)
-            const x = col / (COLS - 1);
-            const y = row / (ROWS - 1);
-
-            // Map to canvas coordinates
-            positions[vertexIndex] = x * width;     // x coordinate
-            positions[vertexIndex + 1] = y * height; // y coordinate
-        }
-    }
-
-    // Update the buffer to apply changes
-    posBuffer.update();
-
-    console.log(`Mesh reset: ${COLS}x${ROWS} grid covering ${width}x${height} canvas`);
-}
-
-// Reset mesh vertices in local texture coordinates (not full-canvas)
-function resetMeshLocal(plane) {
-    if (!plane || !plane.texture) return;
-
-    const posBuffer = plane.geometry.getBuffer('aVertexPosition');
-    const positions = posBuffer.data;
-    const texture = plane.texture;
-
-    // Layout vertices in the plane's LOCAL space using the texture size
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            const vertexIndex = (row * COLS + col) * 2;
-            const x = (col / (COLS - 1)) * texture.width;
-            const y = (row / (ROWS - 1)) * texture.height;
-            positions[vertexIndex] = x;
-            positions[vertexIndex + 1] = y;
-        }
-    }
-    posBuffer.update();
-
-    console.log(`Mesh reset local: ${COLS}x${ROWS} grid covering ${texture.width}x${texture.height} texture`);
-}
-
-// Ensure Pixi-related arrays are sized to match poses.length
-function resizePixiPersonArrays(numPersons) {
-    // Extend arrays if we have more people
-    while (planes.length < numPersons) {
-        planes.push(null);
-        planeContainers.push(null);
-        planePosBufs.push(null);
-        planePoseType.push("Neutral");
-        lastVertexPositions.push({});
-        anchorPos.push({ x: 0, y: 0 });
-        anchorScale.push(1);
-    }
-
-    // Truncate arrays if we have fewer people
-    if (planes.length > numPersons) {
-        // Remove extra planes and containers from stage
-        for (let i = numPersons; i < planes.length; i++) {
-            if (planeContainers[i] && planeContainers[i].parent) {
-                planeContainers[i].parent.removeChild(planeContainers[i]);
-            }
-        }
-        planes = planes.slice(0, numPersons);
-        planeContainers = planeContainers.slice(0, numPersons);
-        planePosBufs = planePosBufs.slice(0, numPersons);
-        planePoseType = planePoseType.slice(0, numPersons);
-        lastVertexPositions = lastVertexPositions.slice(0, numPersons);
-        anchorPos = anchorPos.slice(0, numPersons);
-        anchorScale = anchorScale.slice(0, numPersons);
-    }
 }
 
 // Ensure p5/state arrays are sized to match poses.length
@@ -509,208 +105,13 @@ function resizeStateArrays(numPersons) {
     }
 }
 
-// Create a plane for a specific person if it doesn't exist
-function ensurePlaneForPerson(personIndex) {
-    if (!planes[personIndex]) {
-        // Create container for positioning and scaling
-        planeContainers[personIndex] = new PIXI.Container();
-        meshesContainer.addChild(planeContainers[personIndex]);
-
-        // Create plane with default texture (will be switched based on pose)
-        planes[personIndex] = new PIXI.SimplePlane(primeTex, COLS, ROWS);
-        planes[personIndex].alpha = 1;
-        planes[personIndex].blendMode = MESH_BLEND_MODE;
-
-        // Add plane to container
-        planeContainers[personIndex].addChild(planes[personIndex]);
-
-        // Center the plane in the container (local coordinates)
-        planes[personIndex].position.set(-primeTex.width/2, -primeTex.height/2);
-
-        // Cache position buffer for performance
-        planePosBufs[personIndex] = planes[personIndex].geometry.getBuffer('aVertexPosition');
-
-        // Initialize mesh vertices in local texture coordinates
-        resetMeshLocal(planes[personIndex]);
-
-        console.log(`Created plane for person ${personIndex + 1}`);
-    }
-
-    // Ensure lastVertexPositions[personIndex] exists
-    if (!lastVertexPositions[personIndex]) {
-        lastVertexPositions[personIndex] = {};
-    }
-
-    // Initialize last vertex positions cache for the four tracked vertices if not already done
-    if (planePosBufs[personIndex]) {
-        const trackedVertices = [POSE_VERTEX_MAP.left_shoulder, POSE_VERTEX_MAP.right_shoulder,
-                                POSE_VERTEX_MAP.left_hip, POSE_VERTEX_MAP.right_hip];
-
-        trackedVertices.forEach(vertexIndex => {
-            if (!lastVertexPositions[personIndex][vertexIndex]) {
-                const positions = planePosBufs[personIndex].data;
-                const bufferIndex = vertexIndex * 2;
-                lastVertexPositions[personIndex][vertexIndex] = {
-                    x: positions[bufferIndex],
-                    y: positions[bufferIndex + 1]
-                };
-            }
-        });
-    }
-}
-
-// Create debug markers for specific vertices (14, 15, 26, 27)
-function createDebugMarkers() {
-    if (!pixiApp) return;
-
-    // Clear any existing markers
-    debugMarkers.forEach(marker => {
-        if (marker.parent) {
-            marker.parent.removeChild(marker);
-        }
-    });
-    debugMarkers = [];
-
-    // Create markers for vertices 14, 15, 26, 27
-    const debugVertices = [14, 15, 26, 27];
-
-    debugVertices.forEach((vertexIndex, i) => {
-        // Create a small red circle for each debug vertex
-        const marker = new PIXI.Graphics();
-        marker.beginFill(0xFF0000, 0.8); // Red color with some transparency
-        marker.drawCircle(0, 0, 4); // Small circle with radius 4
-        marker.endFill();
-
-        // Add label text
-        const label = new PIXI.Text(`P${vertexIndex}`, {
-            fontSize: 10,
-            fill: 0xFFFFFF,
-            stroke: 0x000000,
-            strokeThickness: 1
-        });
-        label.anchor.set(0.5);
-        label.y = -8; // Position above the circle
-        marker.addChild(label);
-
-        // Add to stage
-        pixiApp.stage.addChild(marker);
-        debugMarkers.push(marker);
-
-        console.log(`Created debug marker for vertex ${vertexIndex}`);
-    });
-}
-
-// Update debug marker positions based on first visible plane's mesh vertices
-function updateDebugMarkers() {
-    // Find the first visible plane for debug markers
-    let activePlane = null;
-    for (let i = 0; i < planes.length; i++) {
-        if (planes[i] && planes[i].visible) {
-            activePlane = planes[i];
-            break;
-        }
-    }
-
-    if (!activePlane || debugMarkers.length === 0) return;
-
-    // Get the position buffer from the first visible plane
-    const posBuffer = activePlane.geometry.getBuffer('aVertexPosition');
-    const positions = posBuffer.data;
-
-    // Update positions for vertices 14, 15, 26, 27
-    const debugVertices = [14, 15, 26, 27];
-
-    debugVertices.forEach((vertexIndex, i) => {
-        if (debugMarkers[i]) {
-            const x = positions[vertexIndex * 2];
-            const y = positions[vertexIndex * 2 + 1];
-
-            // Convert local coordinates to global coordinates
-            const globalPos = activePlane.toGlobal(new PIXI.Point(x, y));
-
-            debugMarkers[i].x = globalPos.x;
-            debugMarkers[i].y = globalPos.y;
-        }
-    });
-}
-
-// Linear interpolation function for smoothing (renamed to avoid p5 conflict)
-function smoothLerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
-// Update PixiJS mesh vertices for a specific person based on body pose keypoints
-function updatePixiWarpFromPose(personIndex, pose, scaleX, scaleY) {
-    if (!planes[personIndex] || !pose) return;
-
-    // Extract required keypoints by name
-    const leftShoulder = pose.keypoints.find((k) => k.name === "left_shoulder");
-    const rightShoulder = pose.keypoints.find((k) => k.name === "right_shoulder");
-    const leftHip = pose.keypoints.find((k) => k.name === "left_hip");
-    const rightHip = pose.keypoints.find((k) => k.name === "right_hip");
-
-    // Confidence check: skip if any keypoint is missing or has low confidence
-    if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return;
-    if (leftShoulder.confidence < 0.3 || rightShoulder.confidence < 0.3 ||
-        leftHip.confidence < 0.3 || rightHip.confidence < 0.3) return;
-
-    // Get the position buffer for this person's plane
-    const posBuffer = planePosBufs[personIndex];
-    const positions = posBuffer.data;
-
-    // Define the four keypoints we're tracking
-    const keypoints = [
-        { keypoint: leftShoulder, vertexIndex: POSE_VERTEX_MAP.left_shoulder },
-        { keypoint: rightShoulder, vertexIndex: POSE_VERTEX_MAP.right_shoulder },
-        { keypoint: leftHip, vertexIndex: POSE_VERTEX_MAP.left_hip },
-        { keypoint: rightHip, vertexIndex: POSE_VERTEX_MAP.right_hip }
-    ];
-
-    // Update each vertex position
-    keypoints.forEach(({ keypoint, vertexIndex }) => {
-        // Convert from p5 space to screen space using scale factors
-        const sx = keypoint.x * scaleX;
-        const sy = keypoint.y * scaleY;
-
-        // Convert from screen coordinates to plane local coordinates
-        const localPos = planes[personIndex].toLocal(new PIXI.Point(sx, sy));
-
-        // Apply dead-zone and smoothing to reduce jitter
-        let targetX = localPos.x;
-        let targetY = localPos.y;
-
-        if (lastVertexPositions[personIndex][vertexIndex]) {
-            const last = lastVertexPositions[personIndex][vertexIndex];
-
-            // Apply dead-zone for tiny changes
-            if (Math.abs(targetX - last.x) < DEAD_ZONE_PX) targetX = last.x;
-            if (Math.abs(targetY - last.y) < DEAD_ZONE_PX) targetY = last.y;
-
-            // Smooth the movement to reduce jitter
-            targetX = smoothLerp(last.x, targetX, SMOOTHING_FACTOR);
-            targetY = smoothLerp(last.y, targetY, SMOOTHING_FACTOR);
-        }
-
-        // Write smoothed position to buffer (each vertex has x,y coordinates)
-        const bufferIndex = vertexIndex * 2;
-        positions[bufferIndex] = targetX;     // x coordinate
-        positions[bufferIndex + 1] = targetY; // y coordinate
-
-        // Update cache for next frame
-        lastVertexPositions[personIndex][vertexIndex] = { x: targetX, y: targetY };
-    });
-
-    // Update the buffer once after all four assignments
-    posBuffer.update();
-}
-
 /*
 ===========================================================
 DRAWING
 This section is responsible for rendering the mirrored video
 feed on the canvas, visualizing detected poses, and drawing
 skeletons and keypoints for all participants. It also displays
-per-person stickers anchored to shoulders.
+per-person stickers anchored near the navel.
 ===========================================================
 */
 
@@ -733,7 +134,6 @@ function draw() {
 
     // Resize per-person arrays to match current number of poses
     resizeStateArrays(poses.length);
-    resizePixiPersonArrays(poses.length);
 
     // Loop through detected poses to draw skeletons, keypoints, and analyze states
     for (let i = 0; i < poses.length; i++) {
@@ -771,113 +171,17 @@ function draw() {
         }
     }
 
-    // Process each person's pose and update PixiJS planes immediately
-    for (let i = 0; i < poses.length; i++) {
-        let pose = poses[i];
-        let poseType = personStates[i]; // Get the analyzed pose state
-
-        // Extract keypoints for confidence check
-        const leftShoulder = pose.keypoints.find((k) => k.name === "left_shoulder");
-        const rightShoulder = pose.keypoints.find((k) => k.name === "right_shoulder");
-        const leftHip = pose.keypoints.find((k) => k.name === "left_hip");
-        const rightHip = pose.keypoints.find((k) => k.name === "right_hip");
-
-        // Check if we have valid keypoints with good confidence
-        const hasValidKeypoints = leftShoulder && rightShoulder && leftHip && rightHip &&
-                                 leftShoulder.confidence >= 0.3 && rightShoulder.confidence >= 0.3 &&
-                                 leftHip.confidence >= 0.3 && rightHip.confidence >= 0.3;
-
-        if (poseType === "Neutral" || !hasValidKeypoints) {
-            // Hide plane for neutral pose or low confidence
-            if (planeContainers[i]) {
-                planeContainers[i].visible = false;
-            }
-        } else {
-            // Show plane and set appropriate texture
-            ensurePlaneForPerson(i);
-
-            // Switch texture based on pose type (no random selection)
-            const newTexture = (poseType === "Prime") ? primeTex : jesusTex;
-            if (planes[i].texture !== newTexture) {
-                planes[i].texture = newTexture;
-                resetMeshLocal(planes[i]); // Reset mesh for new texture
-            }
-
-            planeContainers[i].visible = true;
-            planePoseType[i] = poseType;
-
-            // Compute per-person anchor and scale each frame (torso offset positioning)
-            const cx = ((leftShoulder.x + rightShoulder.x) / 2) * scaleX;
-            const cyShoulder = ((leftShoulder.y + rightShoulder.y) / 2) * scaleY;
-            const cyHip = ((leftHip.y + rightHip.y) / 2) * scaleY;
-            const cyNavel = cyShoulder + TORSO_OFFSET_FACTOR * (cyHip - cyShoulder);
-            const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * scaleX;
-
-            // Use the same factor as stickers (5.5) to set the plane width in screen pixels
-            const targetWidth = shoulderWidth * 5.5;
-            const scaleFactor = targetWidth / planes[i].texture.width;
-
-            // Apply smoothing and dead-zone to reduce jitter
-            const rawX = cx;
-            const rawY = cyNavel;
-            const rawScale = scaleFactor;
-
-            // Dead-zone for position
-            const prevX = anchorPos[i].x;
-            const prevY = anchorPos[i].y;
-            const dx = Math.abs(rawX - prevX);
-            const dy = Math.abs(rawY - prevY);
-            const targetX = (dx < DEAD_ZONE_PX) ? prevX : rawX;
-            const targetY = (dy < DEAD_ZONE_PX) ? prevY : rawY;
-
-            // Dead-zone for scale
-            const prevS = anchorScale[i];
-            const ds = Math.abs(rawScale - prevS);
-            const targetS = (ds < SCALE_DEAD) ? prevS : rawScale;
-
-            // Smoothing (lerp) for position/scale
-            const smoothX = smoothLerp(prevX, targetX, ANCHOR_SMOOTH);
-            const smoothY = smoothLerp(prevY, targetY, ANCHOR_SMOOTH);
-            const smoothS = smoothLerp(prevS, targetS, SCALE_SMOOTH);
-
-            // Write back caches
-            anchorPos[i].x = smoothX;
-            anchorPos[i].y = smoothY;
-            anchorScale[i] = smoothS;
-
-            // Apply smoothed transform to the container (anchored at navel)
-            planeContainers[i].position.set(smoothX, smoothY);
-            planeContainers[i].scale.set(smoothS);
-
-            // Update mesh warp for this person
-            updatePixiWarpFromPose(i, pose, scaleX, scaleY);
-        }
-    }
-
     // Process per-person state changes and debounce (for p5 stickers)
     for (let i = 0; i < poses.length; i++) {
         processPersonStateChange(i);
     }
 
-    // Draw per-person stickers anchored to shoulders (only if no Pixi planes are visible)
-    let anyPixiPlaneVisible = false;
-    for (let i = 0; i < planeContainers.length; i++) {
-        if (planeContainers[i] && planeContainers[i].visible) {
-            anyPixiPlaneVisible = true;
-            break;
-        }
-    }
-
-    // Only draw p5 stickers if no Pixi planes are visible (avoid double imagery)
-    // Stickers are currently disabled via USE_P5_STICKERS = false
-    if (USE_P5_STICKERS && !anyPixiPlaneVisible) {
+    // Draw per-person stickers anchored near the navel
+    if (USE_P5_STICKERS) {
         for (let i = 0; i < poses.length; i++) {
             drawPersonSticker(i, poses[i], scaleX, scaleY);
         }
     }
-
-    // Update debug markers for PixiJS mesh vertices
-    updateDebugMarkers();
 }
 
 /*
@@ -1026,44 +330,54 @@ function selectImageFor(state) {
 ===========================================================
 STICKER RENDERING
 This section handles drawing per-person stickers
-anchored to shoulder positions.
+anchored near the navel by blending shoulders→hips.
 ===========================================================
 */
 
-// Draw sticker for a specific person anchored to their shoulders
+/** Draw sticker anchored near the navel by blending shoulders→hips */
 function drawPersonSticker(personIndex, pose, scaleX, scaleY) {
     if (personIndex >= personOverlayImages.length) return;
 
-    let overlayImage = personOverlayImages[personIndex];
-    if (!overlayImage) return; // No image to draw
+    const overlayImage = personOverlayImages[personIndex];
+    if (!overlayImage) return;
 
-    // Get shoulder keypoints
-    let leftShoulder = pose.keypoints.find((k) => k.name === "left_shoulder");
-    let rightShoulder = pose.keypoints.find((k) => k.name === "right_shoulder");
+    // Keypoints
+    const leftShoulder = pose.keypoints.find(k => k.name === "left_shoulder");
+    const rightShoulder = pose.keypoints.find(k => k.name === "right_shoulder");
+    const leftHip = pose.keypoints.find(k => k.name === "left_hip");
+    const rightHip = pose.keypoints.find(k => k.name === "right_hip");
 
-    // Safety check for shoulder keypoints
+    // Shoulders must be confident
     if (!leftShoulder || !rightShoulder) return;
     if (leftShoulder.confidence < 0.3 || rightShoulder.confidence < 0.3) return;
 
-    // Calculate anchor point (midpoint between shoulders)
-    let cx = (leftShoulder.x + rightShoulder.x) / 2;
-    let cy = (leftShoulder.y + rightShoulder.y) / 2;
+    // Midpoints
+    const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
+    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
 
-    // Calculate shoulder width for scaling
-    let shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+    const hipsOK = leftHip && rightHip && leftHip.confidence >= 0.3 && rightHip.confidence >= 0.3;
+    const hipMidX = hipsOK ? (leftHip.x + rightHip.x) / 2 : shoulderMidX;
+    const hipMidY = hipsOK ? (leftHip.y + rightHip.y) / 2 : shoulderMidY;
 
-    // Scale the sticker relative to shoulder width
-    let w = 4.5 * shoulderWidth;
+    // Blend factor toward the navel (0 shoulders → 1 hips)
+    const NAVEL_BLEND = (typeof window !== "undefined" && window.NAVEL_BLEND != null)
+        ? window.NAVEL_BLEND
+        : 0.60; // adjust 0.55–0.65 if needed
+
+    let cx = shoulderMidX + (hipMidX - shoulderMidX) * NAVEL_BLEND;
+    let cy = shoulderMidY + (hipMidY - shoulderMidY) * NAVEL_BLEND;
+
+    // Scale relative to shoulder width (keep your current ratio; adjust if needed)
+    const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+    let w = 4.5 * shoulderWidth; // tweak if sticker is too big/small
     let h = w * (overlayImage.height / overlayImage.width);
 
-    // Apply scaling factors for fullscreen
-    cx *= scaleX;
-    cy *= scaleY;
-    w *= scaleX;
-    h *= scaleY;
+    // Apply fullscreen scaling
+    cx *= scaleX; cy *= scaleY;
+    w *= scaleX;  h *= scaleY;
 
-    // Draw the sticker centered at the shoulder midpoint
-    image(overlayImage, cx - w/2, cy - h/2, w, h);
+    // Draw centered on anchor
+    image(overlayImage, cx - w / 2, cy - h / 2, w, h);
 }
 
 // Callback function to handle detected poses
