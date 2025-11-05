@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Between Verses — Selfie Segmentation (ml5)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- ml5.js (1.x) -->
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --fg:#ffffffcc;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px}
+    h1{margin:8px 0 4px}
+    canvas{max-width:90vw;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.12)}
+    button{
+      padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.25);
+      background:linear-gradient(180deg,#222,#111);color:#fff;cursor:pointer
+    }
+    small{opacity:.8;color:var(--fg)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Selfie Segmentation (ml5)</h1>
+    <button id="startBtn">Start</button>
+    <small>Tip: click <b>Start</b> and accept the camera dialog. Detection runs only in your browser; no video is sent to the server.</small>
+  </div>
+
+  <script>
+    // --- Globals ---
+    let video;                 // p5 video capture
+    let segmentation;          // latest ml5 segmentation result
+    let selfieSeg;             // ml5 bodySegmentation model instance
+    let running = false;
+    let modelReady = false;
+    let FEATHER_PX = 4; // try 2–8
+
+
+    // p5 preload: loads the SelfieSegmentation model using the whole person mask
+    function preload() {
+      selfieSeg = ml5.bodySegmentation("SelfieSegmentation", { maskType: "person" });
+      // wait until the model is ready
+      selfieSeg.ready.then(() => { modelReady = true; });
+    }
+
+    function setup() {
+      // Create a canvas with transparent background to show only the segmentation mask
+      const cnv = createCanvas(640, 480);
+      cnv.parent(document.querySelector('.wrap'));
+      clear(); // make background transparent
+
+      // Start video capture (muted/inline helps with autoplay policies)
+      video = createCapture({ video: true, audio: false });
+      video.size(640, 480);
+      video.hide();
+
+      if (video && video.elt) {
+        video.elt.setAttribute('playsinline', '');
+        video.elt.setAttribute('muted', '');
+        video.elt.playsInline = true;
+        video.elt.muted = true;
+        video.elt.autoplay = true;
+      }
+
+      // Start button
+      document.getElementById('startBtn').addEventListener('click', startSegmentation);
+    }
+
+    async function startSegmentation() {
+      if (running) return;
+      if (!modelReady) await selfieSeg.ready;
+
+      try { await video.elt.play(); } catch (e) { /* NotAllowedError is common, ignore and try again */ }
+
+      if (video.elt.readyState < 2 || video.elt.paused) {
+        console.warn('Video not ready yet. Try clicking Start again after granting camera permission.');
+        return;
+      }
+
+      selfieSeg.detectStart(video, gotResults);
+      running = true;
+      const btn = document.getElementById('startBtn');
+      btn.textContent = 'Running…';
+      btn.disabled = true;
+    }
+
+    function draw() {
+      // Black background behind everything
+      background(0);
+
+      // Draw ONLY the segmentation mask, inverted to get white person on black
+      if (segmentation && segmentation.mask) {
+        // Put invert FIRST; then crank contrast and add optional feather
+        drawingContext.filter = `invert(1) grayscale(1) contrast(500%) brightness(120%) blur(${FEATHER_PX}px)`;
+        image(segmentation.mask, 0, 0, width, height);
+        drawingContext.filter = 'none';
+      }
+    }
+
+    // Segmentation callback
+    function gotResults(result) {
+      segmentation = result;
+
+      if (result && result.mask) {
+        // Convert mask to p5.Image so it can be drawn
+        // ml5.bodySegmentation returns mask as a canvas element
+        if (result.mask instanceof HTMLCanvasElement) {
+          // Create p5.Image from canvas
+          maskImage = createImage(result.mask.width, result.mask.height);
+          const ctx = result.mask.getContext('2d');
+          const imgData = ctx.getImageData(0, 0, result.mask.width, result.mask.height);
+          maskImage.loadPixels();
+
+          // Copy pixel data from canvas to p5.Image
+          for (let i = 0; i < imgData.data.length; i += 4) {
+            maskImage.pixels[i] = imgData.data[i];         // R
+            maskImage.pixels[i + 1] = imgData.data[i + 1]; // G
+            maskImage.pixels[i + 2] = imgData.data[i + 2]; // B
+            maskImage.pixels[i + 3] = imgData.data[i + 3]; // A
+          }
+          maskImage.updatePixels();
+        } else if (result.maskImageData) {
+          // Alternative: use maskImageData if available
+          maskImage = createImage(result.maskImageData.width, result.maskImageData.height);
+          maskImage.loadPixels();
+          for (let i = 0; i < result.maskImageData.data.length; i += 4) {
+            maskImage.pixels[i] = result.maskImageData.data[i];
+            maskImage.pixels[i + 1] = result.maskImageData.data[i + 1];
+            maskImage.pixels[i + 2] = result.maskImageData.data[i + 2];
+            maskImage.pixels[i + 3] = result.maskImageData.data[i + 3];
+          }
+          maskImage.updatePixels();
+        } else {
+          // Fallback: try to use mask directly
+          maskImage = result.mask;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
