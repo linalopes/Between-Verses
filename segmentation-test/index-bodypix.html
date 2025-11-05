@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Between Verses — Segmentation Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- ml5.js (next-gen) -->
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+  <style>
+    :root{
+      --bs-pink:#EA7DFF;
+      --bs-turquoise:#08f2db;
+      --bg:#0a0a0a;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px}
+    canvas{max-width:90vw;height:auto;border:1px solid rgba(255,255,255,.1);border-radius:12px}
+    button{
+      padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);
+      background:linear-gradient(180deg,#222,#111);color:#fff;cursor:pointer
+    }
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    label{opacity:.85}
+    select{padding:6px 8px;border-radius:8px}
+    small{opacity:.7}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Segmentation Test (BodyPix / ml5)</h1>
+
+    <div class="row">
+      <button id="startBtn">Start</button>
+      <label>
+        Mask type:
+        <select id="maskType">
+          <option value="parts" selected>parts (body parts)</option>
+          <option value="person">person (whole person)</option>
+          <option value="background">background</option>
+        </select>
+      </label>
+    </div>
+
+    <small>Tip: click <b>Start</b> and allow camera access. Detection runs entirely in your browser; no video is sent to any server.</small>
+  </div>
+
+  <script>
+    let bodySegmentation;
+    let video;
+    let segmentation;
+    let running = false;   // evita múltiplos detectStart
+    let modelReady = false;
+
+    let options = { maskType: "parts" }; // "parts" | "person" | "background"
+
+    function preload() {
+      bodySegmentation = ml5.bodySegmentation("BodyPix", options);
+      // aguarde o modelo carregar
+      bodySegmentation.ready.then(() => { modelReady = true; });
+    }
+
+    function setup() {
+      createCanvas(640, 480).parent(document.querySelector('.wrap'));
+
+      const constraints = { video: true, audio: false };
+      video = createCapture(constraints);
+      video.size(640, 480);
+      video.hide();
+
+      if (video && video.elt) {
+        video.elt.setAttribute('playsinline', '');
+        video.elt.setAttribute('muted', '');
+        video.elt.playsInline = true;
+        video.elt.muted = true;
+        video.elt.autoplay = true;
+      }
+
+      document.getElementById('startBtn').addEventListener('click', startSegmentation);
+      document.getElementById('maskType').addEventListener('change', async (e) => {
+        options.maskType = e.target.value;
+        await restartDetection(); // recria o modelo com nova opção
+      });
+    }
+
+    async function startSegmentation() {
+      if (running) return;               // já está rodando
+      if (!modelReady) await bodySegmentation.ready; // garante modelo pronto
+
+      // tenta tocar o vídeo (gesto do usuário já ocorreu)
+      try { await video.elt.play(); } catch(e) {}
+
+      if (video.elt.readyState < 2 || video.elt.paused) {
+        console.warn('Video not ready yet. Click again after granting camera.');
+        return;
+      }
+
+      bodySegmentation.detectStart(video, gotResults);
+      running = true;
+      const btn = document.getElementById('startBtn');
+      btn.textContent = 'Running…';
+      btn.disabled = true;
+    }
+
+    async function restartDetection() {
+      // para a detecção atual (se a API expõe detectStop)
+      if (running && bodySegmentation?.detectStop) {
+        bodySegmentation.detectStop();
+        running = false;
+      }
+      // recria o modelo com novas options e aguarda ficar pronto
+      bodySegmentation = ml5.bodySegmentation("BodyPix", options);
+      await bodySegmentation.ready;
+      modelReady = true;
+
+      // se o vídeo já está tocando, reinicia a detecção
+      if (video && video.elt && video.elt.readyState >= 2 && !video.elt.paused) {
+        bodySegmentation.detectStart(video, gotResults);
+        running = true;
+        const btn = document.getElementById('startBtn');
+        btn.textContent = 'Running…';
+        btn.disabled = true;
+      }
+    }
+
+    function draw() {
+      background(10);
+      image(video, 0, 0, width, height);
+      if (segmentation?.mask) {
+        // a máscara já vem pronta pra desenhar
+        image(segmentation.mask, 0, 0, width, height);
+      }
+    }
+
+    function gotResults(result) {
+      segmentation = result;
+    }
+  </script>
+
+</body>
+</html>

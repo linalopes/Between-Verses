@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Between Verses — Selfie Segmentation (ml5)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- ml5.js (1.x) -->
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --fg:#ffffffcc;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px}
+    h1{margin:8px 0 4px}
+    canvas{max-width:90vw;height:auto;border-radius:14px;border:1px solid rgba(255,255,255,.12)}
+    button{
+      padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.25);
+      background:linear-gradient(180deg,#222,#111);color:#fff;cursor:pointer
+    }
+    small{opacity:.8;color:var(--fg)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Selfie Segmentation (ml5)</h1>
+    <button id="startBtn">Start</button>
+    <small>Tip: click <b>Start</b> and accept the camera dialog. Detection runs only in your browser; no video is sent to the server.</small>
+  </div>
+
+  <script>
+    // --- Globals ---
+    let video;                 // p5 video capture
+    let segmentation;          // latest ml5 segmentation result
+    let selfieSeg;             // ml5 bodySegmentation model instance
+    let running = false;
+    let modelReady = false;
+    let FEATHER_PX = 4; // try 2–8
+    let BLOB_COLOR = [255, 255, 255];
+
+    // p5 preload: loads the SelfieSegmentation model using the whole person mask
+    function preload() {
+      selfieSeg = ml5.bodySegmentation("SelfieSegmentation", { maskType: "person" });
+      // wait until the model is ready
+      selfieSeg.ready.then(() => { modelReady = true; });
+    }
+
+    function setup() {
+      // Create a canvas with transparent background to show only the segmentation mask
+      const cnv = createCanvas(640, 480);
+      cnv.parent(document.querySelector('.wrap'));
+      clear(); // make background transparent
+
+      // Start video capture (muted/inline helps with autoplay policies)
+      video = createCapture({ video: true, audio: false });
+      video.size(640, 480);
+      video.hide();
+
+      if (video && video.elt) {
+        video.elt.setAttribute('playsinline', '');
+        video.elt.setAttribute('muted', '');
+        video.elt.playsInline = true;
+        video.elt.muted = true;
+        video.elt.autoplay = true;
+      }
+
+      // Start button
+      document.getElementById('startBtn').addEventListener('click', startSegmentation);
+    }
+
+    async function startSegmentation() {
+      if (running) return;
+      if (!modelReady) await selfieSeg.ready;
+
+      try { await video.elt.play(); } catch (e) { /* NotAllowedError is common, ignore and try again */ }
+
+      if (video.elt.readyState < 2 || video.elt.paused) {
+        console.warn('Video not ready yet. Try clicking Start again after granting camera permission.');
+        return;
+      }
+
+      selfieSeg.detectStart(video, gotResults);
+      running = true;
+      const btn = document.getElementById('startBtn');
+      btn.textContent = 'Running…';
+      btn.disabled = true;
+    }
+
+    function draw() {
+      background(0); // keep a neutral backdrop
+
+      // 1) Always draw the video first (so you see something even if mask is empty)
+      image(video, 0, 0, width, height);
+
+      // 2) If we have a mask, draw it on top (person-only will appear)
+      // 2) Draw the segmentation mask with a blur (feathered edges)
+      if (segmentation && segmentation.mask) {
+        // Ensure normal blending, then apply blur only for this draw
+        blendMode(BLEND);
+        drawingContext.filter = `blur(${FEATHER_PX}px)`;
+        image(segmentation.mask, 0, 0, width, height);
+        // IMPORTANT: reset filter so it doesn't affect future draws
+        drawingContext.filter = 'none';
+      }
+    }
+
+
+    // Segmentation callback
+    function gotResults(result) {
+      segmentation = result; // result.mask is a canvas/image with the segmented mask
+    }
+  </script>
+</body>
+</html>
