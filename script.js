@@ -64,7 +64,10 @@ const TORSO_OFFSET_FACTOR = 0.5; // Adjust to move plane up/down between shoulde
 const FG_FRACTION = 0.30; // fraction of screen height for foreground band
 
 // Background image opacity
-const BG_ALPHA = 0.5; // background image opacity (70% transparent)
+const BG_ALPHA = 0.0; // background image opacity (fully opaque)
+
+// p5 canvas opacity
+const P5_ALPHA = 0.8; // p5 canvas opacity (50% transparent)
 
 // Foreground particle system settings
 const FG_SETTINGS = {
@@ -105,8 +108,8 @@ const POSE_VERTEX_MAP = {
 const SMOOTHING_FACTOR = 0.25; // Lerp factor for jitter reduction
 
 // Mesh blend mode for SimplePlane overlays
-const MESH_BLEND_MODE = PIXI.BLEND_MODES.MULTIPLY;
-// Alternative options to try later: SCREEN, OVERLAY, ADD
+const MESH_BLEND_MODE = PIXI.BLEND_MODES.ADD;
+// Alternative options to try later: SCREEN, OVERLAY, ADD, MULTIPLY
 
 /*
 ===========================================================
@@ -122,7 +125,7 @@ function preload() {
     bodyPose = ml5.bodyPose({ flipHorizontal: true });
 
     // Load local images for poses
-    jesusImage = loadImage('./generated/Jesus_1.png');
+    jesusImage = loadImage('./generated/Jesus.png');
     primeImage = loadImage('./generated/Prime_1.png');
 
     console.log("Loading local images: Jesus_1.png and Prime_1.png");
@@ -138,6 +141,8 @@ function setup() {
     canvas.elt.style.position = 'absolute';
     canvas.elt.style.top = '0';
     canvas.elt.style.left = '0';
+    canvas.elt.style.opacity = P5_ALPHA;
+    canvas.elt.style.zIndex = '5';  // Above background (-1) but below meshes (10)
 
     // Initialize video capture and hide the video element (only show the canvas)
     video = createCapture(VIDEO);
@@ -195,13 +200,13 @@ async function initializePixiOverlay() {
 
     // Create container layers with zIndex for organized rendering
     bgContainer = new PIXI.Container();
-    bgContainer.zIndex = 0;
+    bgContainer.zIndex = -1;  // Background behind everything
 
     meshesContainer = new PIXI.Container();
-    meshesContainer.zIndex = 10;
+    meshesContainer.zIndex = 10;  // Meshes above p5 canvas
 
     fgContainer = new PIXI.Container();
-    fgContainer.zIndex = 20;
+    fgContainer.zIndex = 20;  // Lilies on top
 
     // Add containers to stage in order
     pixiApp.stage.addChild(bgContainer, meshesContainer, fgContainer);
@@ -222,7 +227,7 @@ async function initializePixiOverlay() {
         primeTex = await PIXI.Assets.load("generated/Prime_1.png");
         jesusTex = await PIXI.Assets.load("generated/Jesus_1.png");
         lilyTex = await PIXI.Assets.load("./front-images/water-lily.png");
-        bgTex = await PIXI.Assets.load("./bg-images/mountain.png");
+        bgTex = await PIXI.Assets.load("./bg-images/Cloud 1.png");
 
         // Create background sprite from texture
         bgSprite = new PIXI.Sprite(bgTex);
@@ -266,6 +271,8 @@ async function initializePixiOverlay() {
 // Resize both p5 canvas and PixiJS overlay to specified dimensions
 function resizeAllTo(w, h) {
     resizeCanvas(w, h);                  // p5
+    canvas.elt.style.opacity = P5_ALPHA; // Maintain p5 canvas opacity
+    canvas.elt.style.zIndex = '5';       // Maintain p5 canvas z-index
     videoWrapper.style.width = w + 'px';
     videoWrapper.style.height = h + 'px';
     if (pixiApp) {
