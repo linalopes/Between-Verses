@@ -16,13 +16,6 @@ let videoWrapper = null; // Cached reference to video-wrapper element
 let PINK;
 let TURQ;
 
-// SelfieSegmentation globals for silhouette
-let selfieSeg = null;
-let segmentation = null; // last result
-let gSilhouette;         // p5.Graphics buffer for compositing
-let BG_COLOR, SILH_COLOR;
-const MIRROR_MASK = true; // keep in sync with bodyPose flipHorizontal
-
 // Per-person state arrays for multi-person support
 let personStates = []; // Current state for each person
 let personLastStates = []; // Previous state for each person
@@ -75,9 +68,6 @@ function preload() {
     // Preload the bodyPose model using ml5.js with horizontal flip for mirroring
     bodyPose = ml5.bodyPose({ flipHorizontal: true });
 
-    // Initialize SelfieSegmentation for silhouette
-    selfieSeg = ml5.bodySegmentation('SelfieSegmentation', { maskType: 'person' });
-
     // Load local images for poses
     jesusImage = loadImage('./generated/Jesus_1.png');
     primeImage = loadImage('./generated/Prime.png');
@@ -110,22 +100,8 @@ function setup() {
     const cssTurq = root.getPropertyValue('--bs-turquoise').trim(); // e.g. "#08f2db"
     TURQ = color(cssTurq); // p5 accepts CSS hex strings
 
-    // Initialize background and silhouette colors from CSS
-    const cssBg = (root.getPropertyValue('--bg') || '#0b0b0b').trim();
-    const cssSilh = (root.getPropertyValue('--silhouette') || '#EA7DFF').trim();
-    BG_COLOR = color(cssBg);
-    SILH_COLOR = color(cssSilh);
-
-    // Create graphics buffer for silhouette compositing (same size as canvas)
-    gSilhouette = createGraphics(width, height);
-
     /// Start detecting body poses using the video feed
     bodyPose.detectStart(video, gotPoses);
-
-    // Start SelfieSegmentation alongside BodyPose
-    if (selfieSeg && typeof selfieSeg.detectStart === 'function') {
-        selfieSeg.detectStart(video, (res) => { segmentation = res || null; });
-    }
 
     // Get skeleton connection information for drawing lines between keypoints
     connections = bodyPose.getSkeleton();
@@ -139,10 +115,6 @@ function setup() {
 // Resize p5 canvas to specified dimensions
 function resizeAllTo(w, h) {
     resizeCanvas(w, h);
-    // Resize silhouette graphics buffer to match canvas
-    if (gSilhouette) {
-        gSilhouette.resizeCanvas(w, h);
-    }
     videoWrapper.style.width = w + 'px';
     videoWrapper.style.height = h + 'px';
 }
@@ -171,11 +143,10 @@ function resizeStateArrays(numPersons) {
 /*
 ===========================================================
 DRAWING
-Layer order:
-1) Solid background
-2) Silhouette (always visible, from SelfieSegmentation)
-3) Skeleton/keypoints (toggleable via showTracking)
-4) Stickers (top layer, anchored near navel)
+This section is responsible for rendering the mirrored video
+feed on the canvas, visualizing detected poses, and drawing
+skeletons and keypoints for all participants. It also displays
+per-person stickers anchored near the navel.
 ===========================================================
 */
 
@@ -187,37 +158,13 @@ function draw() {
     let scaleX = width / originalWidth;
     let scaleY = height / originalHeight;
 
-    // 1) Solid background (replaces video background)
-    background(BG_COLOR);
-
-    // 2) Silhouette (always ON) using compositing
-    if (segmentation && segmentation.mask) {
-        gSilhouette.clear();
-        // Fill entire buffer with silhouette color
-        gSilhouette.noStroke();
-        gSilhouette.fill(SILH_COLOR);
-        gSilhouette.rect(0, 0, gSilhouette.width, gSilhouette.height);
-
-        // Clip with mask: keep only person region
-        const ctx = gSilhouette.drawingContext;
-        const prevOp = ctx.globalCompositeOperation;
-        ctx.globalCompositeOperation = 'destination-in';
-
-        // Mirror mask to match BodyPose flipHorizontal
-        if (MIRROR_MASK) {
-            gSilhouette.push();
-            gSilhouette.translate(gSilhouette.width, 0);
-            gSilhouette.scale(-1, 1);
-            gSilhouette.image(segmentation.mask, 0, 0, gSilhouette.width, gSilhouette.height);
-            gSilhouette.pop();
-        } else {
-            gSilhouette.image(segmentation.mask, 0, 0, gSilhouette.width, gSilhouette.height);
-        }
-
-        ctx.globalCompositeOperation = prevOp;
-
-        // Paint the colored silhouette onto main canvas
-        image(gSilhouette, 0, 0, width, height);
+    // Draw the mirrored video feed on the canvas (only if showVideo is true)
+    if (showVideo) {
+        push();
+        translate(width, 0);
+        scale(-1, 1);
+        image(video, 0, 0, width, height);
+        pop();
     }
 
     // Resize per-person arrays to match current number of poses
