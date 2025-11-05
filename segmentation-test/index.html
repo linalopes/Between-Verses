@@ -33,28 +33,23 @@
 
   <script>
     // --- Globals ---
-    let video;                 // p5 video capture
-    let segmentation;          // latest ml5 segmentation result
-    let selfieSeg;             // ml5 bodySegmentation model instance
+    let video;
+    let segmentation = null;
+    let selfieSeg = null;
     let running = false;
     let modelReady = false;
-    let FEATHER_PX = 4; // try 2–8
+    let FEATHER_PX = 4;
 
-
-    // p5 preload: loads the SelfieSegmentation model using the whole person mask
     function preload() {
       selfieSeg = ml5.bodySegmentation("SelfieSegmentation", { maskType: "person" });
-      // wait until the model is ready
       selfieSeg.ready.then(() => { modelReady = true; });
     }
 
     function setup() {
-      // Create a canvas with transparent background to show only the segmentation mask
       const cnv = createCanvas(640, 480);
       cnv.parent(document.querySelector('.wrap'));
-      clear(); // make background transparent
+      clear();
 
-      // Start video capture (muted/inline helps with autoplay policies)
       video = createCapture({ video: true, audio: false });
       video.size(640, 480);
       video.hide();
@@ -67,80 +62,76 @@
         video.elt.autoplay = true;
       }
 
-      // Start button
       document.getElementById('startBtn').addEventListener('click', startSegmentation);
+
+      // stop detection when leaving/hiding the tab
+      window.addEventListener('pagehide', stopSegmentation);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopSegmentation();
+      });
     }
 
     async function startSegmentation() {
       if (running) return;
-      if (!modelReady) await selfieSeg.ready;
-
-      try { await video.elt.play(); } catch (e) { /* NotAllowedError is common, ignore and try again */ }
-
-      if (video.elt.readyState < 2 || video.elt.paused) {
-        console.warn('Video not ready yet. Try clicking Start again after granting camera permission.');
-        return;
-      }
-
-      selfieSeg.detectStart(video, gotResults);
-      running = true;
       const btn = document.getElementById('startBtn');
-      btn.textContent = 'Running…';
-      btn.disabled = true;
+
+      try {
+        if (!modelReady) await selfieSeg.ready;
+        await video.elt.play();
+
+        if (video.elt.readyState < 2 || video.elt.paused) {
+          console.warn('Video is not ready yet. Click Start again after allowing the camera.');
+          btn.textContent = 'Start (allow camera)';
+          btn.disabled = false;
+          return;
+        }
+
+        selfieSeg.detectStart(video, (result) => {
+          segmentation = result || null;
+        });
+
+        running = true;
+        btn.textContent = 'Running…';
+        btn.disabled = true;
+
+      } catch (e) {
+        console.error(e);
+        btn.textContent = 'Start';
+        btn.disabled = false;
+      }
+    }
+
+    function stopSegmentation() {
+      if (selfieSeg && running && typeof selfieSeg.detectStop === 'function') {
+        selfieSeg.detectStop();
+      }
+      running = false;
+      const btn = document.getElementById('startBtn');
+      if (btn) {
+        btn.textContent = 'Start';
+        btn.disabled = false;
+      }
     }
 
     function draw() {
-      // Black background behind everything
       background(0);
 
-      // Draw ONLY the segmentation mask, inverted to get white person on black
       if (segmentation && segmentation.mask) {
-        // Put invert FIRST; then crank contrast and add optional feather
-        drawingContext.filter = `invert(1) grayscale(1) contrast(500%) brightness(120%) blur(${FEATHER_PX}px)`;
-        image(segmentation.mask, 0, 0, width, height);
-        drawingContext.filter = 'none';
-      }
-    }
+        // try context filters; if not supported, fallback to drawing without filter
+        const ctx = drawingContext;
+        const hasFilter = typeof ctx.filter === 'string' || typeof ctx.filter === 'object';
 
-    // Segmentation callback
-    function gotResults(result) {
-      segmentation = result;
-
-      if (result && result.mask) {
-        // Convert mask to p5.Image so it can be drawn
-        // ml5.bodySegmentation returns mask as a canvas element
-        if (result.mask instanceof HTMLCanvasElement) {
-          // Create p5.Image from canvas
-          maskImage = createImage(result.mask.width, result.mask.height);
-          const ctx = result.mask.getContext('2d');
-          const imgData = ctx.getImageData(0, 0, result.mask.width, result.mask.height);
-          maskImage.loadPixels();
-
-          // Copy pixel data from canvas to p5.Image
-          for (let i = 0; i < imgData.data.length; i += 4) {
-            maskImage.pixels[i] = imgData.data[i];         // R
-            maskImage.pixels[i + 1] = imgData.data[i + 1]; // G
-            maskImage.pixels[i + 2] = imgData.data[i + 2]; // B
-            maskImage.pixels[i + 3] = imgData.data[i + 3]; // A
-          }
-          maskImage.updatePixels();
-        } else if (result.maskImageData) {
-          // Alternative: use maskImageData if available
-          maskImage = createImage(result.maskImageData.width, result.maskImageData.height);
-          maskImage.loadPixels();
-          for (let i = 0; i < result.maskImageData.data.length; i += 4) {
-            maskImage.pixels[i] = result.maskImageData.data[i];
-            maskImage.pixels[i + 1] = result.maskImageData.data[i + 1];
-            maskImage.pixels[i + 2] = result.maskImageData.data[i + 2];
-            maskImage.pixels[i + 3] = result.maskImageData.data[i + 3];
-          }
-          maskImage.updatePixels();
+        if (hasFilter) {
+          ctx.filter = `invert(1) grayscale(1) contrast(500%) brightness(120%) blur(${FEATHER_PX}px)`;
+          image(segmentation.mask, 0, 0, width, height);
+          ctx.filter = 'none';
         } else {
-          // Fallback: try to use mask directly
-          maskImage = result.mask;
+          // fallback: draws "raw" mask; still works
+          image(segmentation.mask, 0, 0, width, height);
         }
       }
     }
   </script>
+
 </body>
 </html>
