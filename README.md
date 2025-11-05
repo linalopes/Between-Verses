@@ -1,6 +1,6 @@
 # Between Verses
 
-An interactive installation where poses trigger body-anchored images that deform with your movement — blending Brazilian and Swiss landscapes in real time.
+An interactive installation where poses trigger body-anchored images that follow your movement — blending Brazilian and Swiss landscapes in real time.
 
 ## 🎯 Overview
 
@@ -9,42 +9,30 @@ Two-person simultaneous pose detection with immediate visual feedback:
 - **Prime Tower Pose**: Both hands on top of your head, close together → shows `Prime_1.png`
 - **Jesus Pose**: Arms extended horizontally to the sides → shows `Jesus_1.png`
 
-Each person gets their own PixiJS deformable mesh overlay anchored to their body. The mesh warps in real-time based on shoulder and hip movements, creating a dynamic visual experience.
-
-- **Background layer** with configurable opacity, scaled to cover the canvas (e.g., mountain, arara landscapes).
-- **Foreground particle layer** in the bottom 30% of the screen, using transparent PNG sprites (water lilies).
-
-**Note**: Legacy p5.js stickers remain in the codebase (disabled via `USE_P5_STICKERS = false`) but PixiJS mesh overlays are the primary rendering path.
+Each person gets their own p5.js sticker overlay anchored near the navel, scaled relative to shoulder width. The system uses EMA (Exponential Moving Average) smoothing to reduce jitter in both skeleton tracking and sticker positioning.
 
 ## ✨ Features
 
 - **Two-Person Simultaneous Support**: Independent tracking and overlays per person
-- **Real-Time Pose Detection**: ml5.js bodyPose with immediate response (no debouncing)
-- **Background Layer**: Static background image (bgSprite) in PixiJS, scaled to cover the canvas, with configurable opacity (`BG_ALPHA`, default 0.5)
-- **PixiJS Deformable Mesh**: 6×6 grid SimplePlane that warps with body movements and uses `MULTIPLY` blend mode for visual integration with the background
-- **Body-Anchored Positioning**:
-  - Centered horizontally between shoulders
-  - Vertically positioned along shoulder→hip line via `TORSO_OFFSET_FACTOR`
-  - Scaled by shoulder width (5.5× factor)
-- **Mesh Warping**: 4 controlled vertices (indices 14,15,26,27) follow shoulders and hips
-- **Jitter Reduction**: Smoothing and dead-zones for stable overlays when standing still
+- **Real-Time Pose Detection**: ml5.js BodyPose with real-time response (light stabilization via STABLE_FRAMES)
+- **Navel-Anchored Stickers**: Images positioned using shoulders→hips interpolation via `NAVEL_BLEND` factor
+- **EMA Smoothing**: Reduces jitter in skeleton lines and sticker scale (`SMOOTH_POS`, `SMOOTH_SCALE`)
+- **CSS Color Integration**: Skeleton lines use `--bs-pink`, keypoint markers use `--bs-turquoise`
 - **Interactive Controls**: Fullscreen, Hide Video, Hide Tracking
-- **Local Assets**: Images from `/generated` folder (Prime_1.png, Jesus_1.png)
-- **Foreground Particle Layer**: Animated lilies (PNG with alpha) drift horizontally in the bottom 30% band, masked by PixiJS. Parameters: spawn rate, lifetime, sine drift, alpha fade, blend mode.
+- **Local Assets**: Images from `/generated` folder (**Prime_1.png**, **Jesus_1.png**)
 
 ## 🛠️ Tech Stack
 
-- **p5.js**: Canvas rendering and video capture
+- **p5.js**: Canvas rendering, video capture, and sticker drawing
 - **ml5.js**: Real-time body pose detection
-- **PixiJS**: Overlay rendering with deformable meshes, background image, and foreground particle layers
 - **Bootstrap 5**: UI framework with custom CSS
 
 ## 🚀 Getting Started
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/linalopes/expolat-prototype.git
-cd expolat-prototype
+git clone https://github.com/linalopes/Between-Verses.git
+cd Between-Verses
 ```
 
 ### 2. Start Local Server
@@ -57,6 +45,12 @@ Navigate to `http://localhost:8000` and allow camera access.
 
 **Requirements**: Modern browser with camera support. HTTPS not required for localhost.
 
+**Note**: Video capture and pose detection (`video` and `detectStart`) may be gated behind a user gesture due to browser autoplay policies. Click or interact with the page if the camera doesn't start automatically.
+
+## 🔒 Privacy
+
+The webcam runs entirely in your browser; no video is sent to any server.
+
 ## 🎮 How It Works
 
 ### Pose Detection
@@ -65,131 +59,104 @@ Navigate to `http://localhost:8000` and allow camera access.
 
 ### Per-Person Pipeline
 1. **Detect pose type** per person each frame
-2. **Ensure Pixi plane visibility** with correct texture (Prime_1.png or Jesus_1.png)
-3. **Calculate anchor position**:
+2. **Calculate anchor position**:
    - Horizontal: midpoint between shoulders
-   - Vertical: interpolated between shoulders and hips using `TORSO_OFFSET_FACTOR`
-4. **Calculate scale**: width = shoulderWidth × 5.5
-5. **Update mesh warp**: 4 vertices (14,15,26,27) follow shoulders/hips with smoothing
+   - Vertical: interpolated between shoulders and hips using `NAVEL_BLEND` (default 0.60)
+   - Falls back to shoulder midpoint if hips aren't detected with confidence ≥ 0.3
+3. **Calculate scale**: width = shoulderWidth × 4.5 (EMA-smoothed)
+4. **Apply EMA smoothing**: All keypoints and scalar values are smoothed to reduce jitter
+5. **Draw sticker**: p5.js image centered on anchor position
 
-### Legacy p5.js Stickers
-- Code preserved for reference and fallback
-- Disabled by `USE_P5_STICKERS = false` flag
-- Can be re-enabled by changing the flag to `true`
+### Identity Stabilization
+When two people are present, the system tracks them independently. For more stable identity across frames (optional enhancement), you can sort people left-to-right by shoulder midpoint X position before processing.
 
 ## 📁 Project Structure
 
 ```
-between-verses/
+Between-Verses/
 ├── index.html              # Main application
-├── script.js               # p5.js + ml5.js + PixiJS logic
-├── styles.css              # Custom styling
+├── script.js               # p5.js + ml5.js logic
+├── styles.css              # Custom styling with CSS variables
 ├── generated/              # Local overlay images
-│   ├── Jesus_1.png        # Jesus pose texture
-│   └── Prime_1.png        # Prime Tower pose texture
-├── front-images/           # Assets for foreground lilies layer
-│   └── water-lily.png     # Water lily particle texture
-├── bg-images/             # Background images
-│   ├── mountain.png       # Mountain landscape background
-│   └── arara.png          # Arara landscape background
-├── pixijs-test/           # Standalone mesh warp prototype
-│   └── index.html         # Drag control points demo
-├── jesus.svg              # Jesus pose instruction icon
-├── prime.svg              # Prime Tower pose instruction icon
-├── favicon.png            # Website icon
-├── .gitignore             # Git ignore rules
-└── README.md              # This file
+│   ├── Jesus_1.png         # Jesus pose image
+│   ├── Jesus_1.svg         # Jesus pose SVG
+│   ├── Prime_1.png         # Prime Tower pose image
+│   └── Prime_1.svg         # Prime Tower pose SVG
+├── jesus.svg               # Jesus pose instruction icon
+├── prime.svg               # Prime Tower pose instruction icon
+├── favicon.png             # Website icon
+└── README.md               # This file
 ```
-
-### `/pixijs-test` Folder
-Standalone SimplePlane mesh warping prototype for testing and debugging:
-- Static image with draggable control points
-- Reset functionality
-- Useful for understanding mesh behavior without camera complexity
 
 ## 🔧 Configuration
 
 ### Key Constants
-- **`WIDTH_FACTOR`**: 5.5 (plane width = shoulderWidth × 5.5)
-- **`TORSO_OFFSET_FACTOR`**: 0.5 (0 = shoulders, 1 = hips, 0.5 = midpoint)
-- **`SMOOTHING_FACTOR`**: 0.25 (mesh vertex smoothing)
-- **`ANCHOR_SMOOTH`**: 0.15 (position smoothing)
-- **`SCALE_SMOOTH`**: 0.15 (scale smoothing)
-- **`DEAD_ZONE_PX`**: 0.4 (pixel threshold for jitter reduction)
-- **`SCALE_DEAD`**: 0.002 (scale change threshold)
+
+#### Pose Detection
 - **Confidence threshold**: 0.3 (minimum keypoint confidence)
+- **Prime pose threshold**: 100px (horizontal distance between wrists)
+- **Jesus pose spread threshold**: 30px (wrist distance from shoulder)
 
-### Foreground Particle Settings
-- **`FG_FRACTION`**: 0.30 (height fraction for the foreground band)
-- **`FG_SETTINGS.spawnRate`**: 6 (particles per second)
-- **`FG_SETTINGS.maxParticles`**: 40 (maximum particle count)
-- **`FG_SETTINGS.sineAmp`**: 6 (vertical sine amplitude in pixels)
-- **`FG_SETTINGS.sineFreq`**: 1.1 (sine frequency multiplier)
-- **`FG_SETTINGS.alphaStart/End`**: 0.70 → 0.0 (alpha fade range)
-- **`FG_SETTINGS.blendMode`**: PIXI.BLEND_MODES.NORMAL
-- **Lily texture**: Loaded from `/front-images/water-lily.png`
+#### Sticker Positioning
+- **`NAVEL_BLEND`**: 0.60 (0 = shoulders, 1 = hips, 0.60 = near navel)
+  - Adjustable at runtime via `window.NAVEL_BLEND` in browser console
+  - Suggested range: 0.55–0.65
+- **Width factor**: 4.5 (sticker width = shoulderWidth × 4.5)
 
-### Background Settings
-- **`BG_ALPHA`**: 0.5 (background sprite opacity)
-- **Background texture**: Loaded from `/bg-images/` (e.g., mountain.png, arara.png)
-- **Scaling**: Cover mode (maintains aspect ratio, fills canvas)
-- **Blend mode**: NORMAL (background renders normally)
+#### EMA Smoothing
+- **`SMOOTH_POS`**: 0.80 (0..1, higher = smoother skeleton, more lag)
+  - Applied to all keypoint positions for skeleton lines and markers
+- **`SMOOTH_SCALE`**: 0.85 (0..1, higher = smoother sticker size, more lag)
+  - Applied to shoulder width calculation for sticker scaling
 
-### Mesh Configuration
-- **Grid size**: 6×6 vertices (36 total)
-- **Controlled vertices**: 14, 15 (shoulders), 26, 27 (hips)
-- **Texture mapping**: Local coordinates based on image dimensions
-- **`MESH_BLEND_MODE`**: PIXI.BLEND_MODES.MULTIPLY (mesh blend mode for integration with background)
+#### State Management
+- **`STABLE_FRAMES`**: 12 (frames to wait before considering pose state stable)
+
 
 ## 🎮 Controls
 
 | Control | Function |
 |---------|----------|
-| **Fullscreen** | Expands video, tracking, background, meshes, and foreground to fill the screen |
+| **Fullscreen** | Expands video, tracking, and stickers to fill the screen |
 | **Hide Video** | Toggle video feed visibility |
 | **Hide Tracking** | Toggle skeleton lines and keypoints |
 | **ESC Key** | Exit fullscreen mode |
 
 ## 🐛 Troubleshooting
 
-### Overlay Alignment Issues
-- Ensure p5.js and PixiJS canvases share same origin and pixel-perfect dimensions
-- Check `#video-wrapper` positioning (should be `position: relative` with fixed pixel dimensions)
-- Verify both canvases use absolute positioning with `top: 0; left: 0`
-- If background image does not scale correctly on fullscreen, verify `updateFgMask()` and bgSprite scaling logic
-
 ### Jitter/Instability
-- Increase smoothing factors (`ANCHOR_SMOOTH`, `SCALE_SMOOTH`, `SMOOTHING_FACTOR`)
-- Increase dead-zone thresholds (`DEAD_ZONE_PX`, `SCALE_DEAD`)
+- Increase `SMOOTH_POS` (0.80 → 0.85) for smoother skeleton tracking
+- Increase `SMOOTH_SCALE` (0.85 → 0.90) for smoother sticker size changes
 - Improve lighting and camera positioning
+- Ensure full body visibility (stand 2-3 meet from camera)
 
 ### Camera Issues
+- **Autoplay blocked**: Click or interact with the page to start camera
+- Check browser permissions (allow camera access when prompted)
 - Use localhost or HTTPS for camera access
-- Check browser permissions
 - Ensure good lighting and full body visibility
-- Stand 2-3 feet from camera
 
 ### Pose Detection Problems
 - Verify both shoulders are visible with good confidence (>0.3)
-- Check pose criteria: Prime (hands on head, close together) or Jesus (arms extended horizontally)
+- Check pose criteria:
+  - **Prime**: Hands on head, close together (within 100px horizontally)
+  - **Jesus**: Arms extended horizontally to the sides
 - Ensure stable pose holding (system responds immediately, no debouncing)
+- If hips aren't detected, sticker will fall back to shoulder midpoint
 
-### Foreground Particle Issues
-- If lilies appear outside the bottom 30% band, check the mask and clamp logic in `updateFgParticles()`
-- Verify `FG_FRACTION` is set to 0.30 for correct band sizing
-- Ensure `water-lily.png` exists in `/front-images/` folder
-- Ensure background sprite has alpha set correctly if it appears too strong or hides video/tracking
+### Sticker Positioning
+- Adjust `window.NAVEL_BLEND` in browser console:
+  ```javascript
+  window.NAVEL_BLEND = 0.55;  // Move sticker higher (closer to shoulders)
+  window.NAVEL_BLEND = 0.65;  // Move sticker lower (closer to hips)
+  ```
+- Verify shoulder keypoints have confidence ≥ 0.3
+- Check that images exist in `/generated` folder (Prime_1.png, Jesus_1.png)
 
-## 🚀 Roadmap
-
-- **Falloff-based global warping**: More vertices for smoother deformation
-- **Enhanced vertex control**: Additional body landmarks for richer mesh warping
-- **Better ID tracking**: Consistent person identification across frames
-- **Video mapping integration**: Stage/projection mapping capabilities
-- **Performance optimization**: WebGL optimizations for larger crowds
-- **Foreground layer enhancements**: Experiment with other assets (stones, grass, sand, flowers)
-- **ParticleContainer optimization**: If particle count increases significantly
-- **Background experiments**: Test with dynamic backgrounds (clouds, sky, moving textures) and additional blend modes
+### Identity Stabilization (Two People)
+If two people swap positions frequently:
+- Optional: Sort people left-to-right by shoulder midpoint X position before processing
+- This ensures consistent personIndex assignment across frames
 
 ## 📄 License
 
@@ -199,7 +166,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - [p5.js](https://p5js.org/) - Creative coding library
 - [ml5.js](https://ml5js.org/) - Machine learning for the web
-- [PixiJS](https://pixijs.com/) - 2D WebGL renderer
 - [Bootstrap](https://getbootstrap.com/) - CSS framework
 
 ---

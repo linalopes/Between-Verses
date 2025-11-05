@@ -13,6 +13,8 @@ let isFullscreen = false;
 let originalWidth = 640;
 let originalHeight = 480;
 let videoWrapper = null; // Cached reference to video-wrapper element
+let PINK;
+let TURQ;
 
 // Per-person state arrays for multi-person support
 let personStates = []; // Current state for each person
@@ -29,6 +31,30 @@ let primeImage = null; // Prime_1.png
 // Navel anchor blend factor (0 = shoulders, 1 = hips, 0.60 = near navel)
 window.NAVEL_BLEND = 0.60; // Adjustable at runtime via devtools
 
+// ===== EMA smoothing (positions + scalar) =====
+const SMOOTH_POS   = 0.80;  // 0..1 (higher = smoother, more lag)
+const SMOOTH_SCALE = 0.85;  // for scalar values such as shoulderWidth
+
+let smoothStore = {}; // per person: { keyName: {x,y}, _scalars: {name:value} }
+
+/** Exponential moving average for a 2D point. */
+function emaPoint(pIdx, keyName, x, y) {
+    smoothStore[pIdx] ??= { _scalars: {} };
+    const s = (smoothStore[pIdx][keyName] ??= { x, y });
+    s.x = SMOOTH_POS * s.x + (1 - SMOOTH_POS) * x;
+    s.y = SMOOTH_POS * s.y + (1 - SMOOTH_POS) * y;
+    return s;
+}
+
+/** Exponential moving average for a scalar. */
+function emaScalar(pIdx, name, value) {
+    smoothStore[pIdx] ??= { _scalars: {} };
+    const prev = smoothStore[pIdx]._scalars[name] ?? value;
+    const v = SMOOTH_SCALE * prev + (1 - SMOOTH_SCALE) * value;
+    smoothStore[pIdx]._scalars[name] = v;
+    return v;
+}
+
 /*
 ===========================================================
 SETUP
@@ -43,7 +69,7 @@ function preload() {
     bodyPose = ml5.bodyPose({ flipHorizontal: true });
 
     // Load local images for poses
-    jesusImage = loadImage('./generated/Jesus_1.svg');
+    jesusImage = loadImage('./generated/Jesus_1.png');
     primeImage = loadImage('./generated/Prime.png');
 
     console.log("Loading local images: Jesus_1.png and Prime.png");
@@ -64,6 +90,15 @@ function setup() {
     video = createCapture(VIDEO);
     video.size(640, 480);
     video.hide();
+
+    // Initialize PINK color from CSS variable
+    const root = getComputedStyle(document.documentElement);
+    const cssPink = root.getPropertyValue('--bs-pink').trim(); // e.g. "#EA7DFF"
+    PINK = color(cssPink); // p5 can take CSS hex strings
+
+    // Initialize TURQ color from CSS variable
+    const cssTurq = root.getPropertyValue('--bs-turquoise').trim(); // e.g. "#08f2db"
+    TURQ = color(cssTurq); // p5 accepts CSS hex strings
 
     /// Start detecting body poses using the video feed
     bodyPose.detectStart(video, gotPoses);
@@ -148,9 +183,13 @@ function draw() {
                 let pointB = pose.keypoints[pointBIndex];
 
                 if (pointA.confidence > 0.1 && pointB.confidence > 0.1) {
-                    stroke(255, 0, 0);
+                    // Apply EMA smoothing to keypoints
+                    const A_s = emaPoint(i, `kp${pointAIndex}`, pointA.x, pointA.y);
+                    const B_s = emaPoint(i, `kp${pointBIndex}`, pointB.x, pointB.y);
+
+                    stroke(PINK);
                     strokeWeight(2 * min(scaleX, scaleY)); // Scale stroke weight
-                    line(pointA.x * scaleX, pointA.y * scaleY, pointB.x * scaleX, pointB.y * scaleY);
+                    line(A_s.x * scaleX, A_s.y * scaleY, B_s.x * scaleX, B_s.y * scaleY);
                 }
             }
         }
@@ -163,9 +202,13 @@ function draw() {
             for (let j = 0; j < pose.keypoints.length; j++) {
                 let keypoint = pose.keypoints[j];
                 if (keypoint.confidence > 0.1) {
-                    fill(0, 255, 0); // Green color for keypoints
+                    // Apply EMA smoothing to keypoint
+                    const keyName = `kp${j}`;
+                    const P_s = emaPoint(i, keyName, keypoint.x, keypoint.y);
+
+                    fill(TURQ);
                     noStroke();
-                    circle(keypoint.x * scaleX, keypoint.y * scaleY, 10 * min(scaleX, scaleY));
+                    circle(P_s.x * scaleX, P_s.y * scaleY, 10 * min(scaleX, scaleY));
                 }
             }
         }
@@ -342,42 +385,46 @@ function drawPersonSticker(personIndex, pose, scaleX, scaleY) {
     if (!overlayImage) return;
 
     // Keypoints
-    const leftShoulder = pose.keypoints.find(k => k.name === "left_shoulder");
-    const rightShoulder = pose.keypoints.find(k => k.name === "right_shoulder");
-    const leftHip = pose.keypoints.find(k => k.name === "left_hip");
-    const rightHip = pose.keypoints.find(k => k.name === "right_hip");
+    const ls = pose.keypoints.find(k => k.name === "left_shoulder");
+    const rs = pose.keypoints.find(k => k.name === "right_shoulder");
+    const lh = pose.keypoints.find(k => k.name === "left_hip");
+    const rh = pose.keypoints.find(k => k.name === "right_hip");
 
     // Shoulders must be confident
-    if (!leftShoulder || !rightShoulder) return;
-    if (leftShoulder.confidence < 0.3 || rightShoulder.confidence < 0.3) return;
+    if (!ls || !rs) return;
+    if (ls.confidence < 0.3 || rs.confidence < 0.3) return;
+
+    // EMA on shoulders
+    const LS = emaPoint(personIndex, "left_shoulder", ls.x, ls.y);
+    const RS = emaPoint(personIndex, "right_shoulder", rs.x, rs.y);
 
     // Midpoints
-    const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
-    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
+    const shoulderMidX = (LS.x + RS.x) / 2;
+    const shoulderMidY = (LS.y + RS.y) / 2;
 
-    const hipsOK = leftHip && rightHip && leftHip.confidence >= 0.3 && rightHip.confidence >= 0.3;
-    const hipMidX = hipsOK ? (leftHip.x + rightHip.x) / 2 : shoulderMidX;
-    const hipMidY = hipsOK ? (leftHip.y + rightHip.y) / 2 : shoulderMidY;
+    // (Optional) If your anchor blends shoulders→hips, also smooth hips before using them
+    let hipMidX = shoulderMidX, hipMidY = shoulderMidY;
+    if (lh && rh && lh.confidence >= 0.3 && rh.confidence >= 0.3) {
+        const LH = emaPoint(personIndex, "left_hip", lh.x, lh.y);
+        const RH = emaPoint(personIndex, "right_hip", rh.x, rh.y);
+        hipMidX = (LH.x + RH.x) / 2;
+        hipMidY = (LH.y + RH.y) / 2;
+    }
 
-    // Blend factor toward the navel (0 shoulders → 1 hips)
-    const NAVEL_BLEND = (typeof window !== "undefined" && window.NAVEL_BLEND != null)
-        ? window.NAVEL_BLEND
-        : 0.60; // adjust 0.55–0.65 if needed
-
+    // Blend (keep your existing NAVEL_BLEND if present)
+    const NAVEL_BLEND = (typeof window !== "undefined" && window.NAVEL_BLEND != null) ? window.NAVEL_BLEND : 0.60;
     let cx = shoulderMidX + (hipMidX - shoulderMidX) * NAVEL_BLEND;
     let cy = shoulderMidY + (hipMidY - shoulderMidY) * NAVEL_BLEND;
 
-    // Scale relative to shoulder width (keep your current ratio; adjust if needed)
-    const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
-    let w = 4.5 * shoulderWidth; // tweak if sticker is too big/small
+    // EMA on scalar size (shoulder width)
+    const rawShoulderWidth = Math.abs(LS.x - RS.x);
+    const shoulderWidth = emaScalar(personIndex, "shoulderWidth", rawShoulderWidth);
+
+    // Size and draw
+    let w = 4.5 * shoulderWidth;
     let h = w * (overlayImage.height / overlayImage.width);
-
-    // Apply fullscreen scaling
-    cx *= scaleX; cy *= scaleY;
-    w *= scaleX;  h *= scaleY;
-
-    // Draw centered on anchor
-    image(overlayImage, cx - w / 2, cy - h / 2, w, h);
+    cx *= scaleX; cy *= scaleY; w *= scaleX; h *= scaleY;
+    image(overlayImage, cx - w/2, cy - h/2, w, h);
 }
 
 // Callback function to handle detected poses
