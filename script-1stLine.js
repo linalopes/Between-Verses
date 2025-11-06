@@ -46,22 +46,6 @@ const SMOOTH_SCALE = 0.85;  // for scalar values such as shoulderWidth
 
 let smoothStore = {}; // per person: { keyName: {x,y}, _scalars: {name:value} }
 
-// ===== Anti-flicker FSM for pose selection =====
-const POSE_DWELL_MS        = 400;  // must see same pose for this long to lock
-const STICKER_MIN_SHOW_MS  = 1000; // keep sticker at least this long before releasing
-const STICKER_COOLDOWN_MS  = 400;  // after release, ignore immediate re-triggers
-const GRACE_MS             = 250;  // tolerate brief drops before unlocking
-
-// FSM state per personId: {phase, candidatePose, candidateSince, lockedPose, lockedSince, cooldownUntil, lastSeen}
-let poseFSM = {}; // key = stable person id (use your current track/index)
-
-// Track last locked pose for logging transitions
-let lastLockedPoseByPerson = {};
-
-function nowMs() {
-    return millis ? millis() : (performance.now ? performance.now() : Date.now());
-}
-
 /** Exponential moving average for a 2D point. */
 function emaPoint(pIdx, keyName, x, y) {
     smoothStore[pIdx] ??= { _scalars: {} };
@@ -78,85 +62,6 @@ function emaScalar(pIdx, name, value) {
     const v = SMOOTH_SCALE * prev + (1 - SMOOTH_SCALE) * value;
     smoothStore[pIdx]._scalars[name] = v;
     return v;
-}
-
-/** FSM update for anti-flicker pose selection */
-function fsmUpdate(personId, detectedPose /* string or null */, /*optional*/ detectedInfo = {}) {
-    // detectedInfo can contain: {conf: number, margin: number}, both optional.
-    const t = nowMs();
-
-    const s = poseFSM[personId] ?? (poseFSM[personId] = {
-        phase: 'idle', candidatePose: null, candidateSince: 0,
-        lockedPose: null,  lockedSince: 0, cooldownUntil: 0, lastSeen: t
-    });
-
-    s.lastSeen = t;
-
-    // Helper checks (use if you have confidences; otherwise they default to true)
-    const confOK   = (detectedInfo.conf   == null) ? true : (detectedInfo.conf   >= 0);
-    const marginOK = (detectedInfo.margin == null) ? true : (detectedInfo.margin >= 0);
-
-    switch (s.phase) {
-        case 'idle': {
-            if (detectedPose && confOK && marginOK && t >= s.cooldownUntil) {
-                s.phase = 'candidate';
-                s.candidatePose = detectedPose;
-                s.candidateSince = t;
-            }
-            break;
-        }
-        case 'candidate': {
-            if (!detectedPose) {
-                // lost signal — grace back to idle
-                if (t - s.candidateSince > GRACE_MS) {
-                    s.phase = 'idle';
-                    s.candidatePose = null;
-                }
-                break;
-            }
-            if (detectedPose !== s.candidatePose) {
-                // switched candidate → restart dwell
-                s.candidatePose = detectedPose;
-                s.candidateSince = t;
-                break;
-            }
-            // same candidate; check dwell time + quality gate
-            if ((t - s.candidateSince) >= POSE_DWELL_MS && confOK && marginOK) {
-                s.phase = 'locked';
-                s.lockedPose = s.candidatePose;
-                s.lockedSince = t;
-            }
-            break;
-        }
-        case 'locked': {
-            // Hold minimum show time
-            const minShowReached = (t - s.lockedSince) >= STICKER_MIN_SHOW_MS;
-
-            // If we still detect same pose OR min show not reached, keep locked
-            if (detectedPose === s.lockedPose || !minShowReached) break;
-
-            // If pose vanished or changed and min show reached, allow unlock with a brief grace
-            const changed = (!detectedPose) || (detectedPose !== s.lockedPose);
-            if (changed && (t - s.lockedSince) >= (STICKER_MIN_SHOW_MS + GRACE_MS)) {
-                s.phase = 'cooldown';
-                s.candidatePose = null;
-                s.candidateSince = 0;
-                s.cooldownUntil = t + STICKER_COOLDOWN_MS;
-                // clear locked; consumer will notice null and hide sticker
-                s.lockedPose = null;
-            }
-            break;
-        }
-        case 'cooldown': {
-            if (t >= s.cooldownUntil) {
-                s.phase = 'idle';
-            }
-            break;
-        }
-    }
-
-    // Return the current "locked" pose the renderer should use (or null)
-    return s.lockedPose;
 }
 
 /*
@@ -359,22 +264,8 @@ function draw() {
             }
         }
 
-        // Analyze the pose state of each person
-        const detectedPose = analyzeState(pose, i + 1);
-        personStates[i] = detectedPose; // Keep for display/logging
-
-        // Route through FSM for anti-flicker stabilization
-        const detectedInfo = {}; // Can add {conf, margin} here if available
-        const pid = i; // Use index as person ID (or use stable identity if available)
-        const lockedPose = fsmUpdate(pid, detectedPose, detectedInfo);
-
-        // Log transitions for tuning
-        if (lockedPose !== lastLockedPoseByPerson[pid]) {
-            if (lockedPose) {
-                console.log(`Person ${pid + 1} locked pose:`, lockedPose);
-            }
-            lastLockedPoseByPerson[pid] = lockedPose;
-        }
+        // Analyze the pose state of each person (Prime, Jesus, or Neutral) and get the state
+        personStates[i] = analyzeState(pose, i + 1);
 
         // Draw keypoints for each person (only if tracking is enabled)
         if (showTracking) {
@@ -393,18 +284,9 @@ function draw() {
         }
     }
 
-    // Update stickers based on FSM locked poses (replaces old debounce system)
+    // Process per-person state changes and debounce (for p5 stickers)
     for (let i = 0; i < poses.length; i++) {
-        const pid = i;
-        const s = poseFSM[pid];
-        const lockedPose = s ? s.lockedPose : null;
-
-        // Only show sticker if locked pose is not null and not neutral
-        if (lockedPose && lockedPose !== 'neutral') {
-            personOverlayImages[i] = selectImageFor(lockedPose);
-        } else {
-            personOverlayImages[i] = null;
-        }
+        processPersonStateChange(i);
     }
 
     // Draw per-person stickers anchored near the navel
@@ -740,17 +622,17 @@ function selectImageFor(state) {
     // Note: Currently only have Jesus and Prime images loaded
     switch (state) {
         case "arms_out":
-            return arms_outImage;
+            return arms_outImage; 
         case "arms_up":
-            return arms_upImage;
+            return arms_upImage; 
         case "star":
-            return starImage;
+            return starImage; 
         case "zigzag":
-            return zigzagImage;
+            return zigzagImage; 
         case "side_arms":
             return side_armsImage;
         case "rounded":
-            return roundedImage;
+            return roundedImage; 
         case "neutral":
         default:
             return null; // No image for these poses yet

@@ -104,13 +104,19 @@
 				<key>(g3_ASCII)ctrlLayer</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)140</string>
-				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_media</key>
+				<string>(g3_INT)1024</string>
+				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
+				<string>(g3_INT)8</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
 				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_pixelFX_lumaOn</key>
+				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_position_x</key>
+				<string>(g3_FLOAT)-8.000000</string>
+				<key>(g3_ASCII)ctrl_layer_position_y</key>
+				<string>(g3_FLOAT)-168.000000</string>
 				<key>(g3_ASCII)layerActivated</key>
 				<string>(g3_INT)1</string>
 			</dict>
@@ -132,7 +138,7 @@
 				<key>(g3_ASCII)ctrl_layer_color_modulateR</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
-				<string>(g3_INT)0</string>
+				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
 				<string>(g3_INT)1024</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
@@ -248,7 +254,7 @@
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)138</string>
+				<string>(g3_INT)137</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -650,7 +656,7 @@
 					</array>
 					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
 					<array>
-						<string>(g3_FLOAT)0.644154</string>
+						<string>(g3_FLOAT)0.088679</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
@@ -684,7 +690,7 @@
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.046546</string>
+						<string>(g3_FLOAT)0.846249</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.315483</string>
@@ -1965,8 +1971,8 @@
 					</array>
 					<key>(g3_ASCII)absPosition</key>
 					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
+						<string>(g3_FLOAT)-8.000000</string>
+						<string>(g3_FLOAT)-168.000000</string>
 						<string>(g3_FLOAT)623.538291</string>
 					</array>
 					<key>(g3_ASCII)absScale</key>
@@ -2269,7 +2275,7 @@
 					<key>(g3_ASCII)loopPropriety</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)luma</key>
-					<string>(g3_INT)0</string>
+					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)lumaPos</key>
 					<string>(g3_INT)3</string>
 					<key>(g3_ASCII)lumaPreserveAlpha</key>
@@ -2277,7 +2283,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)140</string>
+					<string>(g3_INT)1024</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -2299,7 +2305,7 @@
 					<key>(g3_ASCII)modulesPixelsFiltersPRE</key>
 					<dict/>
 					<key>(g3_ASCII)mute</key>
-					<string>(g3_INT)1</string>
+					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)noise</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)noiseAlpha</key>
@@ -2326,7 +2332,17 @@
 						<dict/>
 						<dict/>
 						<dict/>
-						<dict/>
+						<dict>
+							<key>(g3_ASCII)FILTER</key>
+							<string>(g3_ASCII)(CI) M8 Lumakey</string>
+							<key>(g3_ASCII)PARAMETERS</key>
+							<dict>
+								<key>(g3_ASCII)PreserveAlpha</key>
+								<string>(g3_INT)1</string>
+								<key>(g3_ASCII)Type</key>
+								<string>(g3_INT)0</string>
+							</dict>
+						</dict>
 						<dict/>
 						<dict/>
 					</array>
@@ -2351,9 +2367,9 @@
 					<key>(g3_ASCII)soundOutLinkToAlphaAndCrossfader</key>
 					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)syphonAppName</key>
-					<string>(g3_ASCII)</string>
+					<string>Syphoner</string>
 					<key>(g3_ASCII)syphonName</key>
-					<string>(g3_ASCII)</string>
+					<string>Google Chrome</string>
 					<key>(g3_ASCII)textField</key>
 					<string>(g3_ASCII)hello, you can change this text with the module system</string>
 					<key>(g3_ASCII)textG3Font</key>
@@ -2829,7 +2845,7 @@
 					<key>(g3_ASCII)modulesPixelsFiltersPRE</key>
 					<dict/>
 					<key>(g3_ASCII)mute</key>
-					<string>(g3_INT)0</string>
+					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)noise</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)noiseAlpha</key>
@@ -18860,7 +18876,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)-285.698245</string>
+						<string>(g3_FLOAT)-30.914412</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -18917,8 +18933,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.868149</string>
-						<string>(g3_FLOAT)1.118149</string>
+						<string>(g3_FLOAT)0.762785</string>
+						<string>(g3_FLOAT)1.012785</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)1</string>
@@ -18935,7 +18951,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.017000</string>
+					<string>(g3_FLOAT)0.016000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -19392,7 +19408,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)76.682663</string>
+						<string>(g3_FLOAT)175.171015</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -19449,8 +19465,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.218288</string>
-						<string>(g3_FLOAT)0.468288</string>
+						<string>(g3_FLOAT)0.177559</string>
+						<string>(g3_FLOAT)0.427559</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)1</string>
@@ -19467,7 +19483,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.017000</string>
+					<string>(g3_FLOAT)0.016000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -20111,7 +20127,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)138</string>
+					<string>(g3_INT)137</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -52366,9 +52382,9 @@
 			<key>(g3_INT)10</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>ipe</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Downloads/Between Verses/ipe.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52561,9 +52577,9 @@
 			<key>(g3_INT)9</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>alpine-rose</string>
+				<string>ipe</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Downloads/Between Verses/alpine-rose.png</string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
