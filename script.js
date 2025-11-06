@@ -62,6 +62,23 @@ function nowMs() {
     return millis ? millis() : (performance.now ? performance.now() : Date.now());
 }
 
+// === Sticker animation config ===
+const IN_MS = 440;          // enter duration
+const OUT_MS = 220;         // exit duration
+const S_IN_START = 0.58;    // pop-in starts a bit smaller
+const S_IN_END   = 1.00;    // settles at 1.0
+const S_OUT_END  = 0.76;    // shrink slightly on exit
+
+// Per-person sticker animation state
+// stickerAnim[pid] = { phase:'hidden'|'in'|'steady'|'out', t0, dur, from, to, scale, currentPose, currentImage }
+let stickerAnim = {};
+
+function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function easeOutQuad(u) { return 1 - (1 - u) * (1 - u); }
+function easeInQuad(u) { return u * u; }
+function nowMsAnim() { return nowMs(); }
+
 /** Exponential moving average for a 2D point. */
 function emaPoint(pIdx, keyName, x, y) {
     smoothStore[pIdx] ??= { _scalars: {} };
@@ -157,6 +174,60 @@ function fsmUpdate(personId, detectedPose /* string or null */, /*optional*/ det
 
     // Return the current "locked" pose the renderer should use (or null)
     return s.lockedPose;
+}
+
+/** Update sticker animation state based on FSM locked pose */
+function updateStickerAnim(personId, lockedPose) {
+    const t = nowMsAnim();
+
+    let A = stickerAnim[personId];
+
+    if (!A) A = stickerAnim[personId] = { phase: 'hidden', t0: 0, dur: 0, from: 1, to: 1, scale: 1, currentPose: null, currentImage: null };
+
+    // ENTER: got a pose locked
+    if (lockedPose && lockedPose !== 'neutral') {
+        if (A.phase === 'hidden' || A.phase === 'out' || A.currentPose !== lockedPose) {
+            A.currentPose = lockedPose;
+            A.currentImage = selectImageFor(lockedPose);
+            A.phase = 'in';
+            A.t0 = t;
+            A.dur = IN_MS;
+            A.from = S_IN_START;
+            A.to = S_IN_END;
+        }
+    } else {
+        // EXIT: no locked pose -> animate out if currently visible/steady/in
+        if (A.phase === 'in' || A.phase === 'steady') {
+            A.phase = 'out';
+            A.t0 = t;
+            A.dur = OUT_MS;
+            A.from = A.scale || 1.0;
+            A.to = S_OUT_END;
+        }
+    }
+
+    // Advance animation
+    if (A.phase === 'in') {
+        const u = clamp01((t - A.t0) / A.dur);
+        A.scale = lerp(A.from, A.to, easeOutQuad(u));
+        if (u >= 1) {
+            A.phase = 'steady';
+            A.scale = 1.0;
+        }
+    } else if (A.phase === 'out') {
+        const u = clamp01((t - A.t0) / A.dur);
+        A.scale = lerp(A.from, A.to, easeInQuad(u));
+        if (u >= 1) {
+            A.phase = 'hidden';
+            A.scale = 1.0;
+            A.currentImage = null; // hide for real after exit
+            A.currentPose = null;
+        }
+    } else if (A.phase === 'steady') {
+        A.scale = 1.0;
+    }
+
+    return A;
 }
 
 /*
@@ -393,18 +464,13 @@ function draw() {
         }
     }
 
-    // Update stickers based on FSM locked poses (replaces old debounce system)
+    // Update stickers based on FSM locked poses with animation
     for (let i = 0; i < poses.length; i++) {
         const pid = i;
         const s = poseFSM[pid];
         const lockedPose = s ? s.lockedPose : null;
-
-        // Only show sticker if locked pose is not null and not neutral
-        if (lockedPose && lockedPose !== 'neutral') {
-            personOverlayImages[i] = selectImageFor(lockedPose);
-        } else {
-            personOverlayImages[i] = null;
-        }
+        const A = updateStickerAnim(pid, lockedPose);
+        personOverlayImages[i] = A.currentImage; // stays non-null during OUT until hidden
     }
 
     // Draw per-person stickers anchored near the navel
@@ -811,6 +877,12 @@ function drawPersonSticker(personIndex, pose, scaleX, scaleY) {
     // Size and draw
     let w = 4.5 * shoulderWidth;
     let h = w * (overlayImage.height / overlayImage.width);
+
+    // Apply animation scale
+    const animScale = (stickerAnim[personIndex]?.scale ?? 1.0);
+    w *= animScale;
+    h *= animScale;
+
     cx *= scaleX; cy *= scaleY; w *= scaleX; h *= scaleY;
     image(overlayImage, cx - w/2, cy - h/2, w, h);
 }
