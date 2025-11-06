@@ -8,13 +8,18 @@ let poses = [];
 let connections;
 let canvas;
 let showVideo = true;
-let showTracking = true;
+let showTracking = false; // Start with tracking OFF
+let showSegmentation = false; // Start with segmentation OFF
+let showLine = true; // Start with line ON
 let isFullscreen = false;
 let originalWidth = 640;
 let originalHeight = 480;
 let videoWrapper = null; // Cached reference to video-wrapper element
 let PINK;
 let TURQ;
+let LINECOLOR;
+let LINE_GLOW;
+let LINE_WIDTH;
 
 // SelfieSegmentation globals for silhouette
 let selfieSeg = null;
@@ -31,9 +36,6 @@ let personStableCounters = []; // Counter for state stability
 let personOverlayImages = []; // Overlay image for each person
 const STABLE_FRAMES = 12; // Number of frames to wait before considering a state stable
 
-// Local images for poses
-let jesusImage = null; // Jesus_1.png
-let primeImage = null; // Prime_1.png
 
 // Navel anchor blend factor (0 = shoulders, 1 = hips, 0.60 = near navel)
 window.NAVEL_BLEND = 0.60; // Adjustable at runtime via devtools
@@ -66,8 +68,8 @@ function emaScalar(pIdx, name, value) {
 ===========================================================
 SETUP
 This section initializes the video capture, canvas, and
-starts the body pose detection for Prime and Jesus pose
-analysis with multi-person support.
+starts the body pose detection for 7 poses (star, arms_out,
+zigzag, side_arms, rounded, arms_up, neutral) with multi-person support.
 ===========================================================
 */
 
@@ -78,11 +80,15 @@ function preload() {
     // Initialize SelfieSegmentation for silhouette
     selfieSeg = ml5.bodySegmentation('SelfieSegmentation', { maskType: 'person' });
 
-    // Load local images for poses
-    jesusImage = loadImage('./generated/Jesus_1.png');
-    primeImage = loadImage('./generated/Prime.png');
+    // Load local images for poses (mapped to arms_out and arms_up)
+    arms_outImage = loadImage('./generated/Jesus.png');
+    arms_upImage = loadImage('./generated/Prime.png');
+    starImage = loadImage('./generated/Cathedral.png');
+    zigzagImage = loadImage('./generated/Copan.png');
+    side_armsImage = loadImage('./generated/Grossmuenster.png');
+    roundedImage = loadImage('./generated/Kappell.png');
 
-    console.log("Loading local images: Jesus_1.png and Prime.png");
+    console.log("Loading pose images");
 }
 
 function setup() {
@@ -109,6 +115,11 @@ function setup() {
     // Initialize TURQ color from CSS variable
     const cssTurq = root.getPropertyValue('--bs-turquoise').trim(); // e.g. "#08f2db"
     TURQ = color(cssTurq); // p5 accepts CSS hex strings
+
+    // Initialize organic line settings
+    LINECOLOR = color(255, 255, 128); // pale yellow
+    LINE_GLOW = true; // enable glow effect
+    LINE_WIDTH = 4; // base width in pixels
 
     // Initialize background and silhouette colors from CSS
     const cssBg = (root.getPropertyValue('--bg') || '#0b0b0b').trim();
@@ -151,9 +162,9 @@ function resizeAllTo(w, h) {
 function resizeStateArrays(numPersons) {
     // Extend arrays if we have more people
     while (personStates.length < numPersons) {
-        personStates.push("Neutral");
-        personLastStates.push("Neutral");
-        personStableStates.push("Neutral");
+        personStates.push("neutral");
+        personLastStates.push("neutral");
+        personStableStates.push("neutral");
         personStableCounters.push(0);
         personOverlayImages.push(null);
     }
@@ -190,8 +201,8 @@ function draw() {
     // 1) Solid background (replaces video background)
     background(BG_COLOR);
 
-    // 2) Silhouette (always ON) using compositing
-    if (segmentation && segmentation.mask) {
+    // 2) Silhouette (toggleable via showSegmentation)
+    if (showSegmentation && segmentation && segmentation.mask) {
         gSilhouette.clear();
         // Fill entire buffer with silhouette color
         gSilhouette.noStroke();
@@ -223,12 +234,18 @@ function draw() {
     // Resize per-person arrays to match current number of poses
     resizeStateArrays(poses.length);
 
-    // Loop through detected poses to draw skeletons, keypoints, and analyze states
+    // Loop through detected poses to draw skeletons/lines, keypoints, and analyze states
     for (let i = 0; i < poses.length; i++) {
         let pose = poses[i];
 
-        // Draw skeleton connections for the pose (only if tracking is enabled)
+        // Draw line outline (independent toggle)
+        if (showLine) {
+            drawOrganicOutline(pose, i, scaleX, scaleY);
+        }
+
+        // Draw skeleton tracking visualization (only if tracking is enabled)
         if (showTracking) {
+            // Show traditional skeleton connections
             for (let j = 0; j < connections.length; j++) {
                 let pointAIndex = connections[j][0];
                 let pointBIndex = connections[j][1];
@@ -282,78 +299,266 @@ function draw() {
 
 /*
 ===========================================================
-POSE ANALYSIS
-This section analyzes the body pose data to determine whether
-a participant is in "Prime" pose (hands on head) or "Jesus" pose (open arms).
-It uses keypoints like wrists, elbows, shoulders, and nose to calculate the posture
-and displays the result on the canvas.
+ORGANIC OUTLINE DRAWING
+This section draws a smooth, organic outline around the body
+using detected keypoints to help people locate themselves.
 ===========================================================
 */
 
-// Analyze the player's pose to determine if they are "Prime" (hands on head) or "Jesus" (open arms)
+/** Draw a smooth organic outline around the body */
+function drawOrganicOutline(pose, personIndex, scaleX, scaleY, useGlow = LINE_GLOW, lineWidth = LINE_WIDTH, lineColor = LINECOLOR) {
+    // Get key body outline points
+    const nose = pose.keypoints.find(k => k.name === "nose");
+    const leftShoulder = pose.keypoints.find(k => k.name === "left_shoulder");
+    const rightShoulder = pose.keypoints.find(k => k.name === "right_shoulder");
+    const leftElbow = pose.keypoints.find(k => k.name === "left_elbow");
+    const rightElbow = pose.keypoints.find(k => k.name === "right_elbow");
+    const leftWrist = pose.keypoints.find(k => k.name === "left_wrist");
+    const rightWrist = pose.keypoints.find(k => k.name === "right_wrist");
+    const leftHip = pose.keypoints.find(k => k.name === "left_hip");
+    const rightHip = pose.keypoints.find(k => k.name === "right_hip");
+    const leftKnee = pose.keypoints.find(k => k.name === "left_knee");
+    const rightKnee = pose.keypoints.find(k => k.name === "right_knee");
+    const leftAnkle = pose.keypoints.find(k => k.name === "left_ankle");
+    const rightAnkle = pose.keypoints.find(k => k.name === "right_ankle");
+    const leftEar = pose.keypoints.find(k => k.name === "left_ear");
+    const rightEar = pose.keypoints.find(k => k.name === "right_ear");
+
+    // Build array of outline points going around the body clockwise
+    const outlinePoints = [];
+
+    // Helper to add smoothed point if confident
+    const addPoint = (kp, name) => {
+        if (kp && kp.confidence > 0.2) {
+            const smoothed = emaPoint(personIndex, name, kp.x, kp.y);
+            outlinePoints.push({ x: smoothed.x * scaleX, y: smoothed.y * scaleY });
+        }
+    };
+
+    // Start from head/top and go clockwise around the body
+    addPoint(nose, "nose");
+    addPoint(rightEar, "right_ear");
+    addPoint(rightShoulder, "right_shoulder");
+    addPoint(rightElbow, "right_elbow");
+    addPoint(rightWrist, "right_wrist");
+    addPoint(rightHip, "right_hip");
+    addPoint(rightKnee, "right_knee");
+    addPoint(rightAnkle, "right_ankle");
+
+    // Bottom/feet area - if we have both ankles, connect them
+    addPoint(leftAnkle, "left_ankle");
+
+    // Up the left side
+    addPoint(leftKnee, "left_knee");
+    addPoint(leftHip, "left_hip");
+    addPoint(leftWrist, "left_wrist");
+    addPoint(leftElbow, "left_elbow");
+    addPoint(leftShoulder, "left_shoulder");
+    addPoint(leftEar, "left_ear");
+
+    // Only draw if we have enough points
+    if (outlinePoints.length < 4) return;
+
+    // Helper function to draw the curve
+    const drawCurve = () => {
+        beginShape();
+        // Use curveVertex for smooth curves
+        // Repeat first points at beginning and end for smooth closure
+        curveVertex(outlinePoints[outlinePoints.length - 1].x, outlinePoints[outlinePoints.length - 1].y);
+        for (let point of outlinePoints) {
+            curveVertex(point.x, point.y);
+        }
+        // Close the curve smoothly
+        curveVertex(outlinePoints[0].x, outlinePoints[0].y);
+        curveVertex(outlinePoints[1].x, outlinePoints[1].y);
+        endShape();
+    };
+
+    noFill();
+    const baseWeight = lineWidth * min(scaleX, scaleY);
+
+    if (useGlow) {
+        // Draw glow effect with multiple layers
+        let glowColor = color(lineColor);
+
+        // Outer glow (widest, most transparent)
+        glowColor.setAlpha(40);
+        stroke(glowColor);
+        strokeWeight(baseWeight * 3);
+        drawCurve();
+
+        // Middle glow
+        glowColor.setAlpha(80);
+        stroke(glowColor);
+        strokeWeight(baseWeight * 2);
+        drawCurve();
+
+        // Inner glow
+        glowColor.setAlpha(120);
+        stroke(glowColor);
+        strokeWeight(baseWeight * 1.3);
+        drawCurve();
+
+        // Core line (full opacity)
+        glowColor.setAlpha(200);
+        stroke(glowColor);
+        strokeWeight(baseWeight);
+        drawCurve();
+    } else {
+        // Simple line without glow
+        stroke(lineColor);
+        strokeWeight(baseWeight);
+        drawCurve();
+    }
+}
+
+/*
+===========================================================
+POSE ANALYSIS
+This section analyzes the body pose data to determine which
+of the 7 poses a participant is performing: star, arms_out,
+zigzag, side_arms, rounded, arms_up, or neutral.
+===========================================================
+*/
+
+// Analyze the player's pose to determine which of the 7 poses they're in
 function analyzeState(pose, personNumber) {
-    // Extract keypoints for hands, shoulders, and head
+    // Extract all necessary keypoints
     let leftWrist = pose.keypoints.find((k) => k.name === "left_wrist");
     let rightWrist = pose.keypoints.find((k) => k.name === "right_wrist");
     let leftElbow = pose.keypoints.find((k) => k.name === "left_elbow");
     let rightElbow = pose.keypoints.find((k) => k.name === "right_elbow");
     let leftShoulder = pose.keypoints.find((k) => k.name === "left_shoulder");
     let rightShoulder = pose.keypoints.find((k) => k.name === "right_shoulder");
+    let leftHip = pose.keypoints.find((k) => k.name === "left_hip");
+    let rightHip = pose.keypoints.find((k) => k.name === "right_hip");
+    let leftKnee = pose.keypoints.find((k) => k.name === "left_knee");
+    let rightKnee = pose.keypoints.find((k) => k.name === "right_knee");
+    let leftAnkle = pose.keypoints.find((k) => k.name === "left_ankle");
+    let rightAnkle = pose.keypoints.find((k) => k.name === "right_ankle");
     let nose = pose.keypoints.find((k) => k.name === "nose");
 
-    // Handle missing keypoints
+    // Handle missing critical keypoints
     if (!leftWrist || !rightWrist || !leftElbow || !rightElbow || !leftShoulder || !rightShoulder || !nose) {
-        return "Neutral";
+        return "neutral";
     }
 
-    // Check confidence levels
-    if (leftWrist.confidence < 0.3 || rightWrist.confidence < 0.3 || nose.confidence < 0.3) {
-        return "Neutral";
+    // Check minimum confidence levels
+    if (leftWrist.confidence < 0.3 || rightWrist.confidence < 0.3 ||
+        leftShoulder.confidence < 0.3 || rightShoulder.confidence < 0.3) {
+        return "neutral";
     }
 
-    let state = "Neutral";
+    // Calculate useful metrics
+    const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
 
-    // Check for Prime pose: both hands on top of head and close together
-    let handsAboveHead = leftWrist.y < nose.y - 20 && rightWrist.y < nose.y - 20;
-    let handsCloseTogether = Math.abs(leftWrist.x - rightWrist.x) < 100; // Adjust threshold as needed
+    // Arm extension checks
+    const leftArmLength = Math.sqrt(Math.pow(leftWrist.x - leftShoulder.x, 2) + Math.pow(leftWrist.y - leftShoulder.y, 2));
+    const rightArmLength = Math.sqrt(Math.pow(rightWrist.x - rightShoulder.x, 2) + Math.pow(rightWrist.y - rightShoulder.y, 2));
+    const leftForearmLength = Math.sqrt(Math.pow(leftWrist.x - leftElbow.x, 2) + Math.pow(leftWrist.y - leftElbow.y, 2));
+    const rightForearmLength = Math.sqrt(Math.pow(rightWrist.x - rightElbow.x, 2) + Math.pow(rightWrist.y - rightElbow.y, 2));
 
-    if (handsAboveHead && handsCloseTogether) {
-        state = "Prime";
-    }
-    // Check for Jesus pose: arms extended horizontally (open arms)
-    else {
-        // Calculate distances for arm extension check
-        let leftShoulderToWrist = Math.sqrt(Math.pow(leftWrist.x - leftShoulder.x, 2) + Math.pow(leftWrist.y - leftShoulder.y, 2));
-        let leftShoulderToElbow = Math.sqrt(Math.pow(leftElbow.x - leftShoulder.x, 2) + Math.pow(leftElbow.y - leftShoulder.y, 2));
-        let rightShoulderToWrist = Math.sqrt(Math.pow(rightWrist.x - rightShoulder.x, 2) + Math.pow(rightWrist.y - rightShoulder.y, 2));
-        let rightShoulderToElbow = Math.sqrt(Math.pow(rightElbow.x - rightShoulder.x, 2) + Math.pow(rightElbow.y - rightShoulder.y, 2));
+    // Helper: Check if arms are extended (relatively straight)
+    const leftArmExtended = leftArmLength > leftForearmLength * 1.6;
+    const rightArmExtended = rightArmLength > rightForearmLength * 1.6;
 
-        // Arms are extended if wrist is further from shoulder than elbow
-        let leftArmExtended = leftShoulderToWrist > leftShoulderToElbow + 20;
-        let rightArmExtended = rightShoulderToWrist > rightShoulderToElbow + 20;
+    // Helper: Check if arms are spread wide
+    const leftArmSpread = leftWrist.x < leftShoulder.x - shoulderWidth * 0.3;
+    const rightArmSpread = rightWrist.x > rightShoulder.x + shoulderWidth * 0.3;
 
-        // Check if arms are spread horizontally (wrist is to the side of shoulder)
-        let leftArmSpread = leftWrist.x < leftShoulder.x - 30; // Left wrist is to the left of left shoulder
-        let rightArmSpread = rightWrist.x > rightShoulder.x + 30; // Right wrist is to the right of right shoulder
+    // Helper: Check if wrists are at similar height (symmetric)
+    const wristsSymmetric = Math.abs(leftWrist.y - rightWrist.y) < 60;
 
-        // Check if arms are roughly horizontal (elbow and wrist at similar height)
-        let leftArmHorizontal = Math.abs(leftElbow.y - leftWrist.y) < 40;
-        let rightArmHorizontal = Math.abs(rightElbow.y - rightWrist.y) < 40;
+    // POSE DETECTION (in priority order)
 
-        if (leftArmExtended && rightArmExtended && leftArmSpread && rightArmSpread && leftArmHorizontal && rightArmHorizontal) {
-            state = "Jesus";
+    // 1. STAR: Arms and legs spread wide, arms raised
+    if (leftHip && rightHip && leftAnkle && rightAnkle) {
+        const hipWidth = Math.abs(leftHip.x - rightHip.x);
+        const ankleSpread = Math.abs(leftAnkle.x - rightAnkle.x);
+        const legsSpread = ankleSpread > hipWidth * 1.3;
+        const armsRaised = leftWrist.y < shoulderMidY && rightWrist.y < shoulderMidY;
+
+        if (leftArmExtended && rightArmExtended && leftArmSpread && rightArmSpread &&
+            armsRaised && legsSpread && wristsSymmetric) {
+            displayState(personNumber, "star");
+            return "star";
         }
     }
 
-    // Display the state on the canvas
+    // 2. ARMS UP: Both arms raised above head
+    const bothArmsUp = leftWrist.y < nose.y - 30 && rightWrist.y < nose.y - 30;
+    if (bothArmsUp && leftArmExtended && rightArmExtended && wristsSymmetric) {
+        displayState(personNumber, "arms_up");
+        return "arms_up";
+    }
+
+    // 3. SIDE ARMS: Victory/celebration pose (elbows out, wrists above elbows and shoulders)
+    const leftWristAboveElbow = leftWrist.y < leftElbow.y - 20;
+    const rightWristAboveElbow = rightWrist.y < rightElbow.y - 20;
+    const leftWristAboveShoulder = leftWrist.y < leftShoulder.y;
+    const rightWristAboveShoulder = rightWrist.y < rightShoulder.y;
+    const leftElbowOut = Math.abs(leftElbow.x - leftShoulder.x) > shoulderWidth * 0.3;
+    const rightElbowOut = Math.abs(rightElbow.x - rightShoulder.x) > shoulderWidth * 0.3;
+
+    if (leftWristAboveElbow && rightWristAboveElbow &&
+        leftWristAboveShoulder && rightWristAboveShoulder &&
+        leftElbowOut && rightElbowOut && wristsSymmetric) {
+        displayState(personNumber, "side_arms");
+        return "side_arms";
+    }
+
+    // 4. ZIGZAG: One arm up, one arm down (asymmetric)
+    const wristHeightDiff = Math.abs(leftWrist.y - rightWrist.y);
+    const asymmetric = wristHeightDiff > shoulderWidth * 0.8;
+    const oneArmUp = (leftWrist.y < shoulderMidY - 40) || (rightWrist.y < shoulderMidY - 40);
+    const oneArmDown = (leftWrist.y > shoulderMidY + 40) || (rightWrist.y > shoulderMidY + 40);
+
+    if (asymmetric && oneArmUp && oneArmDown && leftArmExtended && rightArmExtended) {
+        displayState(personNumber, "zigzag");
+        return "zigzag";
+    }
+
+    // 5. ARMS OUT: T-pose (arms extended horizontally)
+    const leftArmHorizontal = Math.abs(leftWrist.y - leftShoulder.y) < 60;
+    const rightArmHorizontal = Math.abs(rightWrist.y - rightShoulder.y) < 60;
+
+    if (leftArmExtended && rightArmExtended && leftArmSpread && rightArmSpread &&
+        leftArmHorizontal && rightArmHorizontal && wristsSymmetric) {
+        displayState(personNumber, "arms_out");
+        return "arms_out";
+    }
+
+    // 6. ROUNDED: Hands on hips
+    if (leftHip && rightHip) {
+        const hipMidY = (leftHip.y + rightHip.y) / 2;
+        const leftWristAtHip = Math.abs(leftWrist.y - hipMidY) < 80;
+        const rightWristAtHip = Math.abs(rightWrist.y - hipMidY) < 80;
+        const leftWristInward = Math.abs(leftWrist.x - leftHip.x) < shoulderWidth * 0.5;
+        const rightWristInward = Math.abs(rightWrist.x - rightHip.x) < shoulderWidth * 0.5;
+        const leftElbowOutward = leftElbow.x < leftWrist.x - 20;
+        const rightElbowOutward = rightElbow.x > rightWrist.x + 20;
+
+        if (leftWristAtHip && rightWristAtHip && leftWristInward && rightWristInward &&
+            leftElbowOutward && rightElbowOutward) {
+            displayState(personNumber, "rounded");
+            return "rounded";
+        }
+    }
+
+    // 7. NEUTRAL: Default fallback
+    displayState(personNumber, "neutral");
+    return "neutral";
+}
+
+// Helper function to display the detected state
+function displayState(personNumber, state) {
     fill(255);
     let scaleX = width / originalWidth;
     let scaleY = height / originalHeight;
     textSize(20 * min(scaleX, scaleY));
     textAlign(LEFT);
     text(`Person ${personNumber}: ${state}`, 10 * scaleX, height - 20 * personNumber * scaleY);
-
-    return state;
 }
 
 /*
@@ -368,9 +573,9 @@ and image selection for multiple people.
 function resizePersonArrays(numPersons) {
     // Extend arrays if we have more people
     while (personStates.length < numPersons) {
-        personStates.push("Neutral");
-        personLastStates.push("Neutral");
-        personStableStates.push("Neutral");
+        personStates.push("neutral");
+        personLastStates.push("neutral");
+        personStableStates.push("neutral");
         personStableCounters.push(0);
         personOverlayImages.push(null);
     }
@@ -413,12 +618,24 @@ function processPersonStateChange(personIndex) {
 
 // Select appropriate image for a given state
 function selectImageFor(state) {
-    if (state === "Jesus") {
-        return jesusImage;
-    } else if (state === "Prime") {
-        return primeImage;
-    } else {
-        return null; // Neutral state
+    // Map new pose names to available images
+    // Note: Currently only have Jesus and Prime images loaded
+    switch (state) {
+        case "arms_out":
+            return arms_outImage; 
+        case "arms_up":
+            return arms_upImage; 
+        case "star":
+            return starImage; 
+        case "zigzag":
+            return zigzagImage; 
+        case "side_arms":
+            return side_armsImage;
+        case "rounded":
+            return roundedImage; 
+        case "neutral":
+        default:
+            return null; // No image for these poses yet
     }
 }
 
@@ -498,6 +715,8 @@ function setupControls() {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const videoToggleBtn = document.getElementById('video-toggle-btn');
     const hideTrackingBtn = document.getElementById('generate-images-btn'); // Reusing the same button ID
+    const segmentationToggleBtn = document.getElementById('segmentation-toggle-btn');
+    const lineToggleBtn = document.getElementById('line-toggle-btn');
 
     // Fullscreen functionality
     fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -507,6 +726,12 @@ function setupControls() {
 
     // Hide tracking toggle functionality
     hideTrackingBtn.addEventListener('click', toggleTracking);
+
+    // Segmentation toggle functionality
+    segmentationToggleBtn.addEventListener('click', toggleSegmentation);
+
+    // Line toggle functionality
+    lineToggleBtn.addEventListener('click', toggleLine);
 
     // Listen for ESC key to exit fullscreen
     document.addEventListener('keydown', function(event) {
@@ -576,5 +801,39 @@ function toggleTracking() {
     } else {
         hideTrackingBtn.classList.remove('btn-1');
         hideTrackingBtn.classList.add('btn-disabled');
+    }
+}
+
+// Toggle segmentation visibility
+function toggleSegmentation() {
+    const segmentationToggleBtn = document.getElementById('segmentation-toggle-btn');
+
+    showSegmentation = !showSegmentation;
+    segmentationToggleBtn.textContent = showSegmentation ? 'Hide Segmentation' : 'Show Segmentation';
+
+    // Update button styling
+    if (showSegmentation) {
+        segmentationToggleBtn.classList.remove('btn-disabled');
+        segmentationToggleBtn.classList.add('btn-1');
+    } else {
+        segmentationToggleBtn.classList.remove('btn-1');
+        segmentationToggleBtn.classList.add('btn-disabled');
+    }
+}
+
+// Toggle line outline (alternative to skeleton)
+function toggleLine() {
+    const lineToggleBtn = document.getElementById('line-toggle-btn');
+
+    showLine = !showLine;
+    lineToggleBtn.textContent = showLine ? 'Hide Line' : 'Show Line';
+
+    // Update button styling
+    if (showLine) {
+        lineToggleBtn.classList.remove('btn-disabled');
+        lineToggleBtn.classList.add('btn-1');
+    } else {
+        lineToggleBtn.classList.remove('btn-1');
+        lineToggleBtn.classList.add('btn-disabled');
     }
 }
