@@ -49,17 +49,67 @@ git clone https://github.com/linalopes/Between-Verses.git
 cd Between-Verses
 ```
 
-### 2. Start Local Server
+### 2. Install the OSC bridge
 ```bash
-python3 -m http.server 8000
+cd osc-bridge
+npm install
+cp .env.example .env   # optional, edit if needed
 ```
 
-### 3. Open Application
-Navigate to `http://localhost:8000` and allow camera access.
+### 3. Run the combined HTTP + WebSocket server
+```bash
+npm run start
+```
+Keep this terminal running. Press `Ctrl+C` to stop the server.
 
-**Requirements**: Modern browser with camera support. HTTPS not required for localhost.
+### 4. Open the application
+In a browser, visit `http://127.0.0.1:5173` and allow camera access.
+
+**Requirements**: Node.js 18+, modern browser with camera support, Modul8 listening for OSC on UDP port 8000.
 
 **Note**: Video capture and pose detection (`video` and `detectStart`) may be gated behind a user gesture due to browser autoplay policies. Click or interact with the page if the camera doesn't start automatically.
+
+## 🔗 WebSocket → OSC Bridge
+
+A lightweight Node.js bridge serves the web app and forwards WebSocket messages to Modul8 via OSC.
+
+- **HTTP**: `http://127.0.0.1:5173`
+- **WebSocket**: `ws://127.0.0.1:5173/ws`
+- **OSC target**: `/md8key/ctrl_layer_media/<layer>` → integer `media`
+
+Environment variables (set in `osc-bridge/.env`):
+
+- `HTTP_PORT` (default `5173`) – shared HTTP & WebSocket port
+- `WS_PATH` (default `/ws`)
+- `MODUL8_HOST` (default `127.0.0.1`)
+- `MODUL8_PORT` (default `8000` UDP)
+
+### Message shapes
+
+```json
+{"type":"ping"}
+```
+→ bridge replies `{"type":"pong"}`
+
+```json
+{"type":"osc","actions":[{"layer":0,"media":8}]}
+```
+→ sends OSC `/md8key/ctrl_layer_media/0` with integer `8`
+
+### Quick test
+
+Run in the browser console while the bridge is running:
+
+```js
+const ws = new WebSocket('ws://127.0.0.1:5173/ws');
+ws.onopen = () => {
+  ws.send(JSON.stringify({ type: 'ping' }));
+  ws.send(JSON.stringify({ type: 'osc', actions: [{ layer: 0, media: 8 }] }));
+};
+ws.onmessage = (event) => console.log('WS message:', event.data);
+```
+
+In Modul8 you should see `RECV ['/md8key/ctrl_layer_media/0', 'i', 8]` and the target layer switches media.
 
 ## 🔒 Privacy
 
@@ -121,6 +171,11 @@ Between-Verses/
 │   ├── Copan.png           # Zigzag pose
 │   ├── Grossmuenster.png   # Side Arms pose
 │   └── Kappell.png         # Rounded pose
+├── osc-bridge/             # Node.js HTTP + WS → OSC bridge
+│   ├── index.js            # Bridge implementation
+│   ├── package.json        # npm scripts and dependencies
+│   ├── README.md           # Bridge-specific instructions
+│   └── .env.example        # Sample environment variables
 ├── jesus.svg               # Pose instruction icon
 ├── prime.svg               # Pose instruction icon
 ├── favicon.png             # Website icon

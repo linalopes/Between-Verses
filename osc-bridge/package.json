@@ -1,0 +1,16 @@
+{
+  "name": "between-verses-osc-bridge",
+  "version": "1.0.0",
+  "description": "WebSocket to OSC bridge and HTTP static server for Between Verses",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "osc": "^2.4.2",
+    "ws": "^8.14.2"
+  }
+}
