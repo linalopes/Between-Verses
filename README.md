@@ -2,6 +2,10 @@
 
 An interactive installation where poses trigger body-anchored images that follow your movement — blending Brazilian and Swiss landscapes in real time.
 
+## Authors
+[Lina Lopes](https://linalopes.info/)
+[Sarah Mennicken](https://www.sarahmennicken.com/)
+
 ## 🎯 Overview
 
 Multi-person simultaneous pose detection with immediate visual feedback and smooth organic outline visualization:
@@ -14,7 +18,7 @@ Multi-person simultaneous pose detection with immediate visual feedback and smoo
 - **Rounded**: Hands on hips (elbows out) → shows `Kappell.png`
 - **Neutral**: Default relaxed pose → no overlay
 
-Each person gets their own p5.js sticker overlay anchored near the navel, scaled relative to shoulder width. The system uses EMA (Exponential Moving Average) smoothing to reduce jitter in both skeleton tracking and sticker positioning, plus an optional organic outline with customizable glow effect.
+Each person gets their own p5.js sticker overlay anchored near the navel, scaled relative to shoulder width. The system uses EMA (Exponential Moving Average) smoothing to reduce jitter in both skeleton tracking and sticker positioning, plus an optional organic outline with customizable glow effect. Stickers feature smooth pop-in/out animations and are stabilized by a time-based finite state machine (FSM) to prevent flicker.
 
 ## ✨ Features
 
@@ -24,6 +28,8 @@ Each person gets their own p5.js sticker overlay anchored near the navel, scaled
 - **SelfieSegmentation Silhouette**: Optional body silhouette visualization using ml5.js BodySegmentation
 - **Organic Outline with Glow**: Smooth body outline with optional multi-layer glow effect (customizable via `useGlow` flag)
 - **Navel-Anchored Stickers**: Images positioned using shoulders→hips interpolation via `NAVEL_BLEND` factor
+- **Pop-In/Out Animations**: Smooth scale animations (440ms enter, 220ms exit) with quadratic easing
+- **Anti-Flicker FSM**: Time-based finite state machine prevents sticker flicker and ping-pong behavior
 - **EMA Smoothing**: Reduces jitter in skeleton lines, outline, and sticker scale (`SMOOTH_POS`, `SMOOTH_SCALE`)
 - **CSS Color Integration**: Skeleton lines use `--bs-pink`, keypoint markers use `--bs-turquoise`, outline uses light grey
 - **Interactive Controls**: Fullscreen, Hide Video, Toggle Tracking, Toggle Segmentation, Toggle Line
@@ -76,17 +82,27 @@ All poses require minimum confidence of 0.3 for critical keypoints (wrists, shou
 
 ### Per-Person Pipeline
 1. **Detect pose type** per person each frame (7 poses in priority order)
-2. **Render visualization layers** (toggleable):
+2. **Route through FSM anti-flicker system**:
+   - **Idle**: Waiting for pose detection
+   - **Candidate**: Pose detected, waiting for `POSE_DWELL_MS` (400ms) to lock
+   - **Locked**: Pose confirmed, sticker shown for minimum `STICKER_MIN_SHOW_MS` (1000ms)
+   - **Cooldown**: After release, ignore re-triggers for `STICKER_COOLDOWN_MS` (400ms)
+   - Grace period of `GRACE_MS` (250ms) tolerates brief detection drops
+3. **Animate sticker appearance**:
+   - **Enter**: Scale from 0.58 → 1.0 over 440ms (easeOutQuad)
+   - **Steady**: Scale at 1.0 while locked
+   - **Exit**: Scale from 1.0 → 0.76 over 220ms (easeInQuad)
+4. **Render visualization layers** (toggleable):
    - **Segmentation**: Body silhouette from SelfieSegmentation (OFF by default)
    - **Line**: Smooth organic outline with optional glow effect (ON by default)
    - **Tracking**: Skeleton lines and keypoint dots (OFF by default)
-3. **Calculate anchor position** for sticker:
+5. **Calculate anchor position** for sticker:
    - Horizontal: midpoint between shoulders
    - Vertical: interpolated between shoulders and hips using `NAVEL_BLEND` (default 0.60)
    - Falls back to shoulder midpoint if hips aren't detected with confidence ≥ 0.3
-4. **Calculate scale**: width = shoulderWidth × 4.5 (EMA-smoothed)
-5. **Apply EMA smoothing**: All keypoints and scalar values are smoothed to reduce jitter
-6. **Draw sticker**: p5.js image centered on anchor position (only for detected non-neutral poses)
+6. **Calculate scale**: width = shoulderWidth × 4.5 (EMA-smoothed) × animation scale
+7. **Apply EMA smoothing**: All keypoints and scalar values are smoothed to reduce jitter
+8. **Draw sticker**: p5.js image centered on anchor position with animation scale applied
 
 ### Identity Stabilization
 When two people are present, the system tracks them independently. For more stable identity across frames (optional enhancement), you can sort people left-to-right by shoulder midpoint X position before processing.
@@ -134,8 +150,25 @@ Between-Verses/
 - **`SMOOTH_SCALE`**: 0.85 (0..1, higher = smoother sticker size, more lag)
   - Applied to shoulder width calculation for sticker scaling
 
-#### State Management
+#### Anti-Flicker FSM (Time-Based)
+- **`POSE_DWELL_MS`**: 400ms (must see same pose for this long to lock)
+  - Increase to 500-600ms if stickers still flicker
+- **`STICKER_MIN_SHOW_MS`**: 1000ms (keep sticker at least this long before releasing)
+  - Increase to 1200ms+ for more persistent stickers
+- **`STICKER_COOLDOWN_MS`**: 400ms (after release, ignore immediate re-triggers)
+- **`GRACE_MS`**: 250ms (tolerate brief detection drops before unlocking)
+
+#### Sticker Animations
+- **`IN_MS`**: 440ms (enter animation duration)
+- **`OUT_MS`**: 220ms (exit animation duration)
+- **`S_IN_START`**: 0.58 (pop-in starts at this scale)
+- **`S_IN_END`**: 1.00 (settles at full scale)
+- **`S_OUT_END`**: 0.76 (shrink to this scale on exit)
+- Uses quadratic easing: `easeOutQuad` for enter, `easeInQuad` for exit
+
+#### State Management (Legacy)
 - **`STABLE_FRAMES`**: 12 (frames to wait before considering pose state stable)
+  - Note: Replaced by FSM time-based system, kept for backward compatibility
 
 #### Visual Rendering
 - **Line/Outline Glow**: Controlled via `useGlow` parameter in `drawOrganicOutline()` (default: `true`)
@@ -180,17 +213,21 @@ Between-Verses/
   5. **Arms Out**: T-pose - arms horizontal at shoulder level
   6. **Rounded**: Hands positioned near hips, elbows bent outward
 - Poses are detected in priority order - first match wins
-- Ensure stable pose holding (12-frame stabilization via STABLE_FRAMES)
+- Stickers use time-based FSM stabilization (400ms dwell, 1000ms minimum show)
+- Stickers animate in/out smoothly (440ms enter, 220ms exit)
 - If hips aren't detected, sticker will fall back to shoulder midpoint
 - View detected state at bottom of screen ("Person 1: [pose_name]")
 
-### Sticker Positioning
+### Sticker Positioning & Animation
 - Adjust `window.NAVEL_BLEND` in browser console:
   ```javascript
   window.NAVEL_BLEND = 0.55;  // Move sticker higher (closer to shoulders)
   window.NAVEL_BLEND = 0.65;  // Move sticker lower (closer to hips)
   ```
 - Verify shoulder keypoints have confidence ≥ 0.3
+- **Sticker flicker**: Increase `POSE_DWELL_MS` (400 → 500-600ms) in script.js
+- **Sticker too brief**: Increase `STICKER_MIN_SHOW_MS` (1000 → 1200ms+) in script.js
+- **Animation too fast/slow**: Adjust `IN_MS` (440ms) and `OUT_MS` (220ms) in script.js
 - Check that images exist in `/generated` folder:
   - `Jesus.png` (Arms Out), `Prime.png` (Arms Up), `Cathedral.png` (Star)
   - `Copan.png` (Zigzag), `Grossmuenster.png` (Side Arms), `Kappell.png` (Rounded)

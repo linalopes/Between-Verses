@@ -20,7 +20,6 @@ let TURQ;
 let LINECOLOR;
 let LINE_GLOW;
 let LINE_WIDTH;
-let FILLCOLOR;
 
 // SelfieSegmentation globals for silhouette
 let selfieSeg = null;
@@ -47,41 +46,6 @@ const SMOOTH_SCALE = 0.85;  // for scalar values such as shoulderWidth
 
 let smoothStore = {}; // per person: { keyName: {x,y}, _scalars: {name:value} }
 
-// ===== Anti-flicker FSM for pose selection =====
-const POSE_DWELL_MS        = 400;  // must see same pose for this long to lock
-const STICKER_MIN_SHOW_MS  = 1000; // keep sticker at least this long before releasing
-const STICKER_COOLDOWN_MS  = 400;  // after release, ignore immediate re-triggers
-const GRACE_MS             = 250;  // tolerate brief drops before unlocking
-
-// FSM state per personId: {phase, candidatePose, candidateSince, lockedPose, lockedSince, cooldownUntil, lastSeen}
-let poseFSM = {}; // key = stable person id (use your current track/index)
-
-// Track last locked pose for logging transitions
-let lastLockedPoseByPerson = {};
-
-function nowMs() {
-    return millis ? millis() : (performance.now ? performance.now() : Date.now());
-}
-
-// === Sticker animation config ===
-const IN_MS = 440;          // enter duration
-const OUT_MS = 220;         // exit duration
-const S_IN_START = 0.58;    // pop-in starts a bit smaller
-const S_IN_END   = 1.00;    // settles at 1.0
-const S_OUT_END  = 0.76;    // shrink slightly on exit
-
-// Per-person sticker animation state
-// stickerAnim[pid] = { phase:'hidden'|'in'|'steady'|'out', t0, dur, from, to, scale, currentPose, currentImage }
-let stickerAnim = {};
-
-function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
-function lerp(a, b, t) { return a + (b - a) * t; }
-function easeOutQuad(u) { return 1 - (1 - u) * (1 - u); }
-function easeInQuad(u) { return u * u; }
-function nowMsAnim() { return nowMs(); }
-// Persistent tracking: store last frame's poses for matching
-let lastFramePoses = [];
-
 /** Exponential moving average for a 2D point. */
 function emaPoint(pIdx, keyName, x, y) {
     smoothStore[pIdx] ??= { _scalars: {} };
@@ -98,139 +62,6 @@ function emaScalar(pIdx, name, value) {
     const v = SMOOTH_SCALE * prev + (1 - SMOOTH_SCALE) * value;
     smoothStore[pIdx]._scalars[name] = v;
     return v;
-}
-
-/** FSM update for anti-flicker pose selection */
-function fsmUpdate(personId, detectedPose /* string or null */, /*optional*/ detectedInfo = {}) {
-    // detectedInfo can contain: {conf: number, margin: number}, both optional.
-    const t = nowMs();
-
-    const s = poseFSM[personId] ?? (poseFSM[personId] = {
-        phase: 'idle', candidatePose: null, candidateSince: 0,
-        lockedPose: null,  lockedSince: 0, cooldownUntil: 0, lastSeen: t
-    });
-
-    s.lastSeen = t;
-
-    // Helper checks (use if you have confidences; otherwise they default to true)
-    const confOK   = (detectedInfo.conf   == null) ? true : (detectedInfo.conf   >= 0);
-    const marginOK = (detectedInfo.margin == null) ? true : (detectedInfo.margin >= 0);
-
-    switch (s.phase) {
-        case 'idle': {
-            if (detectedPose && confOK && marginOK && t >= s.cooldownUntil) {
-                s.phase = 'candidate';
-                s.candidatePose = detectedPose;
-                s.candidateSince = t;
-            }
-            break;
-        }
-        case 'candidate': {
-            if (!detectedPose) {
-                // lost signal — grace back to idle
-                if (t - s.candidateSince > GRACE_MS) {
-                    s.phase = 'idle';
-                    s.candidatePose = null;
-                }
-                break;
-            }
-            if (detectedPose !== s.candidatePose) {
-                // switched candidate → restart dwell
-                s.candidatePose = detectedPose;
-                s.candidateSince = t;
-                break;
-            }
-            // same candidate; check dwell time + quality gate
-            if ((t - s.candidateSince) >= POSE_DWELL_MS && confOK && marginOK) {
-                s.phase = 'locked';
-                s.lockedPose = s.candidatePose;
-                s.lockedSince = t;
-            }
-            break;
-        }
-        case 'locked': {
-            // Hold minimum show time
-            const minShowReached = (t - s.lockedSince) >= STICKER_MIN_SHOW_MS;
-
-            // If we still detect same pose OR min show not reached, keep locked
-            if (detectedPose === s.lockedPose || !minShowReached) break;
-
-            // If pose vanished or changed and min show reached, allow unlock with a brief grace
-            const changed = (!detectedPose) || (detectedPose !== s.lockedPose);
-            if (changed && (t - s.lockedSince) >= (STICKER_MIN_SHOW_MS + GRACE_MS)) {
-                s.phase = 'cooldown';
-                s.candidatePose = null;
-                s.candidateSince = 0;
-                s.cooldownUntil = t + STICKER_COOLDOWN_MS;
-                // clear locked; consumer will notice null and hide sticker
-                s.lockedPose = null;
-            }
-            break;
-        }
-        case 'cooldown': {
-            if (t >= s.cooldownUntil) {
-                s.phase = 'idle';
-            }
-            break;
-        }
-    }
-
-    // Return the current "locked" pose the renderer should use (or null)
-    return s.lockedPose;
-}
-
-/** Update sticker animation state based on FSM locked pose */
-function updateStickerAnim(personId, lockedPose) {
-    const t = nowMsAnim();
-
-    let A = stickerAnim[personId];
-
-    if (!A) A = stickerAnim[personId] = { phase: 'hidden', t0: 0, dur: 0, from: 1, to: 1, scale: 1, currentPose: null, currentImage: null };
-
-    // ENTER: got a pose locked
-    if (lockedPose && lockedPose !== 'neutral') {
-        if (A.phase === 'hidden' || A.phase === 'out' || A.currentPose !== lockedPose) {
-            A.currentPose = lockedPose;
-            A.currentImage = selectImageFor(lockedPose);
-            A.phase = 'in';
-            A.t0 = t;
-            A.dur = IN_MS;
-            A.from = S_IN_START;
-            A.to = S_IN_END;
-        }
-    } else {
-        // EXIT: no locked pose -> animate out if currently visible/steady/in
-        if (A.phase === 'in' || A.phase === 'steady') {
-            A.phase = 'out';
-            A.t0 = t;
-            A.dur = OUT_MS;
-            A.from = A.scale || 1.0;
-            A.to = S_OUT_END;
-        }
-    }
-
-    // Advance animation
-    if (A.phase === 'in') {
-        const u = clamp01((t - A.t0) / A.dur);
-        A.scale = lerp(A.from, A.to, easeOutQuad(u));
-        if (u >= 1) {
-            A.phase = 'steady';
-            A.scale = 1.0;
-        }
-    } else if (A.phase === 'out') {
-        const u = clamp01((t - A.t0) / A.dur);
-        A.scale = lerp(A.from, A.to, easeInQuad(u));
-        if (u >= 1) {
-            A.phase = 'hidden';
-            A.scale = 1.0;
-            A.currentImage = null; // hide for real after exit
-            A.currentPose = null;
-        }
-    } else if (A.phase === 'steady') {
-        A.scale = 1.0;
-    }
-
-    return A;
 }
 
 /*
@@ -286,8 +117,7 @@ function setup() {
     TURQ = color(cssTurq); // p5 accepts CSS hex strings
 
     // Initialize organic line settings
-    LINECOLOR = color(255, 255, 128); 
-    FILLCOLOR = color(255, 255, 128); // pale yellow
+    LINECOLOR = color(255, 255, 128); // pale yellow
     LINE_GLOW = true; // enable glow effect
     LINE_WIDTH = 4; // base width in pixels
 
@@ -434,22 +264,8 @@ function draw() {
             }
         }
 
-        // Analyze the pose state of each person
-        const detectedPose = analyzeState(pose, i + 1);
-        personStates[i] = detectedPose; // Keep for display/logging
-
-        // Route through FSM for anti-flicker stabilization
-        const detectedInfo = {}; // Can add {conf, margin} here if available
-        const pid = i; // Use index as person ID (or use stable identity if available)
-        const lockedPose = fsmUpdate(pid, detectedPose, detectedInfo);
-
-        // Log transitions for tuning
-        if (lockedPose !== lastLockedPoseByPerson[pid]) {
-            if (lockedPose) {
-                console.log(`Person ${pid + 1} locked pose:`, lockedPose);
-            }
-            lastLockedPoseByPerson[pid] = lockedPose;
-        }
+        // Analyze the pose state of each person (Prime, Jesus, or Neutral) and get the state
+        personStates[i] = analyzeState(pose, i + 1);
 
         // Draw keypoints for each person (only if tracking is enabled)
         if (showTracking) {
@@ -468,13 +284,9 @@ function draw() {
         }
     }
 
-    // Update stickers based on FSM locked poses with animation
+    // Process per-person state changes and debounce (for p5 stickers)
     for (let i = 0; i < poses.length; i++) {
-        const pid = i;
-        const s = poseFSM[pid];
-        const lockedPose = s ? s.lockedPose : null;
-        const A = updateStickerAnim(pid, lockedPose);
-        personOverlayImages[i] = A.currentImage; // stays non-null during OUT until hidden
+        processPersonStateChange(i);
     }
 
     // Draw per-person stickers anchored near the navel
@@ -563,7 +375,6 @@ function drawOrganicOutline(pose, personIndex, scaleX, scaleY, useGlow = LINE_GL
     };
 
     noFill();
-    //fill(FILLCOLOR);
     const baseWeight = lineWidth * min(scaleX, scaleY);
 
     if (useGlow) {
@@ -718,45 +529,18 @@ function analyzeState(pose, personNumber) {
         return "arms_out";
     }
 
-    // 6. ROUNDED: Hands on hips (robust for low camera angles, flexible vertical positioning)
+    // 6. ROUNDED: Hands on hips
     if (leftHip && rightHip) {
-        // Calculate body proportions for angle-independent detection
-        const torsoHeight = Math.abs(shoulderMidY - ((leftHip.y + rightHip.y) / 2));
         const hipMidY = (leftHip.y + rightHip.y) / 2;
+        const leftWristAtHip = Math.abs(leftWrist.y - hipMidY) < 80;
+        const rightWristAtHip = Math.abs(rightWrist.y - hipMidY) < 80;
+        const leftWristInward = Math.abs(leftWrist.x - leftHip.x) < shoulderWidth * 0.5;
+        const rightWristInward = Math.abs(rightWrist.x - rightHip.x) < shoulderWidth * 0.5;
+        const leftElbowOutward = leftElbow.x < leftWrist.x - 20;
+        const rightElbowOutward = rightElbow.x > rightWrist.x + 20;
 
-        // Flexible vertical range: from mid-torso down to below hips
-        // Allows hands on waist, hips, or upper thighs
-        const leftWristInRange = leftWrist.y > shoulderMidY - torsoHeight * 0.2 &&
-                                  leftWrist.y < hipMidY + torsoHeight * 0.6;
-        const rightWristInRange = rightWrist.y > shoulderMidY - torsoHeight * 0.2 &&
-                                   rightWrist.y < hipMidY + torsoHeight * 0.6;
-
-        // Distance from wrist to hip (3D-like distance, angle-independent)
-        const leftWristToHipDist = Math.sqrt(
-            Math.pow(leftWrist.x - leftHip.x, 2) +
-            Math.pow(leftWrist.y - leftHip.y, 2)
-        );
-        const rightWristToHipDist = Math.sqrt(
-            Math.pow(rightWrist.x - rightHip.x, 2) +
-            Math.pow(rightWrist.y - rightHip.y, 2)
-        );
-
-        // Wrists should be reasonably close to hips (relaxed threshold)
-        const leftWristNearHip = leftWristToHipDist < shoulderWidth * 1.0;
-        const rightWristNearHip = rightWristToHipDist < shoulderWidth * 1.0;
-
-        // Elbows should be outward from wrists (creates the characteristic shape)
-        const leftElbowOutward = leftElbow.x < leftWrist.x - shoulderWidth * 0.1;
-        const rightElbowOutward = rightElbow.x > rightWrist.x + shoulderWidth * 0.1;
-
-        // Forearms should be relatively short (bent arms, not extended)
-        const leftForearmShort = leftForearmLength < shoulderWidth * 1.4;
-        const rightForearmShort = rightForearmLength < shoulderWidth * 1.4;
-
-        if (leftWristInRange && rightWristInRange &&
-            leftWristNearHip && rightWristNearHip &&
-            leftElbowOutward && rightElbowOutward &&
-            leftForearmShort && rightForearmShort) {
+        if (leftWristAtHip && rightWristAtHip && leftWristInward && rightWristInward &&
+            leftElbowOutward && rightElbowOutward) {
             displayState(personNumber, "rounded");
             return "rounded";
         }
@@ -838,17 +622,17 @@ function selectImageFor(state) {
     // Note: Currently only have Jesus and Prime images loaded
     switch (state) {
         case "arms_out":
-            return arms_outImage;
+            return arms_outImage; 
         case "arms_up":
-            return arms_upImage;
+            return arms_upImage; 
         case "star":
-            return starImage;
+            return starImage; 
         case "zigzag":
-            return zigzagImage;
+            return zigzagImage; 
         case "side_arms":
             return side_armsImage;
         case "rounded":
-            return roundedImage;
+            return roundedImage; 
         case "neutral":
         default:
             return null; // No image for these poses yet
@@ -909,130 +693,13 @@ function drawPersonSticker(personIndex, pose, scaleX, scaleY) {
     // Size and draw
     let w = 4.5 * shoulderWidth;
     let h = w * (overlayImage.height / overlayImage.width);
-
-    // Apply animation scale
-    const animScale = (stickerAnim[personIndex]?.scale ?? 1.0);
-    w *= animScale;
-    h *= animScale;
-
     cx *= scaleX; cy *= scaleY; w *= scaleX; h *= scaleY;
     image(overlayImage, cx - w/2, cy - h/2, w, h);
 }
 
-/**
- * Calculate similarity score between two poses based on keypoint distances
- * Returns a lower score for more similar poses (distance-based)
- */
-function calculatePoseSimilarity(pose1, pose2) {
-    let totalDistance = 0;
-    let numComparisons = 0;
-
-    // Compare key body points that are usually visible and stable
-    const keyPointNames = ["nose", "left_shoulder", "right_shoulder", "left_hip", "right_hip"];
-
-    for (let name of keyPointNames) {
-        const kp1 = pose1.keypoints.find(k => k.name === name);
-        const kp2 = pose2.keypoints.find(k => k.name === name);
-
-        // Only compare if both keypoints exist and are confident
-        if (kp1 && kp2 && kp1.confidence > 0.3 && kp2.confidence > 0.3) {
-            const dx = kp1.x - kp2.x;
-            const dy = kp1.y - kp2.y;
-            totalDistance += Math.sqrt(dx * dx + dy * dy);
-            numComparisons++;
-        }
-    }
-
-    // Return average distance (lower = more similar)
-    return numComparisons > 0 ? totalDistance / numComparisons : Infinity;
-}
-
-/**
- * Match current frame poses to previous frame poses for stable tracking
- * Uses Hungarian algorithm concept: match each current pose to closest previous pose
- */
-function matchPosesToPreviousFrame(currentPoses, previousPoses) {
-    if (!previousPoses || previousPoses.length === 0) {
-        return currentPoses; // First frame, no matching needed
-    }
-
-    if (currentPoses.length === 0) {
-        return currentPoses;
-    }
-
-    // Build a cost matrix: [current][previous] = similarity score
-    const costMatrix = [];
-    for (let i = 0; i < currentPoses.length; i++) {
-        costMatrix[i] = [];
-        for (let j = 0; j < previousPoses.length; j++) {
-            costMatrix[i][j] = calculatePoseSimilarity(currentPoses[i], previousPoses[j]);
-        }
-    }
-
-    // Simple greedy matching (good enough for 2-3 people)
-    const matched = new Array(currentPoses.length);
-    const usedPrevious = new Set();
-
-    // For each previous person slot, find the best matching current pose
-    for (let prevIdx = 0; prevIdx < previousPoses.length; prevIdx++) {
-        let bestCurrentIdx = -1;
-        let bestScore = Infinity;
-
-        for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
-            if (matched[currIdx] !== undefined) continue; // Already matched
-
-            const score = costMatrix[currIdx][prevIdx];
-            if (score < bestScore) {
-                bestScore = score;
-                bestCurrentIdx = currIdx;
-            }
-        }
-
-        // Only match if distance is reasonable (not too far apart)
-        if (bestCurrentIdx !== -1 && bestScore < 200) {
-            matched[bestCurrentIdx] = prevIdx;
-            usedPrevious.add(prevIdx);
-        }
-    }
-
-    // Create reordered array maintaining previous frame indices
-    const reordered = new Array(Math.max(currentPoses.length, previousPoses.length));
-
-    // Place matched poses in their previous positions
-    for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
-        if (matched[currIdx] !== undefined) {
-            reordered[matched[currIdx]] = currentPoses[currIdx];
-        }
-    }
-
-    // Place unmatched poses in remaining slots
-    let nextSlot = 0;
-    for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
-        if (matched[currIdx] === undefined) {
-            // Find next empty slot
-            while (reordered[nextSlot] !== undefined) nextSlot++;
-            reordered[nextSlot] = currentPoses[currIdx];
-        }
-    }
-
-    // Filter out undefined slots and return
-    return reordered.filter(p => p !== undefined);
-}
-
 // Callback function to handle detected poses
 function gotPoses(results) {
-    if (!results || results.length === 0) {
-        poses = results;
-        lastFramePoses = [];
-        return;
-    }
-
-    // Match poses to previous frame for stable tracking
-    const matchedPoses = matchPosesToPreviousFrame(results, lastFramePoses);
-
-    // Store for next frame
-    lastFramePoses = matchedPoses.slice(); // Copy array
-    poses = matchedPoses;
+    poses = results;
 }
 
 /*

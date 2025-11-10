@@ -41,7 +41,7 @@
 		<key>(g3_ASCII)ctrl_master_scale</key>
 		<string>(g3_FLOAT)0.500000</string>
 		<key>(g3_ASCII)ctrl_master_soundLevelCapture</key>
-		<string>(g3_FLOAT)0.490000</string>
+		<string>(g3_FLOAT)0.411765</string>
 		<key>(g3_ASCII)ctrl_master_soundOutLevel</key>
 		<string>(g3_INT)0</string>
 		<key>(g3_ASCII)ctrl_master_speed</key>
@@ -104,34 +104,6 @@
 				<key>(g3_ASCII)ctrlLayer</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)140</string>
-				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)layerActivated</key>
-				<string>(g3_INT)1</string>
-			</dict>
-			<dict>
-				<key>(g3_ASCII)ctrlLayer</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrlPriv_ui_tab_postColorizeRadio</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_color_additiveB</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_color_additiveG</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_color_additiveR</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_color_modulateB</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_color_modulateG</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_color_modulateR</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_hidden</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
 				<string>(g3_INT)1024</string>
@@ -139,34 +111,24 @@
 				<string>(g3_INT)8</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
 				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_lightnessOn</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_lightnessType</key>
-				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastLevel</key>
+				<string>(g3_FLOAT)0.335000</string>
+				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
+				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_lumaOn</key>
 				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_lumaPreserveAlpha</key>
-				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_lumaType</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_saturationInverse</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_saturationOn</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_position_x</key>
-				<string>(g3_FLOAT)176.000000</string>
+				<string>(g3_FLOAT)40.000000</string>
 				<key>(g3_ASCII)ctrl_layer_position_y</key>
-				<string>(g3_FLOAT)-12.000000</string>
-				<key>(g3_ASCII)ctrl_layer_scale_uniform</key>
-				<string>(g3_FLOAT)0.390000</string>
-				<key>(g3_ASCII)ctrl_layer_scale_x</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_scale_y</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_scale_z</key>
-				<string>(g3_INT)0</string>
+				<string>(g3_FLOAT)-304.000000</string>
 				<key>(g3_ASCII)layerActivated</key>
 				<string>(g3_INT)1</string>
+			</dict>
+			<dict>
+				<key>(g3_ASCII)ctrlLayer</key>
+				<string>(g3_INT)0</string>
 			</dict>
 			<dict>
 				<key>(g3_ASCII)ctrlLayer</key>
@@ -186,47 +148,9 @@
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_position_x</key>
-				<string>(g3_FLOAT)-4.000000</string>
+				<string>(g3_FLOAT)8.000000</string>
 				<key>(g3_ASCII)ctrl_layer_position_y</key>
-				<string>(g3_FLOAT)236.000000</string>
-				<key>(g3_ASCII)ctrl_layer_scale_uniform</key>
-				<string>(g3_FLOAT)0.080000</string>
-				<key>(g3_ASCII)ctrl_layer_scale_x</key>
-				<string>(g3_FLOAT)0.085714</string>
-				<key>(g3_ASCII)ctrl_layer_transformer_matrix_resize</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_transformer_matrix_yValue</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_transformer_on</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)layerActivated</key>
-				<string>(g3_INT)1</string>
-			</dict>
-			<dict>
-				<key>(g3_ASCII)ctrlLayer</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_auto_moveCurve</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_auto_moveOn</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_auto_moveSize</key>
-				<string>(g3_FLOAT)0.842857</string>
-				<key>(g3_ASCII)ctrl_layer_auto_moveSpeed</key>
-				<string>(g3_FLOAT)0.071429</string>
-				<key>(g3_ASCII)ctrl_layer_auto_moveStrob</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)129</string>
-				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
-				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
-				<string>(g3_INT)0</string>
-				<key>(g3_ASCII)ctrl_layer_position_x</key>
-				<string>(g3_FLOAT)168.000000</string>
-				<key>(g3_ASCII)ctrl_layer_position_y</key>
-				<string>(g3_FLOAT)192.000000</string>
+				<string>(g3_FLOAT)272.000000</string>
 				<key>(g3_ASCII)ctrl_layer_scale_uniform</key>
 				<string>(g3_FLOAT)0.080000</string>
 				<key>(g3_ASCII)ctrl_layer_scale_x</key>
@@ -245,10 +169,50 @@
 			<dict>
 				<key>(g3_ASCII)ctrlLayer</key>
 				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_auto_moveCurve</key>
+				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_auto_moveOn</key>
+				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_auto_moveSize</key>
+				<string>(g3_FLOAT)0.842857</string>
+				<key>(g3_ASCII)ctrl_layer_auto_moveSpeed</key>
+				<string>(g3_FLOAT)0.071429</string>
+				<key>(g3_ASCII)ctrl_layer_auto_moveStrob</key>
+				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_media</key>
+				<string>(g3_INT)132</string>
+				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
+				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
+				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
+				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_position_x</key>
+				<string>(g3_FLOAT)224.000000</string>
+				<key>(g3_ASCII)ctrl_layer_position_y</key>
+				<string>(g3_FLOAT)244.000000</string>
+				<key>(g3_ASCII)ctrl_layer_scale_uniform</key>
+				<string>(g3_FLOAT)0.040000</string>
+				<key>(g3_ASCII)ctrl_layer_scale_x</key>
+				<string>(g3_FLOAT)0.085714</string>
+				<key>(g3_ASCII)ctrl_layer_transformer_matrix_resize</key>
+				<string>(g3_INT)0</string>
+				<key>(g3_ASCII)ctrl_layer_transformer_matrix_xValue</key>
+				<string>(g3_INT)4</string>
+				<key>(g3_ASCII)ctrl_layer_transformer_matrix_yValue</key>
+				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)ctrl_layer_transformer_on</key>
+				<string>(g3_INT)1</string>
+				<key>(g3_ASCII)layerActivated</key>
+				<string>(g3_INT)1</string>
+			</dict>
+			<dict>
+				<key>(g3_ASCII)ctrlLayer</key>
+				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)138</string>
+				<string>(g3_INT)137</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -272,17 +236,17 @@
 				<key>(g3_ASCII)ctrl_layer_transformer_on</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_cutOffAngleX</key>
-				<string>(g3_FLOAT)0.045000</string>
+				<string>(g3_FLOAT)0.715000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_cutOffAngleY</key>
 				<string>(g3_FLOAT)0.970000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_gravity</key>
 				<string>(g3_FLOAT)0.090000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_life</key>
-				<string>(g3_FLOAT)0.340000</string>
+				<string>(g3_FLOAT)0.445000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_localScale</key>
 				<string>(g3_FLOAT)0.210000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_particlesPerSec</key>
-				<string>(g3_FLOAT)0.045000</string>
+				<string>(g3_FLOAT)0.215000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_radiusSource</key>
 				<string>(g3_FLOAT)0.145000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_speed</key>
@@ -328,11 +292,11 @@
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_life</key>
 				<string>(g3_FLOAT)0.340000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_localScale</key>
-				<string>(g3_FLOAT)0.210000</string>
+				<string>(g3_FLOAT)0.360000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_particlesPerSec</key>
-				<string>(g3_FLOAT)0.045000</string>
+				<string>(g3_FLOAT)0.285000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_radiusSource</key>
-				<string>(g3_FLOAT)0.145000</string>
+				<string>(g3_FLOAT)0.215000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_particle_speed</key>
 				<string>(g3_FLOAT)0.135000</string>
 				<key>(g3_ASCII)ctrl_layer_transformer_type</key>
@@ -650,7 +614,7 @@
 					</array>
 					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
 					<array>
-						<string>(g3_FLOAT)0.644154</string>
+						<string>(g3_FLOAT)0.786967</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
@@ -684,7 +648,7 @@
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.046546</string>
+						<string>(g3_FLOAT)0.097292</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.315483</string>
@@ -1965,8 +1929,8 @@
 					</array>
 					<key>(g3_ASCII)absPosition</key>
 					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
+						<string>(g3_FLOAT)40.000000</string>
+						<string>(g3_FLOAT)-304.000000</string>
 						<string>(g3_FLOAT)623.538291</string>
 					</array>
 					<key>(g3_ASCII)absScale</key>
@@ -2010,7 +1974,7 @@
 					<key>(g3_ASCII)canvasNameStr</key>
 					<string>(g3_ASCII)empty</string>
 					<key>(g3_ASCII)contrast</key>
-					<string>(g3_INT)0</string>
+					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)contrastBoost</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)contrastPolarity</key>
@@ -2018,7 +1982,7 @@
 					<key>(g3_ASCII)contrastPos</key>
 					<string>(g3_INT)2</string>
 					<key>(g3_ASCII)contrastValue</key>
-					<string>(g3_FLOAT)0.500000</string>
+					<string>(g3_FLOAT)0.335000</string>
 					<key>(g3_ASCII)cu_module_AnglesDelta</key>
 					<array>
 						<string>(g3_INT)0</string>
@@ -2269,543 +2233,13 @@
 					<key>(g3_ASCII)loopPropriety</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)luma</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)lumaPos</key>
-					<string>(g3_INT)3</string>
-					<key>(g3_ASCII)lumaPreserveAlpha</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)lumaValue</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)140</string>
-					<key>(g3_ASCII)moduleDict</key>
-					<dict/>
-					<key>(g3_ASCII)module_AnglesDelta</key>
-					<dict/>
-					<key>(g3_ASCII)module_ColorAdditiveDelta</key>
-					<dict/>
-					<key>(g3_ASCII)module_ColorModulateDelta</key>
-					<dict/>
-					<key>(g3_ASCII)module_LocalPositionsDelta</key>
-					<dict/>
-					<key>(g3_ASCII)module_PositionsDelta</key>
-					<dict/>
-					<key>(g3_ASCII)module_ScalesDelta</key>
-					<dict/>
-					<key>(g3_ASCII)modulesDict</key>
-					<dict/>
-					<key>(g3_ASCII)modulesPixelsFiltersPOST</key>
-					<dict/>
-					<key>(g3_ASCII)modulesPixelsFiltersPRE</key>
-					<dict/>
-					<key>(g3_ASCII)mute</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)noise</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)noiseAlpha</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)noiseLevel</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)noiseMonochromatic</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)noisePos</key>
-					<string>(g3_INT)4</string>
-					<key>(g3_ASCII)noiseRGB</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)normTimePositionStart</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)normTimeSelection</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)1.000000</string>
-					</array>
-					<key>(g3_ASCII)normalizeScale</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)pixelFilters</key>
-					<array>
-						<dict/>
-						<dict/>
-						<dict/>
-						<dict/>
-						<dict/>
-						<dict/>
-					</array>
-					<key>(g3_ASCII)pixelsFiltersPOST</key>
-					<array/>
-					<key>(g3_ASCII)pixelsFiltersPRE</key>
-					<array/>
-					<key>(g3_ASCII)saturation</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)saturationBoost</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)saturationPolarity</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)saturationPos</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)saturationValue</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)soundOutBalance</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)soundOutLevel</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)soundOutLinkToAlphaAndCrossfader</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)syphonAppName</key>
-					<string>(g3_ASCII)</string>
-					<key>(g3_ASCII)syphonName</key>
-					<string>(g3_ASCII)</string>
-					<key>(g3_ASCII)textField</key>
-					<string>(g3_ASCII)hello, you can change this text with the module system</string>
-					<key>(g3_ASCII)textG3Font</key>
-					<dict>
-						<key>(g3_ASCII)fontName</key>
-						<string>Helvetica</string>
-						<key>(g3_ASCII)fontSize</key>
-						<string>(g3_FLOAT)20.000000</string>
-					</dict>
-					<key>(g3_ASCII)timeRateDirection</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)transformer</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)transformerApplyLocalParticlesAngle</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)transformerDict</key>
-					<dict>
-						<key>(g3_ASCII)GRID_DMAPPING</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)GRID_DMAPPING_ALPHA</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_DMAPPING_AMOUNT</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_DOUBLE_POINT_LINE_SIZE_WHEN_RES_HIGHER</key>
-						<string>(g3_INT)600</string>
-						<key>(g3_ASCII)GRID_FILL_MODE</key>
-						<string>(g3_ASCII)LINES</string>
-						<key>(g3_ASCII)GRID_MAP_SOUND_INPUT</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_MAP_SOUND_INPUT_AMOUNT</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_MAP_SOUND_INPUT_VDELAY</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_POINT_LINE_SIZE</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)GRID_RANDOM</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_RANDOM_MAX</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)GRID_SHAPE</key>
-						<string>(g3_ASCII)FLAT</string>
-						<key>(g3_ASCII)GRID_X_SIZE</key>
-						<string>(g3_INT)50</string>
-						<key>(g3_ASCII)GRID_Y_SIZE</key>
-						<string>(g3_INT)50</string>
-						<key>(g3_ASCII)MATRIX_EXTRUDE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_EXTRUDE_SIZE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_X_MXEVEN_MYEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_X_MXEVEN_MYUNEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_X_MXUNEVEN_MYEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_X_MXUNEVEN_MYUNEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_Y_MXEVEN_MYEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_Y_MXEVEN_MYUNEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_Y_MXUNEVEN_MYEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_FLIP_Y_MXUNEVEN_MYUNEVEN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_SCALE_TO_SIZE</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)MATRIX_X_SIZE</key>
-						<string>(g3_INT)2</string>
-						<key>(g3_ASCII)MATRIX_X_SPACE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_Y_SIZE</key>
-						<string>(g3_INT)2</string>
-						<key>(g3_ASCII)MATRIX_Y_SPACE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)MATRIX_Z_SIZE</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)MATRIX_Z_SPACE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)PEMITTER_AUTO_ANIMATE</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)PEMITTER_CUTOFF_ANGLEX</key>
-						<string>(g3_FLOAT)72.000000</string>
-						<key>(g3_ASCII)PEMITTER_CUTOFF_ANGLEY</key>
-						<string>(g3_FLOAT)72.000000</string>
-						<key>(g3_ASCII)PEMITTER_DURATION</key>
-						<string>(g3_FLOAT)1.000000</string>
-						<key>(g3_ASCII)PEMITTER_GRAVITY</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_ALPHA_FADE_IN</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_ALPHA_FADE_OUT</key>
-						<string>(g3_INT)1</string>
-						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_SIZE_FADE_IN</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_SIZE_FADE_OUT</key>
-						<string>(g3_INT)0</string>
-						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_X</key>
-						<string>(g3_FLOAT)0.500000</string>
-						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_Y</key>
-						<string>(g3_FLOAT)0.500000</string>
-						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_Z</key>
-						<string>(g3_FLOAT)0.500000</string>
-						<key>(g3_ASCII)PEMITTER_PARTICLES_PER_SEC</key>
-						<string>(g3_FLOAT)20.000000</string>
-						<key>(g3_ASCII)PEMITTER_RADIUS</key>
-						<string>(g3_FLOAT)160.000000</string>
-						<key>(g3_ASCII)PEMITTER_SPEED</key>
-						<string>(g3_FLOAT)500.000000</string>
-					</dict>
-					<key>(g3_ASCII)transformerType</key>
-					<string>(g3_ASCII)MATRIX</string>
-					<key>(g3_ASCII)transitionMediaTime</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)transitionMediaTimeDelta</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)transitionMediaType</key>
-					<string>(g3_INT)0</string>
-				</dict>
-				<dict>
-					<key>(g3_ASCII)absAngles</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)absColorAdditive</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)absColorModulate</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)absPosition</key>
-					<array>
-						<string>(g3_FLOAT)176.000000</string>
-						<string>(g3_FLOAT)-12.000000</string>
-						<string>(g3_FLOAT)623.538291</string>
-					</array>
-					<key>(g3_ASCII)absScale</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)absTimeRate</key>
-					<string>(g3_FLOAT)1.000000</string>
-					<key>(g3_ASCII)blendDst</key>
-					<string>(g3_ASCII)INV_SRC_ALPHA</string>
-					<key>(g3_ASCII)blendEq</key>
-					<string>(g3_ASCII)ADD</string>
-					<key>(g3_ASCII)blendSpecialAlpha</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)blendSrc</key>
-					<string>(g3_ASCII)SRC_ALPHA</string>
-					<key>(g3_ASCII)blur</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)blurHlevel</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)blurKind</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)blurPos</key>
-					<string>(g3_INT)5</string>
-					<key>(g3_ASCII)blurValue</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)blurVlevel</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)brightness</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)brightnessKind</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)brightnessPos</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)brightnessValue</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)canvas</key>
-					<string>(g3_NONE)-</string>
-					<key>(g3_ASCII)canvasNameStr</key>
-					<string>(g3_ASCII)empty</string>
-					<key>(g3_ASCII)contrast</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)contrastBoost</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)contrastPolarity</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)contrastPos</key>
-					<string>(g3_INT)2</string>
-					<key>(g3_ASCII)contrastValue</key>
-					<string>(g3_FLOAT)0.500000</string>
-					<key>(g3_ASCII)cu_module_AnglesDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)cu_module_ColorAdditiveDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)cu_module_ColorModulateDelta</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)cu_module_LocalPositionsDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)cu_module_PositionsDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)cu_module_ScalesDelta</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)deltaLocalPosition</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)deltaPixelRatio</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)deltaScaleUniform</key>
-					<string>(g3_FLOAT)0.780000</string>
-					<key>(g3_ASCII)fieldOfView</key>
-					<string>(g3_FLOAT)60.000000</string>
-					<key>(g3_ASCII)forceMovieTimePosition</key>
-					<string>(g3_NONE)-</string>
-					<key>(g3_ASCII)fx_AnglesDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)fx_ColorModulateDelta</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)fx_PositionsDelta</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)fx_RunList</key>
-					<array/>
-					<key>(g3_ASCII)fx_ScalesDelta</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-					</array>
-					<key>(g3_ASCII)fx_autoCol_AdditiveOn</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)fx_autoCol_ModulateOn</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoCol_curve</key>
-					<string>(g3_INT)3</string>
-					<key>(g3_ASCII)fx_autoCol_randomBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoCol_randomValues</key>
-					<array>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-					</array>
-					<key>(g3_ASCII)fx_autoCol_soundBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoCol_speed</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_curve</key>
-					<string>(g3_INT)3</string>
-					<key>(g3_ASCII)fx_autoMove_randomBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_randomValues</key>
-					<array>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_rate</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoMove_size</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)1</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_size_factor</key>
-					<string>(g3_INT)1</string>
-					<key>(g3_ASCII)fx_autoMove_soundBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoMove_speed</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoMove_xyOn</key>
-					<array>
-						<string>(g3_INT)1</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)fx_autoRot_direction</key>
-					<array>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-						<string>(g3_INT)0</string>
-					</array>
-					<key>(g3_ASCII)fx_autoRot_mode</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)fx_autoRot_rate</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoRot_rateCount</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoRot_speed</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_beatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_curve</key>
-					<string>(g3_INT)3</string>
-					<key>(g3_ASCII)fx_autoScale_randomBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_randomValues</key>
-					<array>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-						<string>(g3_FLOAT)0.982212</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_rate</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoScale_rateCount</key>
-					<string>(g3_FLOAT)0.000000</string>
-					<key>(g3_ASCII)fx_autoScale_size</key>
-					<array>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_soundBeatPosition</key>
-					<array>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_speed</key>
-					<array>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)100.000000</string>
-						<string>(g3_FLOAT)0.000000</string>
-					</array>
-					<key>(g3_ASCII)fx_autoScale_type</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)id</key>
-					<string>(g3_INT)4</string>
-					<key>(g3_ASCII)isInit</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)localRecMode</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)localTimeLine</key>
-					<dict>
-						<key>(g3_ASCII)TOTAL_TIME</key>
-						<string>(g3_FLOAT)60.000000</string>
-						<key>(g3_ASCII)TRACKS</key>
-						<array/>
-					</dict>
-					<key>(g3_ASCII)locked</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)loopPropriety</key>
-					<string>(g3_INT)0</string>
-					<key>(g3_ASCII)luma</key>
 					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)lumaPos</key>
 					<string>(g3_INT)3</string>
 					<key>(g3_ASCII)lumaPreserveAlpha</key>
 					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)lumaValue</key>
-					<string>(g3_INT)1</string>
+					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
 					<string>(g3_INT)1024</string>
 					<key>(g3_ASCII)moduleDict</key>
@@ -2855,7 +2289,19 @@
 					<array>
 						<dict/>
 						<dict/>
-						<dict/>
+						<dict>
+							<key>(g3_ASCII)FILTER</key>
+							<string>(g3_ASCII)(CI) M8 Contrast</string>
+							<key>(g3_ASCII)PARAMETERS</key>
+							<dict>
+								<key>(g3_ASCII)Boost</key>
+								<string>(g3_INT)0</string>
+								<key>(g3_ASCII)Invert</key>
+								<string>(g3_INT)0</string>
+								<key>(g3_ASCII)Level</key>
+								<string>(g3_FLOAT)0.335000</string>
+							</dict>
+						</dict>
 						<dict>
 							<key>(g3_ASCII)FILTER</key>
 							<string>(g3_ASCII)(CI) M8 Lumakey</string>
@@ -2864,7 +2310,7 @@
 								<key>(g3_ASCII)PreserveAlpha</key>
 								<string>(g3_INT)1</string>
 								<key>(g3_ASCII)Type</key>
-								<string>(g3_FLOAT)0.250000</string>
+								<string>(g3_INT)0</string>
 							</dict>
 						</dict>
 						<dict/>
@@ -3010,6 +2456,454 @@
 					<string>(g3_FLOAT)0.500000</string>
 					<key>(g3_ASCII)transitionMediaTimeDelta</key>
 					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)transitionMediaType</key>
+					<string>(g3_INT)0</string>
+				</dict>
+				<dict>
+					<key>(g3_ASCII)absAngles</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)absColorAdditive</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)absColorModulate</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)absPosition</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_FLOAT)415.692194</string>
+					</array>
+					<key>(g3_ASCII)absScale</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)absTimeRate</key>
+					<string>(g3_FLOAT)1.000000</string>
+					<key>(g3_ASCII)blendDst</key>
+					<string>(g3_ASCII)INV_SRC_ALPHA</string>
+					<key>(g3_ASCII)blendEq</key>
+					<string>(g3_ASCII)ADD</string>
+					<key>(g3_ASCII)blendSpecialAlpha</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)blendSrc</key>
+					<string>(g3_ASCII)SRC_ALPHA</string>
+					<key>(g3_ASCII)blur</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)blurHlevel</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)blurKind</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)blurPos</key>
+					<string>(g3_INT)5</string>
+					<key>(g3_ASCII)blurValue</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)blurVlevel</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)brightness</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)brightnessKind</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)brightnessPos</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)brightnessValue</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)canvas</key>
+					<string>(g3_NONE)-</string>
+					<key>(g3_ASCII)canvasNameStr</key>
+					<string>(g3_ASCII)empty</string>
+					<key>(g3_ASCII)contrast</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)contrastBoost</key>
+					<string>(g3_INT)2</string>
+					<key>(g3_ASCII)contrastPolarity</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)contrastPos</key>
+					<string>(g3_INT)2</string>
+					<key>(g3_ASCII)contrastValue</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)cu_module_AnglesDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)cu_module_ColorAdditiveDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)cu_module_ColorModulateDelta</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)cu_module_LocalPositionsDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)cu_module_PositionsDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)cu_module_ScalesDelta</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)deltaLocalPosition</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)deltaPixelRatio</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)deltaScaleUniform</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)fieldOfView</key>
+					<string>(g3_FLOAT)60.000000</string>
+					<key>(g3_ASCII)forceMovieTimePosition</key>
+					<string>(g3_NONE)-</string>
+					<key>(g3_ASCII)fx_AnglesDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_ColorModulateDelta</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)fx_PositionsDelta</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_RunList</key>
+					<array/>
+					<key>(g3_ASCII)fx_ScalesDelta</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)fx_autoCol_AdditiveOn</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)fx_autoCol_ModulateOn</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoCol_curve</key>
+					<string>(g3_INT)3</string>
+					<key>(g3_ASCII)fx_autoCol_randomBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoCol_randomValues</key>
+					<array>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+					</array>
+					<key>(g3_ASCII)fx_autoCol_soundBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoCol_speed</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_curve</key>
+					<string>(g3_INT)3</string>
+					<key>(g3_ASCII)fx_autoMove_randomBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_randomValues</key>
+					<array>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_rate</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)fx_autoMove_rateCount</key>
+					<string>(g3_FLOAT)0.000000</string>
+					<key>(g3_ASCII)fx_autoMove_size</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)1</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_size_factor</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)fx_autoMove_soundBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoMove_speed</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)fx_autoMove_xyOn</key>
+					<array>
+						<string>(g3_INT)1</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoRot_direction</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoRot_mode</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)fx_autoRot_rate</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)fx_autoRot_rateCount</key>
+					<string>(g3_FLOAT)0.000000</string>
+					<key>(g3_ASCII)fx_autoRot_speed</key>
+					<array>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_beatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_curve</key>
+					<string>(g3_INT)3</string>
+					<key>(g3_ASCII)fx_autoScale_randomBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_randomValues</key>
+					<array>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+						<string>(g3_FLOAT)0.205606</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_rate</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)fx_autoScale_rateCount</key>
+					<string>(g3_FLOAT)0.000000</string>
+					<key>(g3_ASCII)fx_autoScale_size</key>
+					<array>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_soundBeatPosition</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)0.000000</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_speed</key>
+					<array>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_FLOAT)100.000000</string>
+						<string>(g3_INT)0</string>
+					</array>
+					<key>(g3_ASCII)fx_autoScale_type</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)id</key>
+					<string>(g3_INT)4</string>
+					<key>(g3_ASCII)isInit</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)localTimeLine</key>
+					<dict>
+						<key>(g3_ASCII)TOTAL_TIME</key>
+						<string>(g3_FLOAT)60.000000</string>
+						<key>(g3_ASCII)TRACKS</key>
+						<array/>
+					</dict>
+					<key>(g3_ASCII)locked</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)loopPropriety</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)luma</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)lumaPos</key>
+					<string>(g3_INT)3</string>
+					<key>(g3_ASCII)lumaPreserveAlpha</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)lumaValue</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)mediaId</key>
+					<string>(g3_INT)9999</string>
+					<key>(g3_ASCII)moduleDict</key>
+					<dict/>
+					<key>(g3_ASCII)module_AnglesDelta</key>
+					<dict/>
+					<key>(g3_ASCII)module_ColorAdditiveDelta</key>
+					<dict/>
+					<key>(g3_ASCII)module_ColorModulateDelta</key>
+					<dict/>
+					<key>(g3_ASCII)module_LocalPositionsDelta</key>
+					<dict/>
+					<key>(g3_ASCII)module_PositionsDelta</key>
+					<dict/>
+					<key>(g3_ASCII)module_ScalesDelta</key>
+					<dict/>
+					<key>(g3_ASCII)modulesDict</key>
+					<dict/>
+					<key>(g3_ASCII)modulesPixelsFiltersPOST</key>
+					<dict/>
+					<key>(g3_ASCII)modulesPixelsFiltersPRE</key>
+					<dict/>
+					<key>(g3_ASCII)mute</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)noise</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)noiseAlpha</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)noiseLevel</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)noiseMonochromatic</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)noisePos</key>
+					<string>(g3_INT)4</string>
+					<key>(g3_ASCII)noiseRGB</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)normTimePositionStart</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)normTimeSelection</key>
+					<array>
+						<string>(g3_FLOAT)0.000000</string>
+						<string>(g3_FLOAT)1.000000</string>
+					</array>
+					<key>(g3_ASCII)normalizeScale</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)pixelFilters</key>
+					<array>
+						<dict/>
+						<dict/>
+						<dict/>
+						<dict/>
+						<dict/>
+						<dict/>
+					</array>
+					<key>(g3_ASCII)pixelsFiltersPOST</key>
+					<array/>
+					<key>(g3_ASCII)pixelsFiltersPRE</key>
+					<array/>
+					<key>(g3_ASCII)saturation</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)saturationBoost</key>
+					<string>(g3_INT)2</string>
+					<key>(g3_ASCII)saturationPolarity</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)saturationPos</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)saturationValue</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)soundOutBalance</key>
+					<string>(g3_FLOAT)0.500000</string>
+					<key>(g3_ASCII)soundOutLevel</key>
+					<string>(g3_FLOAT)1.000000</string>
+					<key>(g3_ASCII)soundOutLinkToAlphaAndCrossfader</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)syphonAppName</key>
+					<string>(g3_ASCII)</string>
+					<key>(g3_ASCII)syphonName</key>
+					<string>(g3_ASCII)</string>
+					<key>(g3_ASCII)textField</key>
+					<string>(g3_ASCII)hello, you can change this text with the module system</string>
+					<key>(g3_ASCII)textG3Font</key>
+					<dict>
+						<key>(g3_ASCII)fontName</key>
+						<string>Helvetica</string>
+						<key>(g3_ASCII)fontSize</key>
+						<string>(g3_FLOAT)20.000000</string>
+					</dict>
+					<key>(g3_ASCII)timeRateDirection</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)transformer</key>
+					<string>(g3_INT)0</string>
+					<key>(g3_ASCII)transformerApplyLocalParticlesAngle</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)transformerDict</key>
+					<dict>
+						<key>(g3_ASCII)GRID_DOUBLE_POINT_LINE_SIZE_WHEN_RES_HIGHER</key>
+						<string>(g3_INT)600</string>
+						<key>(g3_ASCII)PEMITTER_AUTO_ANIMATE</key>
+						<string>(g3_INT)0</string>
+						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_ALPHA_FADE_IN</key>
+						<string>(g3_INT)1</string>
+						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_ALPHA_FADE_OUT</key>
+						<string>(g3_INT)1</string>
+						<key>(g3_ASCII)PEMITTER_SPEED</key>
+						<string>(g3_INT)1000</string>
+					</dict>
+					<key>(g3_ASCII)transformerType</key>
+					<string>(g3_ASCII)MATRIX</string>
+					<key>(g3_ASCII)transitionMediaTime</key>
+					<string>(g3_FLOAT)1.000000</string>
+					<key>(g3_ASCII)transitionMediaTimeDelta</key>
+					<string>(g3_FLOAT)1.000000</string>
 					<key>(g3_ASCII)transitionMediaType</key>
 					<string>(g3_INT)0</string>
 				</dict>
@@ -18733,8 +18627,8 @@
 					</array>
 					<key>(g3_ASCII)absPosition</key>
 					<array>
-						<string>(g3_FLOAT)-4.000000</string>
-						<string>(g3_FLOAT)236.000000</string>
+						<string>(g3_FLOAT)8.000000</string>
+						<string>(g3_FLOAT)272.000000</string>
 						<string>(g3_FLOAT)623.538291</string>
 					</array>
 					<key>(g3_ASCII)absScale</key>
@@ -18860,7 +18754,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)-285.698245</string>
+						<string>(g3_FLOAT)146.074613</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -18917,8 +18811,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.868149</string>
-						<string>(g3_FLOAT)1.118149</string>
+						<string>(g3_FLOAT)0.689591</string>
+						<string>(g3_FLOAT)0.939591</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)1</string>
@@ -19192,7 +19086,7 @@
 						<key>(g3_ASCII)MATRIX_SCALE_TO_SIZE</key>
 						<string>(g3_INT)0</string>
 						<key>(g3_ASCII)MATRIX_X_SIZE</key>
-						<string>(g3_INT)2</string>
+						<string>(g3_INT)3</string>
 						<key>(g3_ASCII)MATRIX_X_SPACE</key>
 						<string>(g3_INT)0</string>
 						<key>(g3_ASCII)MATRIX_Y_SIZE</key>
@@ -19265,8 +19159,8 @@
 					</array>
 					<key>(g3_ASCII)absPosition</key>
 					<array>
-						<string>(g3_FLOAT)168.000000</string>
-						<string>(g3_FLOAT)192.000000</string>
+						<string>(g3_FLOAT)224.000000</string>
+						<string>(g3_FLOAT)244.000000</string>
 						<string>(g3_FLOAT)623.538291</string>
 					</array>
 					<key>(g3_ASCII)absScale</key>
@@ -19365,7 +19259,7 @@
 					<key>(g3_ASCII)deltaPixelRatio</key>
 					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)deltaScaleUniform</key>
-					<string>(g3_FLOAT)0.160000</string>
+					<string>(g3_FLOAT)0.080000</string>
 					<key>(g3_ASCII)fieldOfView</key>
 					<string>(g3_FLOAT)60.000000</string>
 					<key>(g3_ASCII)forceMovieTimePosition</key>
@@ -19392,7 +19286,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)76.682663</string>
+						<string>(g3_FLOAT)-60.387741</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -19449,11 +19343,11 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.218288</string>
-						<string>(g3_FLOAT)0.468288</string>
+						<string>(g3_FLOAT)0.225027</string>
+						<string>(g3_FLOAT)0.475027</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
-					<string>(g3_INT)1</string>
+					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)fx_autoMove_randomBeatPosition</key>
 					<array>
 						<string>(g3_FLOAT)0.531864</string>
@@ -19579,7 +19473,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)129</string>
+					<string>(g3_INT)132</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -19724,7 +19618,7 @@
 						<key>(g3_ASCII)MATRIX_SCALE_TO_SIZE</key>
 						<string>(g3_INT)0</string>
 						<key>(g3_ASCII)MATRIX_X_SIZE</key>
-						<string>(g3_INT)3</string>
+						<string>(g3_INT)4</string>
 						<key>(g3_ASCII)MATRIX_X_SPACE</key>
 						<string>(g3_INT)0</string>
 						<key>(g3_ASCII)MATRIX_Y_SIZE</key>
@@ -20111,7 +20005,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)138</string>
+					<string>(g3_INT)137</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -20282,11 +20176,11 @@
 						<key>(g3_ASCII)PEMITTER_AUTO_ANIMATE</key>
 						<string>(g3_INT)0</string>
 						<key>(g3_ASCII)PEMITTER_CUTOFF_ANGLEX</key>
-						<string>(g3_FLOAT)16.200000</string>
+						<string>(g3_FLOAT)257.400000</string>
 						<key>(g3_ASCII)PEMITTER_CUTOFF_ANGLEY</key>
 						<string>(g3_FLOAT)349.200000</string>
 						<key>(g3_ASCII)PEMITTER_DURATION</key>
-						<string>(g3_FLOAT)1.700000</string>
+						<string>(g3_FLOAT)2.225000</string>
 						<key>(g3_ASCII)PEMITTER_GRAVITY</key>
 						<string>(g3_FLOAT)0.900000</string>
 						<key>(g3_ASCII)PEMITTER_LIFE_CURVE_ALPHA_FADE_IN</key>
@@ -20310,7 +20204,7 @@
 						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_Z</key>
 						<string>(g3_FLOAT)0.210000</string>
 						<key>(g3_ASCII)PEMITTER_PARTICLES_PER_SEC</key>
-						<string>(g3_FLOAT)4.500000</string>
+						<string>(g3_FLOAT)21.500000</string>
 						<key>(g3_ASCII)PEMITTER_RADIUS</key>
 						<string>(g3_FLOAT)116.000000</string>
 						<key>(g3_ASCII)PEMITTER_SPEED</key>
@@ -20852,15 +20746,15 @@
 						<key>(g3_ASCII)PEMITTER_LOCAL_ANGLE_Z</key>
 						<string>(g3_FLOAT)0.000000</string>
 						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_X</key>
-						<string>(g3_FLOAT)0.210000</string>
+						<string>(g3_FLOAT)0.360000</string>
 						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_Y</key>
-						<string>(g3_FLOAT)0.210000</string>
+						<string>(g3_FLOAT)0.360000</string>
 						<key>(g3_ASCII)PEMITTER_LOCAL_SCALE_Z</key>
-						<string>(g3_FLOAT)0.210000</string>
+						<string>(g3_FLOAT)0.360000</string>
 						<key>(g3_ASCII)PEMITTER_PARTICLES_PER_SEC</key>
-						<string>(g3_FLOAT)4.500000</string>
+						<string>(g3_FLOAT)28.500000</string>
 						<key>(g3_ASCII)PEMITTER_RADIUS</key>
-						<string>(g3_FLOAT)116.000000</string>
+						<string>(g3_FLOAT)172.000000</string>
 						<key>(g3_ASCII)PEMITTER_SPEED</key>
 						<string>(g3_FLOAT)135.000000</string>
 					</dict>
@@ -52366,9 +52260,9 @@
 			<key>(g3_INT)10</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>ipe</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Downloads/Between Verses/ipe.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52561,9 +52455,9 @@
 			<key>(g3_INT)9</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>alpine-rose</string>
+				<string>ipe</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Downloads/Between Verses/alpine-rose.png</string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
