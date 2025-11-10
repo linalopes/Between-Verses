@@ -22,14 +22,14 @@ let LINE_GLOW;
 let LINE_WIDTH;
 let FILLCOLOR;
 
-// Stretch-based color change: outline color changes from pastel green (compact)
-// to bright neon pink (stretched) based on body outline length
+// Stretch-based color change: outline color transitions through color wheel
+// based on body outline length (normalized by canvas size for consistency)
+// Gradient: Purple → Blue → Cyan → Green → Yellow → Orange → Red
 // Toggle via: toggleStretchChange() in console, or change flag directly
 let STRETCH_CHANGE = true; // Enable/disable stretch-based color change
 
-// Stretch color gradient (pastel green → bright neon pink)
-let STRETCH_COLOR_MIN; // Pastel green (short/compact pose)
-let STRETCH_COLOR_MAX; // Bright neon pink (long/stretched pose)
+// Stretch color gradient (color wheel progression for distinct phases)
+let STRETCH_COLORS = []; // Array of colors for gradient stages
 
 // SelfieSegmentation globals for silhouette
 let selfieSeg = null;
@@ -300,9 +300,17 @@ function setup() {
     LINE_GLOW = true; // enable glow effect
     LINE_WIDTH = 4; // base width in pixels
 
-    // Initialize stretch color gradient
-    STRETCH_COLOR_MIN = color(180, 255, 180); // Pastel green
-    STRETCH_COLOR_MAX = color(255, 20, 147); // Bright neon pink
+    // Initialize stretch color gradient following color wheel
+    // Each color is visually distinct for clear phase differentiation
+    STRETCH_COLORS = [
+        color(138, 43, 226),   // Stage 0: Purple (compact)
+        color(0, 100, 255),    // Stage 1: Blue
+        color(0, 255, 255),    // Stage 2: Cyan
+        color(0, 255, 100),    // Stage 3: Green
+        color(255, 255, 0),    // Stage 4: Yellow
+        color(255, 140, 0),    // Stage 5: Orange
+        color(255, 0, 0)       // Stage 6: Red (max stretch)
+    ];
 
     // Initialize background and silhouette colors from CSS
     const cssBg = (root.getPropertyValue('--bg') || '#0b0b0b').trim();
@@ -571,15 +579,28 @@ function drawOrganicOutline(pose, personIndex, scaleX, scaleY, useGlow = LINE_GL
             outlineLength += Math.sqrt(dx * dx + dy * dy);
         }
 
-        // Map outline length to color gradient
-        // Typical ranges: ~800-2000 pixels for compact to stretched poses
-        // Higher maxLength = more stretch needed to reach bright pink
+        // Normalize outline length by canvas scale (relative to original size)
+        // This keeps the color transition consistent whether in normal or fullscreen mode
+        const canvasScale = Math.min(scaleX, scaleY);
+        const normalizedOutlineLength = outlineLength / canvasScale;
+
+        // Map normalized outline length to color gradient
+        // Base ranges at original canvas size: ~800-2000 pixels for compact to stretched poses
         const minLength = 800;
         const maxLength = 2000;
-        const normalizedLength = clamp01((outlineLength - minLength) / (maxLength - minLength));
+        const t = clamp01((normalizedOutlineLength - minLength) / (maxLength - minLength));
 
-        // Interpolate between pastel green (min) and bright neon pink (max)
-        lineColor = lerpColor(STRETCH_COLOR_MIN, STRETCH_COLOR_MAX, normalizedLength);
+        // Multi-stage color interpolation
+        // Divide the 0-1 range into segments for each color pair
+        const numColors = STRETCH_COLORS.length;
+        const segmentSize = 1.0 / (numColors - 1);
+        const segmentIndex = Math.floor(t / segmentSize);
+        const segmentT = (t % segmentSize) / segmentSize;
+
+        // Interpolate between the two colors in the current segment
+        const colorA = STRETCH_COLORS[Math.min(segmentIndex, numColors - 2)];
+        const colorB = STRETCH_COLORS[Math.min(segmentIndex + 1, numColors - 1)];
+        lineColor = lerpColor(colorA, colorB, segmentT);
     }
 
     // Helper function to draw the curve
