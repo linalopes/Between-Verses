@@ -41,7 +41,7 @@
 		<key>(g3_ASCII)ctrl_master_scale</key>
 		<string>(g3_FLOAT)0.500000</string>
 		<key>(g3_ASCII)ctrl_master_soundLevelCapture</key>
-		<string>(g3_FLOAT)0.411765</string>
+		<string>(g3_FLOAT)0.000000</string>
 		<key>(g3_ASCII)ctrl_master_soundOutLevel</key>
 		<string>(g3_INT)0</string>
 		<key>(g3_ASCII)ctrl_master_speed</key>
@@ -142,7 +142,7 @@
 				<key>(g3_ASCII)ctrl_layer_auto_moveSpeed</key>
 				<string>(g3_FLOAT)0.057143</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)2</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -180,7 +180,7 @@
 				<key>(g3_ASCII)ctrl_layer_auto_moveStrob</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)4</string>
+				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -212,7 +212,7 @@
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)8</string>
+				<string>(g3_INT)12</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -260,7 +260,7 @@
 				<key>(g3_ASCII)ctrlLayer</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)9</string>
+				<string>(g3_INT)8</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
@@ -614,7 +614,7 @@
 					</array>
 					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
 					<array>
-						<string>(g3_FLOAT)0.090313</string>
+						<string>(g3_FLOAT)0.000031</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
@@ -648,7 +648,7 @@
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.847161</string>
+						<string>(g3_FLOAT)0.748229</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.315483</string>
@@ -18754,7 +18754,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)-401.586532</string>
+						<string>(g3_FLOAT)463.181187</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -18811,8 +18811,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.916075</string>
-						<string>(g3_FLOAT)1.166075</string>
+						<string>(g3_FLOAT)0.558453</string>
+						<string>(g3_FLOAT)0.808453</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)1</string>
@@ -18829,7 +18829,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.016000</string>
+					<string>(g3_FLOAT)0.017000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -18941,7 +18941,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)1</string>
+					<string>(g3_INT)2</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -19286,7 +19286,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)-412.220957</string>
+						<string>(g3_FLOAT)146.930824</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -19343,8 +19343,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.079528</string>
-						<string>(g3_FLOAT)0.329528</string>
+						<string>(g3_FLOAT)0.810763</string>
+						<string>(g3_FLOAT)1.060763</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)0</string>
@@ -19361,7 +19361,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.016000</string>
+					<string>(g3_FLOAT)0.017000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -19473,7 +19473,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)4</string>
+					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -20005,7 +20005,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)8</string>
+					<string>(g3_INT)12</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -20553,7 +20553,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)9</string>
+					<string>(g3_INT)8</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -36951,11 +36951,11 @@
 			<key>(g3_INT)10</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>alpine-rose</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/alpine-rose.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -36966,11 +36966,11 @@
 			<key>(g3_INT)11</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>alpine-rose2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/alpine-rose2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -36981,11 +36981,11 @@
 			<key>(g3_INT)12</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>bromelia</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/bromelia.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -36996,11 +36996,11 @@
 			<key>(g3_INT)13</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>bromelia2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/bromelia2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37011,11 +37011,11 @@
 			<key>(g3_INT)14</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>edelweiss</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/edelweiss.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37026,11 +37026,11 @@
 			<key>(g3_INT)15</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>edelweiss2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/edelweiss2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37131,9 +37131,9 @@
 			<key>(g3_INT)8</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>edelweiss</string>
+				<string>alpine-aster</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/edelweiss.png</string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/alpine-aster.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -37146,9 +37146,9 @@
 			<key>(g3_INT)9</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>ipe</string>
+				<string>alpine-aster2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/alpine-aster2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -39594,11 +39594,11 @@
 			<key>(g3_INT)0</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>ipe</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -39609,11 +39609,11 @@
 			<key>(g3_INT)1</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>ipe2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -39714,11 +39714,11 @@
 			<key>(g3_INT)2</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>water-lily</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/water-lily.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -39729,11 +39729,11 @@
 			<key>(g3_INT)3</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>water-lily2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/water-lily2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -52625,12 +52625,6 @@
 			<string>Mask (global)</string>
 			<key>(g3_ASCII)state</key>
 			<string>(g3_ASCII)Stopped</string>
-		</dict>
-		<dict>
-			<key>(g3_ASCII)name</key>
-			<string>OSC (global)</string>
-			<key>(g3_ASCII)state</key>
-			<string>(g3_ASCII)Paused</string>
 		</dict>
 		<dict>
 			<key>(g3_ASCII)name</key>

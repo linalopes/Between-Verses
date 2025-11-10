@@ -22,6 +22,39 @@ let LINE_GLOW;
 let LINE_WIDTH;
 let FILLCOLOR;
 
+const WS_URL = 'ws://127.0.0.1:5173/ws';
+
+let oscWS = null, wsQueue = [], wsBackoffMs = 500;
+
+function wsConnect() {
+    if (oscWS && (oscWS.readyState === 0 || oscWS.readyState === 1)) return;
+    try {
+        oscWS = new WebSocket(WS_URL);
+        oscWS.onopen = () => {
+            wsBackoffMs = 500;
+            while (wsQueue.length) oscWS.send(wsQueue.shift());
+            console.log('[WS] connected');
+        };
+        oscWS.onclose = () => {
+            setTimeout(wsConnect, wsBackoffMs);
+            wsBackoffMs = Math.min(wsBackoffMs * 2, 4000);
+            console.log('[WS] closed, retrying...');
+        };
+        oscWS.onerror = (e) => console.warn('[WS] error', e);
+        oscWS.onmessage = (e) => { /* optional debug */ };
+    } catch (e) {
+        console.warn('[WS] connect error', e);
+        setTimeout(wsConnect, wsBackoffMs);
+    }
+}
+wsConnect();
+
+function sendOsc(actions) {
+    const payload = JSON.stringify({ type: 'osc', actions });
+    if (oscWS && oscWS.readyState === 1) oscWS.send(payload);
+    else wsQueue.push(payload);
+}
+
 // SelfieSegmentation globals for silhouette
 let selfieSeg = null;
 let segmentation = null; // last result
@@ -58,6 +91,72 @@ let poseFSM = {}; // key = stable person id (use your current track/index)
 
 // Track last locked pose for logging transitions
 let lastLockedPoseByPerson = {};
+
+// Layers (zero-based)
+const LAYERS = { FLOWER_A: 2, FLOWER_B: 3, BIRD_A: 4, BIRD_B: 5 };
+
+// Birds in order from the folder: 1..7
+const BIRDS   = [1,2,3,4,5,6,7];
+// Flowers start at 8; continue sequentially
+const FLOWERS = [8,9,10,11,12,13,14,15,16,17,18,19];
+
+const POSE_TO_BUNDLE = {
+    star: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[0] },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[1] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[0]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[1]   },
+    ],
+    arms_out: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[2] },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[3] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[2]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[3]   },
+    ],
+    zigzag: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[4] },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[5] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[4]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[5]   },
+    ],
+    side_arms: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[6] },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[7] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[1]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[2]   },
+    ],
+    rounded: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[8]  },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[9]  },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[3]    },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[4]    },
+    ],
+    arms_up: [
+        { layer: LAYERS.FLOWER_A, media: FLOWERS[10] },
+        { layer: LAYERS.FLOWER_B, media: FLOWERS[11] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[5]    },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[6]    },
+    ],
+};
+
+const GLOBAL_DEBOUNCE_MS = 600;
+let lastBundleKey = '';
+let lastSentAt = 0;
+
+function keyOfBundle(bundle) {
+    return bundle.slice().sort((a, b) => a.layer - b.layer).map(a => `${a.layer}:${a.media}`).join('|');
+}
+
+function maybeSendBundle(bundle) {
+    const now = performance.now();
+    if (now - lastSentAt < GLOBAL_DEBOUNCE_MS) return;
+    const k = keyOfBundle(bundle);
+    if (k === lastBundleKey) return;
+    sendOsc(bundle);
+    lastBundleKey = k;
+    lastSentAt = now;
+    console.log('[OSC] sent bundle', k);
+}
 
 function nowMs() {
     return millis ? millis() : (performance.now ? performance.now() : Date.now());
@@ -286,7 +385,7 @@ function setup() {
     TURQ = color(cssTurq); // p5 accepts CSS hex strings
 
     // Initialize organic line settings
-    LINECOLOR = color(255, 255, 128); 
+    LINECOLOR = color(255, 255, 128);
     FILLCOLOR = color(255, 255, 128); // pale yellow
     LINE_GLOW = true; // enable glow effect
     LINE_WIDTH = 4; // base width in pixels
@@ -447,6 +546,10 @@ function draw() {
         if (lockedPose !== lastLockedPoseByPerson[pid]) {
             if (lockedPose) {
                 console.log(`Person ${pid + 1} locked pose:`, lockedPose);
+                if (lockedPose !== 'neutral') {
+                    const bundle = POSE_TO_BUNDLE[lockedPose];
+                    if (bundle) maybeSendBundle(bundle);
+                }
             }
             lastLockedPoseByPerson[pid] = lockedPose;
         }

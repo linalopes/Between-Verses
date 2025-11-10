@@ -111,6 +111,21 @@ ws.onmessage = (event) => console.log('WS message:', event.data);
 
 In Modul8 you should see `RECV ['/md8key/ctrl_layer_media/0', 'i', 8]` and the target layer switches media.
 
+### Automatic pose bundles
+
+`script.js` now opens its own WebSocket connection (`ws://127.0.0.1:5173/ws`) and automatically pushes OSC bundles whenever a person locks into a non-neutral pose. The mapping uses zero-based layers and fixed media IDs:
+
+| Pose        | Layer 2 (Flower A) | Layer 3 (Flower B) | Layer 4 (Bird A) | Layer 5 (Bird B) |
+|-------------|--------------------|--------------------|------------------|------------------|
+| `star`      | 8                  | 9                  | 1                | 2                |
+| `arms_out`  | 10                 | 11                 | 3                | 4                |
+| `zigzag`    | 12                 | 13                 | 5                | 6                |
+| `side_arms` | 14                 | 15                 | 2                | 3                |
+| `rounded`   | 16                 | 17                 | 4                | 5                |
+| `arms_up`   | 18                 | 19                 | 6                | 7                |
+
+Bundles are debounced globally (600 ms) and de-duplicated; only pose transitions trigger sends. Adjust the layer content in Modul8 to match the numeric IDs.
+
 ## 🔒 Privacy
 
 The webcam runs entirely in your browser; no video is sent to any server.
