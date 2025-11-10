@@ -62,11 +62,11 @@
 				<key>(g3_ASCII)ctrl_layer_auto_colorRSpeed</key>
 				<string>(g3_FLOAT)0.142857</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)128</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_position_x</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_position_y</key>
@@ -142,11 +142,11 @@
 				<key>(g3_ASCII)ctrl_layer_auto_moveSpeed</key>
 				<string>(g3_FLOAT)0.057143</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)129</string>
+				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_position_x</key>
 				<string>(g3_FLOAT)8.000000</string>
 				<key>(g3_ASCII)ctrl_layer_position_y</key>
@@ -180,11 +180,11 @@
 				<key>(g3_ASCII)ctrl_layer_auto_moveStrob</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)132</string>
+				<string>(g3_INT)4</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_position_x</key>
@@ -212,11 +212,11 @@
 				<key>(g3_ASCII)ctrl_layer_hidden</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)137</string>
+				<string>(g3_INT)8</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastLevel</key>
 				<string>(g3_FLOAT)0.265000</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
@@ -260,11 +260,11 @@
 				<key>(g3_ASCII)ctrlLayer</key>
 				<string>(g3_INT)1</string>
 				<key>(g3_ASCII)ctrl_layer_media</key>
-				<string>(g3_INT)136</string>
+				<string>(g3_INT)9</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSet</key>
 				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_mediaSetGroup</key>
-				<string>(g3_INT)1</string>
+				<string>(g3_INT)0</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastLevel</key>
 				<string>(g3_FLOAT)0.335000</string>
 				<key>(g3_ASCII)ctrl_layer_pixelFX_contrastOn</key>
@@ -614,7 +614,7 @@
 					</array>
 					<key>(g3_ASCII)fx_ColorAdditiveDelta</key>
 					<array>
-						<string>(g3_FLOAT)0.786967</string>
+						<string>(g3_FLOAT)0.090313</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
@@ -648,7 +648,7 @@
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)fx_autoCol_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.097292</string>
+						<string>(g3_FLOAT)0.847161</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.000000</string>
 						<string>(g3_FLOAT)0.315483</string>
@@ -815,7 +815,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)128</string>
+					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -18754,7 +18754,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)146.074613</string>
+						<string>(g3_FLOAT)-401.586532</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -18811,8 +18811,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.689591</string>
-						<string>(g3_FLOAT)0.939591</string>
+						<string>(g3_FLOAT)0.916075</string>
+						<string>(g3_FLOAT)1.166075</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)1</string>
@@ -18829,7 +18829,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.017000</string>
+					<string>(g3_FLOAT)0.016000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -18941,7 +18941,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)129</string>
+					<string>(g3_INT)1</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -19286,7 +19286,7 @@
 					</array>
 					<key>(g3_ASCII)fx_PositionsDelta</key>
 					<array>
-						<string>(g3_FLOAT)-60.387741</string>
+						<string>(g3_FLOAT)-412.220957</string>
 						<string>(g3_INT)0</string>
 						<string>(g3_INT)0</string>
 					</array>
@@ -19343,8 +19343,8 @@
 					</array>
 					<key>(g3_ASCII)fx_autoMove_beatPosition</key>
 					<array>
-						<string>(g3_FLOAT)0.225027</string>
-						<string>(g3_FLOAT)0.475027</string>
+						<string>(g3_FLOAT)0.079528</string>
+						<string>(g3_FLOAT)0.329528</string>
 					</array>
 					<key>(g3_ASCII)fx_autoMove_curve</key>
 					<string>(g3_INT)0</string>
@@ -19361,7 +19361,7 @@
 					<key>(g3_ASCII)fx_autoMove_rate</key>
 					<string>(g3_FLOAT)0.000000</string>
 					<key>(g3_ASCII)fx_autoMove_rateCount</key>
-					<string>(g3_FLOAT)0.017000</string>
+					<string>(g3_FLOAT)0.016000</string>
 					<key>(g3_ASCII)fx_autoMove_size</key>
 					<array>
 						<string>(g3_INT)1</string>
@@ -19473,7 +19473,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)132</string>
+					<string>(g3_INT)4</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -20005,7 +20005,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)137</string>
+					<string>(g3_INT)8</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -20553,7 +20553,7 @@
 					<key>(g3_ASCII)lumaValue</key>
 					<string>(g3_INT)0</string>
 					<key>(g3_ASCII)mediaId</key>
-					<string>(g3_INT)136</string>
+					<string>(g3_INT)9</string>
 					<key>(g3_ASCII)moduleDict</key>
 					<dict/>
 					<key>(g3_ASCII)module_AnglesDelta</key>
@@ -36921,11 +36921,11 @@
 			<key>(g3_INT)0</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>BG</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/BG.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -36936,11 +36936,11 @@
 			<key>(g3_INT)1</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>arara</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/arara.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37041,11 +37041,11 @@
 			<key>(g3_INT)2</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>bemtevi</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/bemtevi.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37056,11 +37056,11 @@
 			<key>(g3_INT)3</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>cuckoo</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/cuckoo.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37071,11 +37071,11 @@
 			<key>(g3_INT)4</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>robin</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/robin.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37086,11 +37086,11 @@
 			<key>(g3_INT)5</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>swallow</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/swallow.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37101,11 +37101,11 @@
 			<key>(g3_INT)6</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>swallow2</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/swallow2.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37116,11 +37116,11 @@
 			<key>(g3_INT)7</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>tucano</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/tucano.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37131,11 +37131,11 @@
 			<key>(g3_INT)8</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>edelweiss</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/edelweiss.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -37146,11 +37146,11 @@
 			<key>(g3_INT)9</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string></string>
+				<string>ipe</string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string></string>
+				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
 				<key>(g3_ASCII)mediaStorage</key>
-				<string>(g3_ASCII)STREAM</string>
+				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
 				<string>(g3_ASCII)HIGH</string>
 				<key>(g3_ASCII)surfaceFilteringMag</key>
@@ -52230,9 +52230,9 @@
 			<key>(g3_INT)0</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>BG</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/BG.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52245,9 +52245,9 @@
 			<key>(g3_INT)1</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>arara</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/arara.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52350,9 +52350,9 @@
 			<key>(g3_INT)2</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>bemtevi</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/bemtevi.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52365,9 +52365,9 @@
 			<key>(g3_INT)3</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>cuckoo</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/cuckoo.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52380,9 +52380,9 @@
 			<key>(g3_INT)4</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>robin</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/robin.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52395,9 +52395,9 @@
 			<key>(g3_INT)5</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>swallow</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/swallow.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52410,9 +52410,9 @@
 			<key>(g3_INT)6</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>swallow2</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/swallow2.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52425,9 +52425,9 @@
 			<key>(g3_INT)7</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>tucano</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/birds/tucano.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52440,9 +52440,9 @@
 			<key>(g3_INT)8</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>edelweiss</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/edelweiss.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52455,9 +52455,9 @@
 			<key>(g3_INT)9</key>
 			<dict>
 				<key>(g3_ASCII)mediaName</key>
-				<string>ipe</string>
+				<string></string>
 				<key>(g3_ASCII)mediaPath</key>
-				<string>/Users/linalopes/Desktop/Between-Verses/between-verses-vjing/flowers/ipe.png</string>
+				<string></string>
 				<key>(g3_ASCII)mediaStorage</key>
 				<string>(g3_ASCII)FULL_PRELOAD</string>
 				<key>(g3_ASCII)streamQuality</key>
@@ -52533,8 +52533,38 @@
 		<dict/>
 		<key>Mask (global)</key>
 		<dict/>
+		<key>OSC (global)</key>
+		<dict>
+			<key>(g3_ASCII)-1</key>
+			<dict>
+				<key>(g3_ASCII)__AUTO_SERIALIZE</key>
+				<dict>
+					<key>(g3_ASCII)47</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)48</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)57</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)58</key>
+					<string>localhost</string>
+				</dict>
+			</dict>
+		</dict>
 		<key>OSC native (global)</key>
-		<dict/>
+		<dict>
+			<key>(g3_ASCII)-1</key>
+			<dict>
+				<key>(g3_ASCII)__AUTO_SERIALIZE</key>
+				<dict>
+					<key>(g3_ASCII)47</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)48</key>
+					<string>(g3_INT)1</string>
+					<key>(g3_ASCII)57</key>
+					<string>(g3_INT)1</string>
+				</dict>
+			</dict>
+		</dict>
 		<key>Painter (layer)</key>
 		<dict/>
 		<key>Perspective Transform</key>
@@ -52598,9 +52628,15 @@
 		</dict>
 		<dict>
 			<key>(g3_ASCII)name</key>
+			<string>OSC (global)</string>
+			<key>(g3_ASCII)state</key>
+			<string>(g3_ASCII)Paused</string>
+		</dict>
+		<dict>
+			<key>(g3_ASCII)name</key>
 			<string>OSC native (global)</string>
 			<key>(g3_ASCII)state</key>
-			<string>(g3_ASCII)Stopped</string>
+			<string>(g3_ASCII)Playing</string>
 		</dict>
 		<dict>
 			<key>(g3_ASCII)name</key>
