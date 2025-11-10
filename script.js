@@ -713,18 +713,45 @@ function analyzeState(pose, personNumber) {
         return "arms_out";
     }
 
-    // 6. ROUNDED: Hands on hips
+    // 6. ROUNDED: Hands on hips (robust for low camera angles, flexible vertical positioning)
     if (leftHip && rightHip) {
+        // Calculate body proportions for angle-independent detection
+        const torsoHeight = Math.abs(shoulderMidY - ((leftHip.y + rightHip.y) / 2));
         const hipMidY = (leftHip.y + rightHip.y) / 2;
-        const leftWristAtHip = Math.abs(leftWrist.y - hipMidY) < 80;
-        const rightWristAtHip = Math.abs(rightWrist.y - hipMidY) < 80;
-        const leftWristInward = Math.abs(leftWrist.x - leftHip.x) < shoulderWidth * 0.5;
-        const rightWristInward = Math.abs(rightWrist.x - rightHip.x) < shoulderWidth * 0.5;
-        const leftElbowOutward = leftElbow.x < leftWrist.x - 20;
-        const rightElbowOutward = rightElbow.x > rightWrist.x + 20;
 
-        if (leftWristAtHip && rightWristAtHip && leftWristInward && rightWristInward &&
-            leftElbowOutward && rightElbowOutward) {
+        // Flexible vertical range: from mid-torso down to below hips
+        // Allows hands on waist, hips, or upper thighs
+        const leftWristInRange = leftWrist.y > shoulderMidY - torsoHeight * 0.2 &&
+                                  leftWrist.y < hipMidY + torsoHeight * 0.6;
+        const rightWristInRange = rightWrist.y > shoulderMidY - torsoHeight * 0.2 &&
+                                   rightWrist.y < hipMidY + torsoHeight * 0.6;
+
+        // Distance from wrist to hip (3D-like distance, angle-independent)
+        const leftWristToHipDist = Math.sqrt(
+            Math.pow(leftWrist.x - leftHip.x, 2) +
+            Math.pow(leftWrist.y - leftHip.y, 2)
+        );
+        const rightWristToHipDist = Math.sqrt(
+            Math.pow(rightWrist.x - rightHip.x, 2) +
+            Math.pow(rightWrist.y - rightHip.y, 2)
+        );
+
+        // Wrists should be reasonably close to hips (relaxed threshold)
+        const leftWristNearHip = leftWristToHipDist < shoulderWidth * 1.0;
+        const rightWristNearHip = rightWristToHipDist < shoulderWidth * 1.0;
+
+        // Elbows should be outward from wrists (creates the characteristic shape)
+        const leftElbowOutward = leftElbow.x < leftWrist.x - shoulderWidth * 0.1;
+        const rightElbowOutward = rightElbow.x > rightWrist.x + shoulderWidth * 0.1;
+
+        // Forearms should be relatively short (bent arms, not extended)
+        const leftForearmShort = leftForearmLength < shoulderWidth * 1.4;
+        const rightForearmShort = rightForearmLength < shoulderWidth * 1.4;
+
+        if (leftWristInRange && rightWristInRange &&
+            leftWristNearHip && rightWristNearHip &&
+            leftElbowOutward && rightElbowOutward &&
+            leftForearmShort && rightForearmShort) {
             displayState(personNumber, "rounded");
             return "rounded";
         }
