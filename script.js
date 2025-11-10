@@ -20,6 +20,7 @@ let TURQ;
 let LINECOLOR;
 let LINE_GLOW;
 let LINE_WIDTH;
+let FILLCOLOR;
 
 // SelfieSegmentation globals for silhouette
 let selfieSeg = null;
@@ -45,6 +46,9 @@ const SMOOTH_POS   = 0.80;  // 0..1 (higher = smoother, more lag)
 const SMOOTH_SCALE = 0.85;  // for scalar values such as shoulderWidth
 
 let smoothStore = {}; // per person: { keyName: {x,y}, _scalars: {name:value} }
+
+// Persistent tracking: store last frame's poses for matching
+let lastFramePoses = [];
 
 /** Exponential moving average for a 2D point. */
 function emaPoint(pIdx, keyName, x, y) {
@@ -117,7 +121,8 @@ function setup() {
     TURQ = color(cssTurq); // p5 accepts CSS hex strings
 
     // Initialize organic line settings
-    LINECOLOR = color(255, 255, 128); // pale yellow
+    LINECOLOR = color(255, 255, 128); 
+    FILLCOLOR = color(255, 255, 128); // pale yellow
     LINE_GLOW = true; // enable glow effect
     LINE_WIDTH = 4; // base width in pixels
 
@@ -375,6 +380,7 @@ function drawOrganicOutline(pose, personIndex, scaleX, scaleY, useGlow = LINE_GL
     };
 
     noFill();
+    //fill(FILLCOLOR);
     const baseWeight = lineWidth * min(scaleX, scaleY);
 
     if (useGlow) {
@@ -697,9 +703,120 @@ function drawPersonSticker(personIndex, pose, scaleX, scaleY) {
     image(overlayImage, cx - w/2, cy - h/2, w, h);
 }
 
+/**
+ * Calculate similarity score between two poses based on keypoint distances
+ * Returns a lower score for more similar poses (distance-based)
+ */
+function calculatePoseSimilarity(pose1, pose2) {
+    let totalDistance = 0;
+    let numComparisons = 0;
+
+    // Compare key body points that are usually visible and stable
+    const keyPointNames = ["nose", "left_shoulder", "right_shoulder", "left_hip", "right_hip"];
+
+    for (let name of keyPointNames) {
+        const kp1 = pose1.keypoints.find(k => k.name === name);
+        const kp2 = pose2.keypoints.find(k => k.name === name);
+
+        // Only compare if both keypoints exist and are confident
+        if (kp1 && kp2 && kp1.confidence > 0.3 && kp2.confidence > 0.3) {
+            const dx = kp1.x - kp2.x;
+            const dy = kp1.y - kp2.y;
+            totalDistance += Math.sqrt(dx * dx + dy * dy);
+            numComparisons++;
+        }
+    }
+
+    // Return average distance (lower = more similar)
+    return numComparisons > 0 ? totalDistance / numComparisons : Infinity;
+}
+
+/**
+ * Match current frame poses to previous frame poses for stable tracking
+ * Uses Hungarian algorithm concept: match each current pose to closest previous pose
+ */
+function matchPosesToPreviousFrame(currentPoses, previousPoses) {
+    if (!previousPoses || previousPoses.length === 0) {
+        return currentPoses; // First frame, no matching needed
+    }
+
+    if (currentPoses.length === 0) {
+        return currentPoses;
+    }
+
+    // Build a cost matrix: [current][previous] = similarity score
+    const costMatrix = [];
+    for (let i = 0; i < currentPoses.length; i++) {
+        costMatrix[i] = [];
+        for (let j = 0; j < previousPoses.length; j++) {
+            costMatrix[i][j] = calculatePoseSimilarity(currentPoses[i], previousPoses[j]);
+        }
+    }
+
+    // Simple greedy matching (good enough for 2-3 people)
+    const matched = new Array(currentPoses.length);
+    const usedPrevious = new Set();
+
+    // For each previous person slot, find the best matching current pose
+    for (let prevIdx = 0; prevIdx < previousPoses.length; prevIdx++) {
+        let bestCurrentIdx = -1;
+        let bestScore = Infinity;
+
+        for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
+            if (matched[currIdx] !== undefined) continue; // Already matched
+
+            const score = costMatrix[currIdx][prevIdx];
+            if (score < bestScore) {
+                bestScore = score;
+                bestCurrentIdx = currIdx;
+            }
+        }
+
+        // Only match if distance is reasonable (not too far apart)
+        if (bestCurrentIdx !== -1 && bestScore < 200) {
+            matched[bestCurrentIdx] = prevIdx;
+            usedPrevious.add(prevIdx);
+        }
+    }
+
+    // Create reordered array maintaining previous frame indices
+    const reordered = new Array(Math.max(currentPoses.length, previousPoses.length));
+
+    // Place matched poses in their previous positions
+    for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
+        if (matched[currIdx] !== undefined) {
+            reordered[matched[currIdx]] = currentPoses[currIdx];
+        }
+    }
+
+    // Place unmatched poses in remaining slots
+    let nextSlot = 0;
+    for (let currIdx = 0; currIdx < currentPoses.length; currIdx++) {
+        if (matched[currIdx] === undefined) {
+            // Find next empty slot
+            while (reordered[nextSlot] !== undefined) nextSlot++;
+            reordered[nextSlot] = currentPoses[currIdx];
+        }
+    }
+
+    // Filter out undefined slots and return
+    return reordered.filter(p => p !== undefined);
+}
+
 // Callback function to handle detected poses
 function gotPoses(results) {
-    poses = results;
+    if (!results || results.length === 0) {
+        poses = results;
+        lastFramePoses = [];
+        return;
+    }
+
+    // Match poses to previous frame for stable tracking
+    const matchedPoses = matchPosesToPreviousFrame(results, lastFramePoses);
+
+    // Store for next frame
+    lastFramePoses = matchedPoses.slice(); // Copy array
+    poses = matchedPoses;
 }
 
 /*
