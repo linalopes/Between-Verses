@@ -11,6 +11,7 @@ let showVideo = true;
 let showTracking = false; // Start with tracking OFF
 let showSegmentation = false; // Start with segmentation OFF
 let showLine = true; // Start with line ON
+let showPersonText = true; // Start with person text ON
 let isFullscreen = false;
 let originalWidth = 640;
 let originalHeight = 480;
@@ -93,48 +94,62 @@ let poseFSM = {}; // key = stable person id (use your current track/index)
 let lastLockedPoseByPerson = {};
 
 // Layers (zero-based)
-const LAYERS = { FLOWER_A: 2, FLOWER_B: 3, BIRD_A: 4, BIRD_B: 5 };
+const LAYERS = { FLOWER_A1: 1, FLOWER_A2: 2, FLOWERS_B1: 3, FLOWERS_B2: 4, BIRD_A: 6, BIRD_B: 7 };
 
 // Birds in order from the folder: 1..7
 const BIRDS   = [1,2,3,4,5,6,7];
+// bird_a is right -> left (1,2,3,4)
+// bird_b is left -> right (5,6,7)
 // Flowers start at 8; continue sequentially
 const FLOWERS = [8,9,10,11,12,13,14,15,16,17,18,19];
 
 const POSE_TO_BUNDLE = {
     star: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[0] },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[1] },
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[0] },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[1] },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[2] },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[3] },
         { layer: LAYERS.BIRD_A,   media: BIRDS[0]   },
-        { layer: LAYERS.BIRD_B,   media: BIRDS[1]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[4]   },
     ],
     arms_out: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[2] },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[3] },
-        { layer: LAYERS.BIRD_A,   media: BIRDS[2]   },
-        { layer: LAYERS.BIRD_B,   media: BIRDS[3]   },
-    ],
-    zigzag: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[4] },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[5] },
-        { layer: LAYERS.BIRD_A,   media: BIRDS[4]   },
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[4] },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[5] },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[6] },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[7] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[1]   },
         { layer: LAYERS.BIRD_B,   media: BIRDS[5]   },
     ],
+    zigzag: [
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[8] },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[9] },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[10] },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[11] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[2]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[6]   },
+    ],
     side_arms: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[6] },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[7] },
-        { layer: LAYERS.BIRD_A,   media: BIRDS[1]   },
-        { layer: LAYERS.BIRD_B,   media: BIRDS[2]   },
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[11] },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[10] },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[9] },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[8] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[3]   },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[4]   },
     ],
     rounded: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[8]  },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[9]  },
-        { layer: LAYERS.BIRD_A,   media: BIRDS[3]    },
-        { layer: LAYERS.BIRD_B,   media: BIRDS[4]    },
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[7]  },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[6]  },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[5]  },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[4]  },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[1]    },
+        { layer: LAYERS.BIRD_B,   media: BIRDS[5]    },
     ],
     arms_up: [
-        { layer: LAYERS.FLOWER_A, media: FLOWERS[10] },
-        { layer: LAYERS.FLOWER_B, media: FLOWERS[11] },
-        { layer: LAYERS.BIRD_A,   media: BIRDS[5]    },
+        { layer: LAYERS.FLOWER_A1, media: FLOWERS[3] },
+        { layer: LAYERS.FLOWER_A2, media: FLOWERS[2] },
+        { layer: LAYERS.FLOWERS_B1, media: FLOWERS[1] },
+        { layer: LAYERS.FLOWERS_B2, media: FLOWERS[0] },
+        { layer: LAYERS.BIRD_A,   media: BIRDS[2]    },
         { layer: LAYERS.BIRD_B,   media: BIRDS[6]    },
     ],
 };
@@ -872,6 +887,7 @@ function analyzeState(pose, personNumber) {
 
 // Helper function to display the detected state
 function displayState(personNumber, state) {
+    if (!showPersonText) return; // Don't display if toggle is off
     fill(255);
     let scaleX = width / originalWidth;
     let scaleY = height / originalHeight;
@@ -1153,6 +1169,7 @@ function setupControls() {
     const hideTrackingBtn = document.getElementById('generate-images-btn'); // Reusing the same button ID
     const segmentationToggleBtn = document.getElementById('segmentation-toggle-btn');
     const lineToggleBtn = document.getElementById('line-toggle-btn');
+    const personTextToggleBtn = document.getElementById('person-text-toggle-btn');
 
     // Fullscreen functionality
     fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -1168,6 +1185,9 @@ function setupControls() {
 
     // Line toggle functionality
     lineToggleBtn.addEventListener('click', toggleLine);
+
+    // Person text toggle functionality
+    personTextToggleBtn.addEventListener('click', togglePersonText);
 
     // Listen for ESC key to exit fullscreen
     document.addEventListener('keydown', function(event) {
@@ -1271,5 +1291,22 @@ function toggleLine() {
     } else {
         lineToggleBtn.classList.remove('btn-1');
         lineToggleBtn.classList.add('btn-disabled');
+    }
+}
+
+// Toggle person text display
+function togglePersonText() {
+    const personTextToggleBtn = document.getElementById('person-text-toggle-btn');
+
+    showPersonText = !showPersonText;
+    personTextToggleBtn.textContent = showPersonText ? 'Hide Person Text' : 'Show Person Text';
+
+    // Update button styling
+    if (showPersonText) {
+        personTextToggleBtn.classList.remove('btn-disabled');
+        personTextToggleBtn.classList.add('btn-1');
+    } else {
+        personTextToggleBtn.classList.remove('btn-1');
+        personTextToggleBtn.classList.add('btn-disabled');
     }
 }
